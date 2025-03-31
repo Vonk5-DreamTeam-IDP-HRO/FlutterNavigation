@@ -1,0 +1,41 @@
+config.js
+
+# Logs
+logs/
+*.log
+
+# Build output
+dist/
+build/
+out/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Editor/IDE files
+.idea/
+*.iml
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Compiled files
+*.pyc
+__pycache__/
+
+# Testing
+coverage/
+test-results/
+
+# Misc
+*.bak
+*.tmp
+*.temp
