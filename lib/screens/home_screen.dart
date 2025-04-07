@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Center(
         child: Card(
-        child: Column(
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -26,24 +26,23 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 TextButton(
-                  onPressed: (){},
+                  onPressed: () {},
                   child: const Text('Edit'),
                 ),
                 TextButton(
                     onPressed: () {
-                      final appState = Provider.of<AppState>(context, listen: false);
+                      final appState =
+                          Provider.of<AppState>(context, listen: false);
                       appState.showRouteOnMap();
 
                       // Use the static method to navigate to map tab
                       MainScreen.navigateToMapTab(context);
                     },
-                    child: const Text("View route")
-                )
+                    child: const Text("View route"))
               ],
             )
           ],
-        )
-      ),
+        )),
       ),
     );
   }

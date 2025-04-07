@@ -24,7 +24,7 @@ class _MapScreenState extends State<MapScreen> {
   //TODO: Fix hardcoded & import data from database
   //Start with empty waypoints list - will be populated when route is requested
   List<LatLng> _waypoints = [];
-  
+
   // Waypoint data to use when route is requested
   final List<LatLng> _waypointsData = [
     LatLng(51.9201, 4.4869), // Markthal
@@ -69,7 +69,7 @@ class _MapScreenState extends State<MapScreen> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.osm_navigation',
                 ),
-                
+
                 // Display all waypoint markers
                 if (_waypoints.isNotEmpty)
                   MarkerLayer(
@@ -115,10 +115,11 @@ class _MapScreenState extends State<MapScreen> {
       // First set the waypoints from the waypoints data
       if (mounted) {
         setState(() {
-          _waypoints = List.from(_waypointsData); // Create a copy of the waypoint data
+          _waypoints =
+              List.from(_waypointsData); // Create a copy of the waypoint data
         });
       }
-      
+
       final List<LatLng> roundTripWaypoints = [
         _waypointsData.first,
         ..._waypointsData,

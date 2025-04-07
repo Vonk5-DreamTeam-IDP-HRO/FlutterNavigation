@@ -10,25 +10,22 @@ class ValhallaService {
 
   Future<Map<String, dynamic>> getOptimizedRoute(List<LatLng> waypoints) async {
     // Convert waypoints to Valhalla format
-    final List<Map<String, dynamic>> locations = waypoints.map((point) => {
-      'lat': point.latitude,
-      'lon': point.longitude,
-      'type': 'break'
-    }).toList();
+    final List<Map<String, dynamic>> locations = waypoints
+        .map((point) =>
+            {'lat': point.latitude, 'lon': point.longitude, 'type': 'break'})
+        .toList();
 
     // Build request data
     final requestData = {
       'locations': locations,
       'costing': 'pedestrian',
-      'directions_options': {
-        'units': 'kilometers',
-        'language': 'en'
-      }
+      'directions_options': {'units': 'kilometers', 'language': 'en'}
     };
 
     // Make the API request
     final response = await http.get(
-      Uri.parse('$baseUrl/optimized_route?json=${Uri.encodeComponent(jsonEncode(requestData))}'),
+      Uri.parse(
+          '$baseUrl/optimized_route?json=${Uri.encodeComponent(jsonEncode(requestData))}'),
     );
 
     if (response.statusCode == 200) {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/screens/save_screen.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
-import 'screens/map_screen.dart';
+import 'package:osm_navigation/screens/home_screen.dart';
+import 'package:osm_navigation/screens/map_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -70,11 +71,13 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   List<Widget> get _screens => [
-    const HomeScreen(),
-    const Scaffold(body: Center(child: Text('Save Screen'))), // Placeholder
-    const Scaffold(body: Center(child: Text('Create Route Screen'))), // Placeholder
-    const MapScreen(),
-    const Scaffold(body: Center(child: Text('Settings Screen'))), // Placeholder
+        const HomeScreen(),
+        const CesiumViewer(), // Placeholder
+        const Scaffold(
+            body: Center(child: Text('Create Route Screen'))), // Placeholder
+        const MapScreen(),
+        const Scaffold(
+            body: Center(child: Text('Settings Screen'))), // Placeholder
       ];
 
   void navigateToTab(int index, {bool showRoute = false}) {
@@ -112,9 +115,7 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.map),
             label: 'Map',
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'settings')
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'settings')
         ],
       ),
     );

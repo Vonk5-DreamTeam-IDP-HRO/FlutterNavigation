@@ -30,29 +30,29 @@ class _CesiumViewerState extends State<CesiumViewer> {
   final LatLng _center = LatLng(51.92, 4.48); // Rotterdam coordinates
   bool _cesiumLoaded = false;
 
-late final WebViewController _controller = WebViewController()
-  ..setJavaScriptMode(JavaScriptMode.unrestricted)
-  ..setBackgroundColor(const Color.fromARGB(0, 0, 0, 0))
-  ..setNavigationDelegate(
-    NavigationDelegate(
-      onPageFinished: (_) {
-        setState(() => _cesiumLoaded = true);
-      },
-      onWebResourceError: (error) {
-        print("WebView error: ${error.description}");
-      },
-    ),
-  );
+  late final WebViewController _controller = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setBackgroundColor(const Color.fromARGB(0, 0, 0, 0))
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onPageFinished: (_) {
+          setState(() => _cesiumLoaded = true);
+        },
+        onWebResourceError: (error) {
+          print("WebView error: ${error.description}");
+        },
+      ),
+    );
 
-@override
-void initState() {
-  super.initState();
-  loadHtmlContent().then((htmlContent) {
-    _controller.loadHtmlString(htmlContent);
-  }).catchError((error) {
-    print("Error loading HTML content: $error");
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    loadHtmlContent().then((htmlContent) {
+      _controller.loadHtmlString(htmlContent);
+    }).catchError((error) {
+      print("Error loading HTML content: $error");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
