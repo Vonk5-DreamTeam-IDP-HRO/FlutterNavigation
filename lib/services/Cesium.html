@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.106/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.106/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: transparent;
+    }
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    .cesium-viewer-bottom,
+    .cesium-viewer-timelineContainer,
+    .cesium-viewer-animationContainer,
+    .cesium-viewer-toolbar,
+    .cesium-widget-credits {
+      display: none !important;
+    }
+    .cesium-viewer-cesiumWidgetContainer {
+      background-color: transparent !important;
+    }
+    .cesium-widget canvas {
+      image-rendering: high-quality;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    // Use setTimeout to ensure the script runs after Cesium has fully loaded
+    setTimeout(function() {
+      try {
+        if (typeof Cesium === 'undefined') {
+          console.error('Cesium is not loaded yet');
+          return;
+        }
+
+        console.log('Initializing Cesium with Rotterdam 3D data');
+
+        // Configure Cesium ion
+fetch('/assets/cesium_token.txt')
+  .then(response => response.text())
+  .then(token => {
+    Cesium.Ion.defaultAccessToken = token;
+  })
+  .catch(error => {
+    console.error('Error loading Cesium token:', error);
+  });
+
+        // Create OpenStreetMap imagery provider
+const osmProvider = new Cesium.OpenStreetMapImageryProvider({
+  url: 'https://tile.openstreetmap.org/'
+});
+const baseLayer = new Cesium.ImageryLayer(osmProvider);
+viewer.scene.imageryLayers.add(baseLayer);
+
+        // Create viewer with OpenStreetMap base layer
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          animation: false,
+          timeline: false,
+          fullscreenButton: false,
+          vrButton: false,
+          skyBox: false,
+          skyAtmosphere: false,
+          orderIndependentTranslucency: false,
+          imageryProvider: osmProvider,
+          requestRenderMode: true,
+          maximumRenderTimeChange: Infinity,
+          contextOptions: {
+            webgl: {
+              alpha: true,
+              antialias: true,
+              powerPreference: 'high-performance',
+              preserveDrawingBuffer: false
+            }
+          }
+        });
+
+        // Enable the globe surface and set its properties
+        viewer.scene.globe.show = true;
+        viewer.scene.logarithmicDepthBuffer = true;
+        viewer.scene.fxaa = false;
+
+        console.log('Loading Rotterdam 3D buildings');
+
+        // Define tileset URLs
+        const texturedTilesetUrl = 'https://www.3drotterdam.nl/datasource-data/3adbe5af-d05c-475a-b34c-59e69ba8dadc/tileset.json';
+        const untexturedTilesetUrl = 'https://www.3drotterdam.nl/datasource-data/d0c755ef-ba1b-43fc-bc44-24fc7bb152ce/tileset.json';
+        const lod1TilesetUrl = 'https://www.3drotterdam.nl/datasource-data/83825457-ab08-4017-bab3-af80d1e6cefa/tileset.json';
+
+        // Track loaded tilesets
+        let loadedTilesets = 0;
+        const totalTilesets = 3;
+
+        // Function to create and add a tileset
+async function addTileset(url, color) {
+  try {
+    const tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
+      maximumScreenSpaceError: 16,
+      maximumMemoryUsage: 512
+    });
+    viewer.scene.primitives.add(tileset);
+
+            // Apply custom styling if color is provided
+            if (color) {
+              tileset.style = new Cesium.Cesium3DTileStyle({
+                color: color
+              });
+            }
+
+            tileset.readyPromise
+              .then(function(tileset) {
+                console.log('Tileset loaded successfully: ' + url);
+
+                loadedTilesets++;
+
+                // If this is the first tileset to load completely, set the camera
+                if (loadedTilesets === 1) {
+                  // Set camera to Rotterdam
+                  viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(4.48, 51.92, 400),
+                    orientation: {
+                      heading: Cesium.Math.toRadians(0.0),
+                      pitch: Cesium.Math.toRadians(-45.0),
+                    }
+                  });
+                }
+
+                // If all tilesets are loaded, zoom to fit all
+                if (loadedTilesets === totalTilesets) {
+                  console.log('All tilesets loaded, zooming to fit');
+                  viewer.zoomTo(viewer.scene.primitives);
+                }
+              })
+              .catch(function(error) {
+                console.error('Tileset loading error for ' + url + ':', error);
+              });
+
+            return tileset;
+          } catch (tilesetError) {
+            console.error('Error adding tileset ' + url + ':', tilesetError);
+            return null;
+          }
+        }
+
+        // Add the textured tileset (visible by default)
+        const texturedTileset = addTileset(texturedTilesetUrl, 'color("white", 1)');
+        const untexturedTileset = addTileset(untexturedTilesetUrl, 'color("white", 0)');
+        const lod1Tileset = addTileset(lod1TilesetUrl, 'color("white", 0)');
+
+        // Sync camera function for integration with the 2D map
+        window.updateCesiumCamera = function(lat, lng, zoom) {
+          const height = 1000 / Math.pow(2, zoom - 12);
+          viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(lng, lat, height)
+          });
+        };
+
+        console.log('Cesium initialization complete');
+      } catch (error) {
+        console.error('Cesium initialization error:', error);
+      }
+    }, 1000); // Give Cesium time to load
+  </script>
+</body>
+</html>
