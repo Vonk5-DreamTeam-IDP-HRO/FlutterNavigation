@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/screens/save_screen.dart';
+import 'package:osm_navigation/screens/setting_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/screens/home_screen.dart';
 import 'package:osm_navigation/screens/map_screen.dart';
@@ -72,12 +73,11 @@ class _MainScreenState extends State<MainScreen> {
 
   List<Widget> get _screens => [
         const HomeScreen(),
-        const CesiumViewer(), // Placeholder
+        const SaveScreen(),
         const Scaffold(
             body: Center(child: Text('Create Route Screen'))), // Placeholder
         const MapScreen(),
-        const Scaffold(
-            body: Center(child: Text('Settings Screen'))), // Placeholder
+       const SettingsScreen(),
       ];
 
   void navigateToTab(int index, {bool showRoute = false}) {
