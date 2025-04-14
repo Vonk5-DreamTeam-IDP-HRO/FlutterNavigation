@@ -34,7 +34,7 @@ class ValhallaService {
       // Create Valhalla request body
       final requestBody = {
         'locations': locations,
-        'costing': 'auto',  // Can be auto, bicycle, pedestrian, etc.
+        'costing': 'pedestrian',  // Can be auto, bicycle, pedestrian, etc.
         'directions_options': {
           'units': 'kilometers'
         }

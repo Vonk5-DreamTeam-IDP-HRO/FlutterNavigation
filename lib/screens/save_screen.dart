@@ -71,6 +71,8 @@ class _SaveScreenState extends State<SaveScreen> {
   }
   
   // Check if Cesium is fully initialized and ready
+  // This is for preventing that Cesium is not ready when the user clicks on the button
+  // to move the camera to the center of Rotterdam
   Future<void> _checkCesiumReady() async {
     if (!_cesiumLoaded) return;
     
@@ -109,6 +111,8 @@ class _SaveScreenState extends State<SaveScreen> {
   }
   
   // Method to get current Cesium camera position
+  // This is used to synchronize the map and Cesium views
+  // This is possibly needed in the future.
   Future<Map<String, dynamic>?> _getCesiumCameraPosition() async {
     try {
       final result = await _controller.runJavaScriptReturningResult(
@@ -170,6 +174,8 @@ class _SaveScreenState extends State<SaveScreen> {
       body: Stack(
         children: [
           // 3D Cesium layer with transparent background
+          // This is a WebView that loads the Cesium HTML content
+          // and displays the 3D map and with all the selected layers.
           WebViewWidget(controller: _controller),
           
           // Loading indicator
