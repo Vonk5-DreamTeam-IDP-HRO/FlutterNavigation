@@ -1,41 +1,70 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 class ValhallaService {
-  final String baseUrl;
-
-  ValhallaService({this.baseUrl = 'http://145.24.222.95:8002'});
-
+  // URL of your Valhalla server
+  final String _baseUrl;
+  
+  /// Constructor for ValhallaService
+  /// [baseUrl] is the URL of the Valhalla server. Default is 'http://145.24.222.95:8002'
+  /// This gives the freedom to set a different server URL if needed.
+  ValhallaService({String? baseUrl}) 
+      : _baseUrl = baseUrl ?? 'http://145.24.222.95:8002';
+  
+  /// Main functions of API for requesting optimized routes
+  /// Must contain a list of LatLng points (at least 2) to be optimized
+  /// Returns a Map with the route information from Valhalla
+  ///
+  /// TODO: Add more get-function for different route options
   Future<Map<String, dynamic>> getOptimizedRoute(List<LatLng> waypoints) async {
-    // Convert waypoints to Valhalla format
-    final List<Map<String, dynamic>> locations = waypoints
-        .map((point) =>
-            {'lat': point.latitude, 'lon': point.longitude, 'type': 'break'})
-        .toList();
-
-    // Build request data
-    final requestData = {
-      'locations': locations,
-      'costing': 'pedestrian',
-      'directions_options': {'units': 'kilometers', 'language': 'en'}
-    };
-
-    // Make the API request
-    final response = await http.get(
-      Uri.parse(
-          '$baseUrl/optimized_route?json=${Uri.encodeComponent(jsonEncode(requestData))}'),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to get route: ${response.statusCode}');
+    if (waypoints.length < 2) {
+      throw Exception('At least 2 waypoints are required');
+    }
+    
+    try {
+      // Format waypoints for Valhalla
+      final locations = waypoints.map((point) => {
+        'lon': point.longitude,
+        'lat': point.latitude
+      }).toList();
+      
+      // Create Valhalla request body
+      final requestBody = {
+        'locations': locations,
+        'costing': 'auto',  // Can be auto, bicycle, pedestrian, etc.
+        'directions_options': {
+          'units': 'kilometers'
+        }
+      };
+      
+      // Send request to Valhalla server
+      final response = await http.post(
+        Uri.parse('$_baseUrl/route'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+      
+      if (response.statusCode == 200) {
+        final routeData = jsonDecode(response.body);
+        final encodedPolyline = routeData['trip']['legs'][0]['shape'] as String;
+        final decodedPolyline = decodePolyline(encodedPolyline);
+        return {
+          'route': routeData,
+          'decodedPolyline': decodedPolyline,
+        };
+      } else {
+        throw Exception('Failed to get route: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Valhalla routing error: $e');
+      rethrow;
     }
   }
-
-  // Decode the polyline from Valhalla (similar to the JS function)
+  
+     // Decode the polyline from Valhalla (similar to the JS function)
   List<LatLng> decodePolyline(String encoded, {int precision = 6}) {
     List<LatLng> points = [];
     int index = 0;

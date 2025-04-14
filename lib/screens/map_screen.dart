@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:osm_navigation/services/valhalla_service.dart';
+import 'package:osm_navigation/services/valhalla_test.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart';
@@ -105,9 +105,6 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _getOptimizedRoute() async {
-    // The loading state was not being used in the UI, so we can remove it
-    // or we could add a loading indicator if needed
-
     // Store context to avoid async gap issues
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
@@ -116,7 +113,7 @@ class _MapScreenState extends State<MapScreen> {
       if (mounted) {
         setState(() {
           _waypoints =
-              List.from(_waypointsData); // Create a copy of the waypoint data
+              List.from(_waypointsData);
         });
       }
 
@@ -163,7 +160,7 @@ class _MapScreenState extends State<MapScreen> {
         if (allPoints.isNotEmpty) {
           var bounds = LatLngBounds.fromPoints(allPoints);
 
-          // Use fitCamera which is available in flutter_map
+      
           _mapController.fitCamera(
             CameraFit.bounds(
               bounds: bounds,
@@ -173,11 +170,9 @@ class _MapScreenState extends State<MapScreen> {
         }
       }
     } catch (e) {
-      // Replace print with debugPrint for a better logging approach in Flutter
       debugPrint('Error fetching route: $e');
 
       if (mounted) {
-        // Use stored scaffold messenger to avoid async gap issues
         scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Error fetching route: $e'),
@@ -192,12 +187,10 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
 
-    // Schedule after frame is built to avoid Provider access during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final appState = Provider.of<AppState>(context, listen: false);
 
-        // Only get route if explicitly requested via AppState
         if (appState.shouldShowRouteOnMap) {
           _getOptimizedRoute();
           appState.routeShown();

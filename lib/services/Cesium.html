@@ -159,20 +159,7 @@
             }
           }
 
-          // Define the WMS layer using the provided URL
-        const wmsLayer = new Cesium.WebMapServiceImageryProvider({
-            url: 'https://diensten.rotterdam.nl/arcgis/services/LUCHTFOTO/luchtfoto_actueel/MapServer/WMSServer',
-            layers: '0', // Specify the layer index or name (0 is often the default layer)
-            parameters: {
-                transparent: true,
-                format: 'image/png'
-            }
-        });
-
-        // Add the WMS layer to the viewer
-        viewer.imageryLayers.addImageryProvider(wmsLayer);
-
-        
+          
           try {
             console.log("Attempting to Load in Rotterdam bridges...");
             const tilesetBridgesTextured = await Cesium.Cesium3DTileset.fromUrl(
