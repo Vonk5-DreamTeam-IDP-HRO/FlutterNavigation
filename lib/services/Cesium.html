@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Cesium Rotterdam 3D</title>
+    <!-- Cesium CSS -->
+    <link
+      href="https://cesium.com/downloads/cesiumjs/releases/1.106/Build/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: transparent;
+      }
+
+      .cesium-viewer-bottom,
+      .cesium-viewer-timelineContainer,
+      .cesium-viewer-animationContainer,
+      .cesium-viewer-toolbar,
+      .cesium-viewer-fullscreenContainer {
+        display: none !important;
+      }
+
+      /* Make the cesium canvas transparent */
+      .cesium-widget-credits {
+        display: none !important;
+      }
+
+      .cesium-widget canvas {
+        background-color: transparent !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer"></div>
+
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.106/Build/Cesium/Cesium.js"></script>
+    <script>
+      console.log("Initializing Cesium with Rotterdam 3D data");
+
+      // Configure Cesium ion
+      Cesium.Ion.defaultAccessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4NDMzMDlmNC05YmE4LTQxZDEtYTY2OS01NDdjZThkYjU1NjAiLCJpZCI6MjkwOTMyLCJpYXQiOjE3NDM3NzYzNzl9.RNrsjvHimJihaGS_fU6lcO7RUx_G5KLkPuWiRmmFOyk";
+
+      // Initialize the scene asynchronously
+      async function initScene() {
+        try {
+          console.log("Creating Cesium viewer with default settings first...");
+          // Create viewer with minimal settings first to avoid terrain errors
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            vrButton: false,
+            requestRenderMode: true,
+            maximumRenderTimeChange: Infinity,
+            contextOptions: {
+              webgl: {
+                alpha: true,
+                antialias: true,
+                preserveDrawingBuffer: false,
+              },
+            },
+          });
+          console.log("Basic Cesium viewer created successfully");
+
+          // Reference the viewer globally for Flutter communication
+          window.cesiumViewer = viewer;
+
+          console.log("Setting imagery layer...");
+          try {
+            const osmLayer = new Cesium.ImageryLayer(
+              new Cesium.OpenStreetMapImageryProvider({
+                url: "https://tile.openstreetmap.org/",
+              })
+            );
+            // Replace the default base layer with created osmLayer. removeAll() is used to clear any existing layers.
+            // This is important to avoid conflicts with the default Cesium base layer. Since Cesium uses Bing Maps by default
+            viewer.scene.imageryLayers.removeAll();
+            viewer.scene.imageryLayers.add(osmLayer);
+            viewer.scene.globe.depthTestAgainstTerrain = true;
+            viewer.scene.globe.showGroundAtmosphere = false;
+
+            console.log("OSM imagery layer added successfully");
+          } catch (imageryError) {
+            console.warn("Failed to set OSM imagery layer:", imageryError);
+          }
+
+          console.log("Setting Rotterdam terrain layer...");
+          try {
+            const rotterdamTerrainProvider =
+              await Cesium.CesiumTerrainProvider.fromUrl(
+                "https://www.3drotterdam.nl/datasource-data/d60bdba8-c40b-42e2-bc47-78c8adabbb29" , // Rotterdam Terrein-actueel
+                {
+                  requestVertexNormals: true,
+                              }
+              );
+            viewer.scene.terrainProvider = rotterdamTerrainProvider;
+            console.log("Rotterdam terrain layer added successfully");
+            // Catch any error related to loading in Rotterdam Terrein-actueel.
+            // It will try to loading the standard world terrain from Cesium itself.
+          } catch (terrainError) {
+            console.warn(
+              "Failed to load Rotterdam terrain, trying world terrain:",
+              terrainError
+            );
+            try {
+              viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
+              console.log("World terrain provider set successfully");
+            } catch (worldTerrainError) {
+              console.warn("Failed to set world terrain:", worldTerrainError);
+            }
+          }
+
+          console.log("Loading 3D buildings...");
+          try {
+            // Try to load Rotterdam-specific buildings first
+            console.log("Attempting to load Rotterdam 3D buildings...");
+            const tileset = await Cesium.Cesium3DTileset.fromUrl(
+              "https://www.3drotterdam.nl/datasource-data/3adbe5af-d05c-475a-b34c-59e69ba8dadc/tileset.json",
+              {
+                skipLevelOfDetail: false,
+                baseScreenSpaceError: 256,
+                skipScreenSpaceErrorFactor: 16,
+                skipLevels: 0,
+                immediatelyLoadDesiredLevelOfDetail: false,
+                loadSiblings: true,
+                cullWithChildrenBounds: true,
+              }
+            );
+            viewer.scene.primitives.add(tileset);
+            console.log("Rotterdam 3D buildings loaded successfully");
+          } catch (rotterdamError) {
+            console.warn("Failed to load Rotterdam buildings:", rotterdamError);
+            // If Rotterdam buildings fail, try OSM buildings. Same as with the terrain
+            try {
+              console.log("Loading OSM buildings as fallback...");
+              const buildingTileset = await Cesium.createOsmBuildingsAsync();
+              viewer.scene.primitives.add(buildingTileset);
+              console.log("OSM 3D buildings loaded successfully");
+            } catch (osmError) {
+              console.error("Failed to load OSM buildings:", osmError);
+            }
+          }
+
+          
+          try {
+            console.log("Attempting to Load in Rotterdam bridges...");
+            const tilesetBridgesTextured = await Cesium.Cesium3DTileset.fromUrl(
+              "https://www.3drotterdam.nl/datasource-data/69926a30-444d-46bb-995e-bb14b151d3ab/tileset.json",
+              {
+                skipLevelOfDetail: false,
+                baseScreenSpaceError: 1024,
+                skipScreenSpaceErrorFactor: 16,
+                skipLevels: 0,
+                immediatelyLoadDesiredLevelOfDetail: false,
+              }
+            );
+
+            viewer.scene.primitives.add(tilesetBridgesTextured);
+            console.log("Bridges loaded successfully");
+          } catch (error) {
+            console.error("Error loading Rotterdam bridges:", error);
+          }
+
+          // Set up initial camera position for Rotterdam
+          console.log("Setting initial camera position...");
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(4.48, 51.92, 500),
+            orientation: {
+              heading: Cesium.Math.toRadians(0),
+              pitch: Cesium.Math.toRadians(-45),
+              roll: 0,
+            },
+            duration: 1,
+          });
+          console.log("Camera position set successfully");
+
+          // Enable terrain depth test to properly render 3D buildings with terrain
+          viewer.scene.globe.depthTestAgainstTerrain = true;
+          console.log("Terrain depth testing enabled");
+
+          // Add method to check if viewer is ready
+          window.isCesiumReady = function () {
+            return !!window.cesiumViewer && !viewer.isDestroyed();
+          };
+
+          console.log("Cesium initialization complete");
+        } catch (error) {
+          console.error("Error initializing Cesium scene:", error.message);
+          console.error("Stack trace:", error.stack);
+
+          // Attempt recovery by creating a minimal viewer
+          try {
+            console.log("Attempting fallback initialization...");
+            const fallbackViewer = new Cesium.Viewer("cesiumContainer", {
+              baseLayerPicker: false,
+              geocoder: false,
+              homeButton: false,
+              sceneModePicker: false,
+              navigationHelpButton: false,
+              animation: false,
+              timeline: false,
+              fullscreenButton: false,
+            });
+            window.cesiumViewer = fallbackViewer;
+            console.log("Fallback viewer created successfully");
+          } catch (fallbackError) {
+            console.error(
+              "Fallback initialization failed:",
+              fallbackError.message
+            );
+          }
+        }
+      }
+
+      // Start the initialization process
+      initScene();
+
+      // Create function to update camera from Flutter
+      window.updateCesiumCamera = function (lat, lng, zoom) {
+        if (!window.cesiumViewer || window.cesiumViewer.isDestroyed()) {
+          console.warn("Cesium viewer not initialized yet or destroyed");
+          return false;
+        }
+
+        try {
+          const height = 500 / Math.pow(2, zoom - 14); // Adjust height based on zoom
+          window.cesiumViewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(lng, lat, height),
+            duration: 1,
+          });
+          return true;
+        } catch (error) {
+          console.error("Error updating camera:", error);
+          return false;
+        }
+      };
+
+      // Add a method to get current camera position for two-way communication
+      window.getCesiumCameraPosition = function () {
+        if (!window.cesiumViewer || window.cesiumViewer.isDestroyed()) {
+          console.warn("Cesium viewer is not initialized or has been destroyed");
+          return null;
+        }
+        
+        try {
+          const camera = window.cesiumViewer.camera;
+          const ellipsoid = Cesium.Ellipsoid.WGS84;
+          const cartographic = ellipsoid.cartesianToCartographic(
+            camera.position
+          );
+
+          if (!cartographic) {
+            return null;
+          }
+
+          return {
+            lat: Cesium.Math.toDegrees(cartographic.latitude),
+            lng: Cesium.Math.toDegrees(cartographic.longitude),
+            height: cartographic.height,
+            heading: Cesium.Math.toDegrees(camera.heading),
+            pitch: Cesium.Math.toDegrees(camera.pitch),
+          };
+        } catch (error) {
+          console.error("Error getting camera position:", error);
+          return null;
+        }
+      };
+    </script>
+  </body>
+</html>

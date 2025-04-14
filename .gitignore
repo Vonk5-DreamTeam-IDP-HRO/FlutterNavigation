@@ -1,24 +1,79 @@
-# Miscellaneous
+# Config files
+config.js
+
+# Logs
+logs/
+*.log
+
+# Build output
+dist/
+build/
+out/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Editor/IDE files
+.idea/
+*.iml
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Compiled files
+*.pyc
+__pycache__/
+
+# Testing
+coverage/
+test-results/
+
+# Misc
+*.bak
+*.tmp
+*.temp
 *.class
 *.lock
-*.log
-*.pyc
-*.swp
-.buildlog/
-.history
 
+# IntelliJ related
+*.ipr
+*.iws
 
+# Visual Studio Code related
+.classpath
+.project
+.settings/
+.vscode/*
+.ccls-cache
+
+# This file, on the master branch, should never exist or be checked-in.
+# On a *final* release branch, that is, what will ship to stable or beta, the
+# file can be force added (git add --force) and checked-in in order to effectively
+# "pin" the engine artifact version so the flutter tool does not need to use git
+# to determine the engine artifacts.
+# See https://github.com/flutter/flutter/blob/main/docs/tool/Engine-artifacts.md.
+/bin/internal/engine.version
 
 # Flutter repo-specific
 /bin/cache/
 /bin/internal/bootstrap.bat
 /bin/internal/bootstrap.sh
+/bin/internal/engine.realm
 /bin/mingit/
 /dev/benchmarks/mega_gallery/
 /dev/bots/.recipe_deps
 /dev/bots/android_tools/
 /dev/devicelab/ABresults*.json
 /dev/docs/doc/
+/dev/docs/api_docs.zip
 /dev/docs/flutter.docs.zip
 /dev/docs/lib/
 /dev/docs/pubspec.yaml
@@ -39,6 +94,7 @@ analysis_benchmark.json
 **/generated_plugin_registrant.dart
 .packages
 .pub-preload-cache/
+.pub-cache/
 .pub/
 build/
 flutter_*.png
@@ -56,6 +112,11 @@ unlinked_spec.ds
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+local.properties
+**/.cxx/
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
@@ -95,11 +156,13 @@ unlinked_spec.ds
 **/xcuserdata/
 
 # Windows
+**/windows/flutter/ephemeral/
 **/windows/flutter/generated_plugin_registrant.cc
 **/windows/flutter/generated_plugin_registrant.h
 **/windows/flutter/generated_plugins.cmake
 
 # Linux
+**/linux/flutter/ephemeral/
 **/linux/flutter/generated_plugin_registrant.cc
 **/linux/flutter/generated_plugin_registrant.h
 **/linux/flutter/generated_plugins.cmake
@@ -117,3 +180,7 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+!/dev/ci/**/Gemfile.lock
+!.vscode/settings.json
+
+# Monorepo
