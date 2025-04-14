@@ -7,19 +7,19 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class SaveScreen extends StatefulWidget {
   const SaveScreen({super.key});
-  
+
   @override
   State<SaveScreen> createState() => _SaveScreenState();
 }
 
 Future<String> loadHtmlContent() async {
   try {
-    String htmlContentCesium =
+    final String htmlContentCesium =
         await rootBundle.loadString('lib/services/Cesium.html');
     return htmlContentCesium;
   } catch (e) {
     if (kDebugMode) {
-      print("Error loading HTML content: $e");
+      print('Error loading HTML content: $e');
     }
     rethrow;
   }
@@ -27,22 +27,22 @@ Future<String> loadHtmlContent() async {
 
 class _SaveScreenState extends State<SaveScreen> {
   final MapController _mapController = MapController();
-  final LatLng _center = LatLng(51.92, 4.48); // Rotterdam coordinates
+  final LatLng _center = const LatLng(51.92, 4.48); // Rotterdam coordinates
   bool _cesiumLoaded = false;
   bool _cesiumReady = false;
-  
+
   late final WebViewController _controller;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     _initWebView();
-    
+
     // Set up periodic check for Cesium readiness
     Future.delayed(const Duration(seconds: 2), _checkCesiumReady);
   }
-  
+
   void _initWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -55,35 +55,35 @@ class _SaveScreenState extends State<SaveScreen> {
           },
           onWebResourceError: (error) {
             if (kDebugMode) {
-              print("WebView error: ${error.description}");
+              print('WebView error: ${error.description}');
             }
           },
         ),
       );
-      
+
     loadHtmlContent().then((htmlContent) {
       _controller.loadHtmlString(htmlContent);
     }).catchError((error) {
       if (kDebugMode) {
-        print("Error loading HTML content: $error");
+        print('Error loading HTML content: $error');
       }
     });
   }
-  
+
   // Check if Cesium is fully initialized and ready
   // This is for preventing that Cesium is not ready when the user clicks on the button
   // to move the camera to the center of Rotterdam
   Future<void> _checkCesiumReady() async {
     if (!_cesiumLoaded) return;
-    
+
     try {
       final result = await _controller.runJavaScriptReturningResult(
           'window.isCesiumReady ? "ready" : "not-ready"');
-      
+
       final isReady = result.toString().contains('ready');
       if (isReady && !_cesiumReady) {
         setState(() => _cesiumReady = true);
-        
+
         // Once ready, synchronize the map positions
         _moveCesiumCamera(_center.latitude, _center.longitude, 14.0);
       } else if (!isReady) {
@@ -92,12 +92,12 @@ class _SaveScreenState extends State<SaveScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Error checking Cesium ready state: $e");
+        print('Error checking Cesium ready state: $e');
       }
       Future.delayed(const Duration(seconds: 2), _checkCesiumReady);
     }
   }
-  
+
   // Method to move the Cesium camera
   Future<void> _moveCesiumCamera(double lat, double lng, double zoom) async {
     try {
@@ -105,11 +105,11 @@ class _SaveScreenState extends State<SaveScreen> {
           'if (window.updateCesiumCamera) { updateCesiumCamera($lat, $lng, $zoom); }');
     } catch (e) {
       if (kDebugMode) {
-        print("Error moving Cesium camera: $e");
+        print('Error moving Cesium camera: $e');
       }
     }
   }
-  
+
   // Method to get current Cesium camera position
   // This is used to synchronize the map and Cesium views
   // This is possibly needed in the future.
@@ -117,17 +117,17 @@ class _SaveScreenState extends State<SaveScreen> {
     try {
       final result = await _controller.runJavaScriptReturningResult(
           'JSON.stringify(window.getCesiumCameraPosition ? getCesiumCameraPosition() : null)');
-      
-      if (result == "null") return null;
-      
+
+      if (result == 'null') return null;
+
       // Parse the JSON string and convert to Map
       final String jsonString = result.toString().replaceAll('"', '');
       final Map<String, dynamic> cameraData = {};
-      
+
       // Extract properties from JSON string (basic parsing)
       final regex = RegExp(r'(\w+):([^,}]+)');
       final matches = regex.allMatches(jsonString);
-      
+
       for (final match in matches) {
         final key = match.group(1);
         final value = match.group(2);
@@ -135,28 +135,28 @@ class _SaveScreenState extends State<SaveScreen> {
           cameraData[key] = double.tryParse(value) ?? value;
         }
       }
-      
+
       return cameraData;
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting camera position: $e");
+        print('Error getting camera position: $e');
       }
       return null;
     }
   }
-  
+
   // Synchronize map and Cesium view
   void _syncMapAndCesium() async {
     final cameraPosition = await _getCesiumCameraPosition();
     if (cameraPosition != null) {
       final lat = cameraPosition['lat'] as double;
       final lng = cameraPosition['lng'] as double;
-      
+
       // Update flutter_map position
       _mapController.move(LatLng(lat, lng), _mapController.camera.zoom);
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,7 +177,7 @@ class _SaveScreenState extends State<SaveScreen> {
           // This is a WebView that loads the Cesium HTML content
           // and displays the 3D map and with all the selected layers.
           WebViewWidget(controller: _controller),
-          
+
           // Loading indicator
           if (!_cesiumReady)
             const Center(
@@ -190,7 +190,7 @@ class _SaveScreenState extends State<SaveScreen> {
                 ],
               ),
             ),
-          
+
           // Navigation controls
           Positioned(
             bottom: 16,
@@ -199,17 +199,18 @@ class _SaveScreenState extends State<SaveScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 FloatingActionButton(
-                  heroTag: "home",
+                  heroTag: 'home',
                   onPressed: () {
                     // Move both map controllers to center
                     _mapController.move(_center, 14.0);
-                    _moveCesiumCamera(_center.latitude, _center.longitude, 14.0);
+                    _moveCesiumCamera(
+                        _center.latitude, _center.longitude, 14.0);
                   },
                   child: const Icon(Icons.home),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton(
-                  heroTag: "refresh",
+                  heroTag: 'refresh',
                   onPressed: () {
                     _controller.reload();
                     setState(() {

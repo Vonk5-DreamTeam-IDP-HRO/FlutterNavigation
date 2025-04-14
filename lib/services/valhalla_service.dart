@@ -7,13 +7,13 @@ import 'package:latlong2/latlong.dart';
 class ValhallaService {
   // URL of your Valhalla server
   final String _baseUrl;
-  
+
   /// Constructor for ValhallaService
   /// [baseUrl] is the URL of the Valhalla server. Default is 'http://145.24.222.95:8002'
   /// This gives the freedom to set a different server URL if needed.
-  ValhallaService({String? baseUrl}) 
+  ValhallaService({String? baseUrl})
       : _baseUrl = baseUrl ?? 'http://145.24.222.95:8002';
-  
+
   /// Main functions of API for requesting optimized routes
   /// Must contain a list of LatLng points (at least 2) to be optimized
   /// Returns a Map with the route information from Valhalla
@@ -23,30 +23,27 @@ class ValhallaService {
     if (waypoints.length < 2) {
       throw Exception('At least 2 waypoints are required');
     }
-    
+
     try {
       // Format waypoints for Valhalla
-      final locations = waypoints.map((point) => {
-        'lon': point.longitude,
-        'lat': point.latitude
-      }).toList();
-      
+      final locations = waypoints
+          .map((point) => {'lon': point.longitude, 'lat': point.latitude})
+          .toList();
+
       // Create Valhalla request body
       final requestBody = {
         'locations': locations,
-        'costing': 'pedestrian',  // Can be auto, bicycle, pedestrian, etc.
-        'directions_options': {
-          'units': 'kilometers'
-        }
+        'costing': 'pedestrian', // Can be auto, bicycle, pedestrian, etc.
+        'directions_options': {'units': 'kilometers'}
       };
-      
+
       // Send request to Valhalla server
       final response = await http.post(
         Uri.parse('$_baseUrl/route'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
-      
+
       if (response.statusCode == 200) {
         final routeData = jsonDecode(response.body);
         final encodedPolyline = routeData['trip']['legs'][0]['shape'] as String;
@@ -63,12 +60,12 @@ class ValhallaService {
       rethrow;
     }
   }
-  
-     // Decode the polyline from Valhalla (similar to the JS function)
+
+  // Decode the polyline from Valhalla (similar to the JS function)
   List<LatLng> decodePolyline(String encoded, {int precision = 6}) {
-    List<LatLng> points = [];
+    final List<LatLng> points = [];
     int index = 0;
-    int len = encoded.length;
+    final int len = encoded.length;
     int lat = 0, lng = 0;
 
     while (index < len) {
@@ -80,7 +77,7 @@ class ValhallaService {
         shift += 5;
       } while (b >= 0x20);
 
-      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      final int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lat += dlat;
 
       shift = 0;
@@ -92,10 +89,10 @@ class ValhallaService {
         shift += 5;
       } while (b >= 0x20);
 
-      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      final int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lng += dlng;
 
-      double factor = pow(10, precision).toDouble();
+      final double factor = pow(10, precision).toDouble();
       points.add(LatLng(lat / factor, lng / factor));
     }
 

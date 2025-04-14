@@ -2,3 +2,14 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
+    always_declare_return_types: true
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_final_locals: true
+    unnecessary_this: true
+    sort_pub_dependencies: true
+    avoid_unnecessary_containers: true
+    avoid_empty_else: true
+    prefer_single_quotes: true
+    curly_braces_in_flow_control_structures: true
