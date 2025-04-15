@@ -12,7 +12,7 @@ class ValhallaService {
   /// [baseUrl] is the URL of the Valhalla server. Default is 'http://145.24.222.95:8002'
   /// This gives the freedom to set a different server URL if needed.
   ValhallaService({String? baseUrl})
-      : _baseUrl = baseUrl ?? 'http://145.24.222.95:8002';
+    : _baseUrl = baseUrl ?? 'http://145.24.222.95:8002';
 
   /// Main functions of API for requesting optimized routes
   /// Must contain a list of LatLng points (at least 2) to be optimized
@@ -26,15 +26,16 @@ class ValhallaService {
 
     try {
       // Format waypoints for Valhalla
-      final locations = waypoints
-          .map((point) => {'lon': point.longitude, 'lat': point.latitude})
-          .toList();
+      final locations =
+          waypoints
+              .map((point) => {'lon': point.longitude, 'lat': point.latitude})
+              .toList();
 
       // Create Valhalla request body
       final requestBody = {
         'locations': locations,
         'costing': 'pedestrian', // Can be auto, bicycle, pedestrian, etc.
-        'directions_options': {'units': 'kilometers'}
+        'directions_options': {'units': 'kilometers'},
       };
 
       // Send request to Valhalla server
@@ -48,10 +49,7 @@ class ValhallaService {
         final routeData = jsonDecode(response.body);
         final encodedPolyline = routeData['trip']['legs'][0]['shape'] as String;
         final decodedPolyline = decodePolyline(encodedPolyline);
-        return {
-          'route': routeData,
-          'decodedPolyline': decodedPolyline,
-        };
+        return {'route': routeData, 'decodedPolyline': decodedPolyline};
       } else {
         throw Exception('Failed to get route: ${response.statusCode}');
       }
@@ -61,7 +59,7 @@ class ValhallaService {
     }
   }
 
-  // Decode the polyline from Valhalla (similar to the JS function)
+  // Decode the polyline from Valhalla (similar to the JS function given in the docs on official website)
   List<LatLng> decodePolyline(String encoded, {int precision = 6}) {
     final List<LatLng> points = [];
     int index = 0;

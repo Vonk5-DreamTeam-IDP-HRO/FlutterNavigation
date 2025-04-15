@@ -1,12 +1,12 @@
 name: osm_navigation
 description: A new Flutter project. Trying out implementing IDP
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 0.0.1+1
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.7.0
 
 dependencies:
   english_words: ^4.0.0
@@ -22,11 +22,9 @@ dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - lib/services/Cesium.html
+    - assets/Cesium.html
 
 dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
-
-  

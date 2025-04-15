@@ -5,7 +5,8 @@ import 'package:osm_navigation/core/navigation/navigation.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
-/// 
+///
+
 void main() {
   runApp(const MyApp());
 }
@@ -15,7 +16,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure AppState is provided
     return ChangeNotifierProvider(
       create: (context) => AppState(),
       child: MaterialApp(
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
-        home: MainScreen.instance(),
+        home: const MainScreen(),
       ),
     );
   }

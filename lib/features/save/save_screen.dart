@@ -14,8 +14,9 @@ class SaveScreen extends StatefulWidget {
 
 Future<String> loadHtmlContent() async {
   try {
-    final String htmlContentCesium =
-        await rootBundle.loadString('lib/services/Cesium.html');
+    final String htmlContentCesium = await rootBundle.loadString(
+      'lib/services/Cesium.html',
+    );
     return htmlContentCesium;
   } catch (e) {
     if (kDebugMode) {
@@ -44,30 +45,33 @@ class _SaveScreenState extends State<SaveScreen> {
   }
 
   void _initWebView() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color.fromARGB(0, 0, 0, 0))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) {
-            setState(() => _cesiumLoaded = true);
-            _checkCesiumReady();
-          },
-          onWebResourceError: (error) {
-            if (kDebugMode) {
-              print('WebView error: ${error.description}');
-            }
-          },
-        ),
-      );
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setBackgroundColor(const Color.fromARGB(0, 0, 0, 0))
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onPageFinished: (_) {
+                setState(() => _cesiumLoaded = true);
+                _checkCesiumReady();
+              },
+              onWebResourceError: (error) {
+                if (kDebugMode) {
+                  print('WebView error: ${error.description}');
+                }
+              },
+            ),
+          );
 
-    loadHtmlContent().then((htmlContent) {
-      _controller.loadHtmlString(htmlContent);
-    }).catchError((error) {
-      if (kDebugMode) {
-        print('Error loading HTML content: $error');
-      }
-    });
+    loadHtmlContent()
+        .then((htmlContent) {
+          _controller.loadHtmlString(htmlContent);
+        })
+        .catchError((error) {
+          if (kDebugMode) {
+            print('Error loading HTML content: $error');
+          }
+        });
   }
 
   // Check if Cesium is fully initialized and ready
@@ -78,7 +82,8 @@ class _SaveScreenState extends State<SaveScreen> {
 
     try {
       final result = await _controller.runJavaScriptReturningResult(
-          'window.isCesiumReady ? "ready" : "not-ready"');
+        'window.isCesiumReady ? "ready" : "not-ready"',
+      );
 
       final isReady = result.toString().contains('ready');
       if (isReady && !_cesiumReady) {
@@ -102,7 +107,8 @@ class _SaveScreenState extends State<SaveScreen> {
   Future<void> _moveCesiumCamera(double lat, double lng, double zoom) async {
     try {
       await _controller.runJavaScript(
-          'if (window.updateCesiumCamera) { updateCesiumCamera($lat, $lng, $zoom); }');
+        'if (window.updateCesiumCamera) { updateCesiumCamera($lat, $lng, $zoom); }',
+      );
     } catch (e) {
       if (kDebugMode) {
         print('Error moving Cesium camera: $e');
@@ -116,7 +122,8 @@ class _SaveScreenState extends State<SaveScreen> {
   Future<Map<String, dynamic>?> _getCesiumCameraPosition() async {
     try {
       final result = await _controller.runJavaScriptReturningResult(
-          'JSON.stringify(window.getCesiumCameraPosition ? getCesiumCameraPosition() : null)');
+        'JSON.stringify(window.getCesiumCameraPosition ? getCesiumCameraPosition() : null)',
+      );
 
       if (result == 'null') return null;
 
@@ -186,7 +193,7 @@ class _SaveScreenState extends State<SaveScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Loading 3D map...')
+                  Text('Loading 3D map...'),
                 ],
               ),
             ),
@@ -204,7 +211,10 @@ class _SaveScreenState extends State<SaveScreen> {
                     // Move both map controllers to center
                     _mapController.move(_center, 14.0);
                     _moveCesiumCamera(
-                        _center.latitude, _center.longitude, 14.0);
+                      _center.latitude,
+                      _center.longitude,
+                      14.0,
+                    );
                   },
                   child: const Icon(Icons.home),
                 ),

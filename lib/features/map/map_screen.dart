@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 
 class MapScreen extends StatefulWidget {
-  // We don't need this parameter anymore as we're using AppState
   const MapScreen({super.key});
 
   @override
@@ -41,29 +40,24 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Valhalla Navigation'),
-      ),
+      appBar: AppBar(title: const Text('Valhalla Navigation')),
       body: Column(
         children: [
           if (_tripSummary.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(_tripSummary,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                _tripSummary,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-          ),
+          const Padding(padding: EdgeInsets.all(8.0)),
 
           // Map in the middle (expanding to fill space)
           Expanded(
             child: FlutterMap(
               mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _center,
-                initialZoom: 13.0,
-              ),
+              options: MapOptions(initialCenter: _center, initialZoom: 13.0),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -73,16 +67,19 @@ class _MapScreenState extends State<MapScreen> {
                 // Display all waypoint markers
                 if (_waypoints.isNotEmpty)
                   MarkerLayer(
-                    markers: _waypoints
-                        .map((point) => Marker(
-                              point: point,
-                              child: const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 30,
+                    markers:
+                        _waypoints
+                            .map(
+                              (point) => Marker(
+                                point: point,
+                                child: const Icon(
+                                  Icons.location_pin,
+                                  color: Colors.red,
+                                  size: 30,
+                                ),
                               ),
-                            ))
-                        .toList(),
+                            )
+                            .toList(),
                   ),
 
                 // Display route polyline if available
@@ -123,8 +120,9 @@ class _MapScreenState extends State<MapScreen> {
         _waypointsData.first,
       ];
 
-      final response =
-          await _valhallaService.getOptimizedRoute(roundTripWaypoints);
+      final response = await _valhallaService.getOptimizedRoute(
+        roundTripWaypoints,
+      );
 
       if (response.containsKey('trip') &&
           response['trip'].containsKey('legs')) {
@@ -132,8 +130,9 @@ class _MapScreenState extends State<MapScreen> {
 
         for (var leg in response['trip']['legs']) {
           if (leg.containsKey('shape')) {
-            final List<LatLng> legPoints =
-                _valhallaService.decodePolyline(leg['shape']);
+            final List<LatLng> legPoints = _valhallaService.decodePolyline(
+              leg['shape'],
+            );
             allPoints.addAll(legPoints);
           }
         }
@@ -161,10 +160,7 @@ class _MapScreenState extends State<MapScreen> {
           final bounds = LatLngBounds.fromPoints(allPoints);
 
           _mapController.fitCamera(
-            CameraFit.bounds(
-              bounds: bounds,
-              padding: const EdgeInsets.all(50),
-            ),
+            CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
           );
         }
       }
