@@ -283,6 +283,75 @@
           return null;
         }
       };
+
+      // --- Function to display a route polyline received from Flutter ---
+      let currentRouteEntity = null; // Keep track of the current route entity
+
+      window.showRouteOnMap = function(polylineData) {
+        const viewer = window.cesiumViewer; // Use the global viewer reference
+        if (!viewer || viewer.isDestroyed()) {
+          console.error("Cesium viewer not ready or destroyed.");
+          return;
+        }
+        console.log("Received route data:", polylineData);
+
+        // Remove previous route if it exists
+        if (currentRouteEntity) {
+          viewer.entities.remove(currentRouteEntity);
+          currentRouteEntity = null;
+          console.log("Previous route removed.");
+        }
+
+        if (!polylineData || !Array.isArray(polylineData) || polylineData.length < 2) {
+           console.warn("Invalid or insufficient polyline data received. Cannot draw route.");
+           return;
+        }
+
+        try {
+          // Convert {lat, lng} array to Cesium Cartesian3 positions
+          const positions = polylineData.map(p => {
+             if (typeof p.lng !== 'number' || typeof p.lat !== 'number') {
+                 throw new Error(`Invalid coordinate in polyline: ${JSON.stringify(p)}`);
+             }
+             return Cesium.Cartesian3.fromDegrees(p.lng, p.lat);
+          });
+
+            // Add the new polyline entity
+            currentRouteEntity = viewer.entities.add({
+            name: 'Valhalla Route',
+            polyline: {
+              positions: positions,
+              width: 10, // Line width in pixels
+              material: new Cesium.GridMaterialProperty({
+              lineCount: new Cesium.Cartesian2(20, 0),
+              cellAlpha: 0,
+              lineOffset: new Cesium.Cartesian2(0, 0.5),
+              lineThickness: new Cesium.Cartesian2(10, 0)
+              }),
+              clampToGround: false, // Drape the line onto the terrain
+              // depthFailMaterial: Cesium.Color.DODGERBLUE.withAlpha(0.3) // Optional: Style when behind terrain
+            }
+            });
+            console.log("New route entity added.");
+
+          // Optional: Fly camera to the newly added route
+          viewer.flyTo(currentRouteEntity).then(() => {
+             console.log("Camera flew to the new route.");
+          }).catch(error => {
+             console.error("Error flying camera to route:", error);
+          });
+
+        } catch (error) {
+            console.error("Error processing or drawing route polyline:", error);
+            // Clean up partially added entity if error occurred mid-process
+            if (currentRouteEntity) {
+               viewer.entities.remove(currentRouteEntity);
+               currentRouteEntity = null;
+            }
+        }
+      };
+      // --- End of showRouteOnMap function ---
+
     </script>
   </body>
 </html>
