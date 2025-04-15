@@ -283,6 +283,50 @@
           return null;
         }
       };
+
+      // Function to display a Valhalla route polyline
+      window.displayValhallaRoute = function(polylinePointsJson) {
+        if (!window.cesiumViewer || window.cesiumViewer.isDestroyed()) {
+          console.warn("Cesium viewer not initialized or destroyed");
+          return;
+        }
+
+        try {
+          const polylinePoints = JSON.parse(polylinePointsJson);
+          if (!Array.isArray(polylinePoints) || polylinePoints.length === 0) {
+            console.warn("Invalid or empty polyline data received.");
+            return;
+          }
+
+          // Convert LatLng points to Cesium Cartesian3 positions
+          const positions = polylinePoints.map(p => Cesium.Cartesian3.fromDegrees(p.lng, p.lat));
+
+          // Remove previous route entity if it exists (using a specific ID)
+          const existingRoute = window.cesiumViewer.entities.getById('valhallaRoute');
+          if (existingRoute) {
+            window.cesiumViewer.entities.remove(existingRoute);
+          }
+
+          // Add the new route polyline
+          window.cesiumViewer.entities.add({
+            id: 'valhallaRoute', // Assign an ID for easy removal later
+            polyline: {
+              positions: positions,
+              width: 5,
+              material: Cesium.Color.DODGERBLUE, // Use a distinct color
+              clampToGround: true // Ensure the line follows the terrain
+            }
+          });
+
+          // Optional: Fly the camera to view the entire route
+          // window.cesiumViewer.flyTo(window.cesiumViewer.entities.getById('valhallaRoute'));
+
+          console.log("Valhalla route displayed successfully.");
+
+        } catch (error) {
+          console.error("Error displaying Valhalla route:", error);
+        }
+      };
     </script>
   </body>
 </html>

@@ -47,11 +47,30 @@ class ValhallaService {
 
       if (response.statusCode == 200) {
         final routeData = jsonDecode(response.body);
-        final encodedPolyline = routeData['trip']['legs'][0]['shape'] as String;
-        final decodedPolyline = decodePolyline(encodedPolyline);
-        return {'route': routeData, 'decodedPolyline': decodedPolyline};
+        final List<LatLng> fullDecodedPolyline = [];
+
+        // Iterate through all legs and decode/combine their shapes
+        if (routeData.containsKey('trip') && routeData['trip'].containsKey('legs')) {
+          final legs = routeData['trip']['legs'] as List;
+          for (var leg in legs) {
+            if (leg.containsKey('shape')) {
+              final encodedPolyline = leg['shape'] as String;
+              final decodedLegPolyline = decodePolyline(encodedPolyline);
+              fullDecodedPolyline.addAll(decodedLegPolyline);
+            }
+          }
+        }
+
+        // Remove duplicate points that might occur at the connection between legs
+        final uniquePolyline = fullDecodedPolyline.toSet().toList();
+
+        return {'route': routeData, 'decodedPolyline': uniquePolyline};
       } else {
-        throw Exception('Failed to get route: ${response.statusCode}');
+        // Provide more detailed error information
+        final errorBody = jsonDecode(response.body);
+        final errorMessage = errorBody['error'] ?? 'Unknown error';
+        final errorCode = errorBody['error_code'] ?? response.statusCode;
+        throw Exception('Failed to get route: [$errorCode] $errorMessage');
       }
     } catch (e) {
       debugPrint('Valhalla routing error: $e');

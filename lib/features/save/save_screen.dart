@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert'; // Added for JSON encoding
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import '../map/services/valhalla_service.dart'; // Import ValhallaService
 
 class SaveScreen extends StatefulWidget {
   const SaveScreen({super.key});
@@ -15,7 +17,7 @@ class SaveScreen extends StatefulWidget {
 Future<String> loadHtmlContent() async {
   try {
     final String htmlContentCesium = await rootBundle.loadString(
-      'lib/services/Cesium.html',
+      'assets/Cesium.html',
     );
     return htmlContentCesium;
   } catch (e) {
@@ -31,8 +33,20 @@ class _SaveScreenState extends State<SaveScreen> {
   final LatLng _center = const LatLng(51.92, 4.48); // Rotterdam coordinates
   bool _cesiumLoaded = false;
   bool _cesiumReady = false;
+  bool _isLoadingRoute = false; // Added to track route loading state
 
   late final WebViewController _controller;
+  final ValhallaService _valhallaService = ValhallaService(); // Instantiate ValhallaService
+
+  // Waypoint data to use when route is requested
+  final List<LatLng> _waypointsData = [
+    const LatLng(51.9201, 4.4869), // Markthal
+    const LatLng(51.9249, 4.4692), // Centraal Station
+    const LatLng(51.9206, 4.4733), // Schouwburgplein
+    const LatLng(51.9135, 4.4879), // Boompjeskade
+    const LatLng(51.9093, 4.4884), // Erasmusbrug
+    const LatLng(51.9144, 4.4735), // Museum Boijmans
+  ];
 
   @override
   void initState() {
@@ -164,6 +178,40 @@ class _SaveScreenState extends State<SaveScreen> {
     }
   }
 
+  // Function to load and display the Valhalla route
+  Future<void> _loadAndDisplayValhallaRoute() async {
+    if (!_cesiumReady || _isLoadingRoute) return; // Prevent multiple calls
+
+    setState(() => _isLoadingRoute = true); // Show loading indicator
+
+    try {
+      final routeResult = await _valhallaService.getOptimizedRoute(_waypointsData);
+      final decodedPolyline = routeResult['decodedPolyline'] as List<LatLng>;
+
+      // Convert LatLng list to JSON string suitable for JavaScript
+      final polylineJson = jsonEncode(
+        decodedPolyline.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
+      );
+
+      // Call the JavaScript function in Cesium to display the route
+      await _controller.runJavaScript(
+        'if (window.displayValhallaRoute) { window.displayValhallaRoute(\'$polylineJson\'); }',
+      );
+
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading or displaying Valhalla route: $e');
+      }
+      // Optionally show an error message to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load route: $e')),
+      );
+    } finally {
+      setState(() => _isLoadingRoute = false); // Hide loading indicator
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,6 +277,19 @@ class _SaveScreenState extends State<SaveScreen> {
                     });
                   },
                   child: const Icon(Icons.refresh),
+                ),
+                const SizedBox(height: 8), // Add space
+                FloatingActionButton(
+                  heroTag: 'valhalla_route',
+                  onPressed: _loadAndDisplayValhallaRoute,
+                  tooltip: 'Load Valhalla Route',
+                  child: _isLoadingRoute
+                      ? const SizedBox( // Show progress indicator when loading
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.route), // Show route icon otherwise
                 ),
               ],
             ),
