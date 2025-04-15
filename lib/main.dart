@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 // Corrected import path for AppState
 import 'package:osm_navigation/providers/app_state.dart';
 // Import for the moved MainScreen
-import 'package:osm_navigation/navigation/main_screen.dart';
+import 'package:osm_navigation/navigation/navigation.dart';
 
 void main() {
   runApp(const MyApp());

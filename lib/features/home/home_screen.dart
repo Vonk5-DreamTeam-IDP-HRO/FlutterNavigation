@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/providers/app_state.dart'; // Add correct import for AppState
-import 'package:osm_navigation/navigation/main_screen.dart'; // Add correct import for MainScreen
+import 'package:osm_navigation/navigation/navigation.dart'; // Add correct import for MainScreen
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
