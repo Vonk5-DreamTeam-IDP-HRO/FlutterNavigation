@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:osm_navigation/services/valhalla_service.dart';
+import 'package:osm_navigation/features/map/services/valhalla_service.dart';
 import 'package:provider/provider.dart';
 
-import 'package:osm_navigation/providers/app_state.dart'; // Correct import for AppState
+import 'package:osm_navigation/core/providers/app_state.dart';
 
 class MapScreen extends StatefulWidget {
   // We don't need this parameter anymore as we're using AppState

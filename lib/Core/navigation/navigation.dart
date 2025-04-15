@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:osm_navigation/providers/app_state.dart';
+import 'package:osm_navigation/core/providers/app_state.dart'; // Updated path
 import 'package:osm_navigation/features/home/home_screen.dart';
 import 'package:osm_navigation/features/map/map_screen.dart';
 import 'package:osm_navigation/features/save/save_screen.dart';

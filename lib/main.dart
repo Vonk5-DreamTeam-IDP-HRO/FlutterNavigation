@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart';
 
-// Corrected import path for AppState
-import 'package:osm_navigation/providers/app_state.dart';
-// Import for the moved MainScreen
-import 'package:osm_navigation/navigation/navigation.dart';
-
+/// This application is build according the MVVM architectural pattern
+/// https://docs.flutter.dev/app-architecture/guide
+/// 
 void main() {
   runApp(const MyApp());
 }
@@ -24,12 +24,8 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
-        // MainScreen will be defined in navigation/main_screen.dart
         home: MainScreen.instance(),
       ),
     );
   }
 }
-
-// AppState class has been moved to lib/providers/app_state.dart
-// MainScreen and _MainScreenState classes will be moved to lib/navigation/main_screen.dart
