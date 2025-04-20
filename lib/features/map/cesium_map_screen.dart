@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert'; // Added for JSON encoding
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+// import 'package:flutter_map/flutter_map.dart'; // Removed unused import
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import '../map/services/valhalla_service.dart'; // Import ValhallaService
+import 'services/valhalla_service.dart'; // Import ValhallaService - Corrected path
 
-class SaveScreen extends StatefulWidget {
-  const SaveScreen({super.key});
+class CesiumMapScreen extends StatefulWidget {
+  const CesiumMapScreen({super.key});
 
   @override
-  State<SaveScreen> createState() => _SaveScreenState();
+  State<CesiumMapScreen> createState() => _CesiumMapScreenState();
 }
 
 Future<String> loadHtmlContent() async {
@@ -28,15 +28,15 @@ Future<String> loadHtmlContent() async {
   }
 }
 
-class _SaveScreenState extends State<SaveScreen> {
-  final MapController _mapController = MapController();
+class _CesiumMapScreenState extends State<CesiumMapScreen> {
   final LatLng _center = const LatLng(51.92, 4.48); // Rotterdam coordinates
   bool _cesiumLoaded = false;
   bool _cesiumReady = false;
   bool _isLoadingRoute = false; // Added to track route loading state
 
   late final WebViewController _controller;
-  final ValhallaService _valhallaService = ValhallaService(); // Instantiate ValhallaService
+  final ValhallaService _valhallaService =
+      ValhallaService(); // Instantiate ValhallaService
 
   // Waypoint data to use when route is requested
   final List<LatLng> _waypointsData = [
@@ -166,17 +166,7 @@ class _SaveScreenState extends State<SaveScreen> {
     }
   }
 
-  // Synchronize map and Cesium view
-  void _syncMapAndCesium() async {
-    final cameraPosition = await _getCesiumCameraPosition();
-    if (cameraPosition != null) {
-      final lat = cameraPosition['lat'] as double;
-      final lng = cameraPosition['lng'] as double;
-
-      // Update flutter_map position
-      _mapController.move(LatLng(lat, lng), _mapController.camera.zoom);
-    }
-  }
+  // Removed unused _syncMapAndCesium method
 
   // Function to load and display the Valhalla route
   Future<void> _loadAndDisplayValhallaRoute() async {
@@ -185,46 +175,41 @@ class _SaveScreenState extends State<SaveScreen> {
     setState(() => _isLoadingRoute = true); // Show loading indicator
 
     try {
-      final routeResult = await _valhallaService.getOptimizedRoute(_waypointsData);
+      final routeResult = await _valhallaService.getOptimizedRoute(
+        _waypointsData,
+      );
       final decodedPolyline = routeResult['decodedPolyline'] as List<LatLng>;
 
       // Convert LatLng list to JSON string suitable for JavaScript
       final polylineJson = jsonEncode(
-        decodedPolyline.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
+        decodedPolyline
+            .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+            .toList(),
       );
 
       // Call the JavaScript function in Cesium to display the route
       await _controller.runJavaScript(
         'if (window.displayValhallaRoute) { window.displayValhallaRoute(\'$polylineJson\'); }',
       );
-
     } catch (e) {
       if (kDebugMode) {
         print('Error loading or displaying Valhalla route: $e');
       }
       // Optionally show an error message to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load route: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load route: $e')));
     } finally {
       setState(() => _isLoadingRoute = false); // Hide loading indicator
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rotterdam 3D Viewer'),
-        actions: [
-          if (_cesiumReady)
-            IconButton(
-              icon: const Icon(Icons.sync),
-              tooltip: 'Sync 2D and 3D views',
-              onPressed: _syncMapAndCesium,
-            ),
-        ],
+        // Removed unused sync button from actions
       ),
       body: Stack(
         children: [
@@ -256,8 +241,8 @@ class _SaveScreenState extends State<SaveScreen> {
                 FloatingActionButton(
                   heroTag: 'home',
                   onPressed: () {
-                    // Move both map controllers to center
-                    _mapController.move(_center, 14.0);
+                    // Only move Cesium camera now
+                    // _mapController.move(_center, 14.0); // Removed
                     _moveCesiumCamera(
                       _center.latitude,
                       _center.longitude,
@@ -283,13 +268,20 @@ class _SaveScreenState extends State<SaveScreen> {
                   heroTag: 'valhalla_route',
                   onPressed: _loadAndDisplayValhallaRoute,
                   tooltip: 'Load Valhalla Route',
-                  child: _isLoadingRoute
-                      ? const SizedBox( // Show progress indicator when loading
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.route), // Show route icon otherwise
+                  child:
+                      _isLoadingRoute
+                          ? const SizedBox(
+                            // Show progress indicator when loading
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Icon(
+                            Icons.route,
+                          ), // Show route icon otherwise
                 ),
               ],
             ),

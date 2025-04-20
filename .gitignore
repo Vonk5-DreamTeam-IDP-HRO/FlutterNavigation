@@ -184,3 +184,10 @@ app.*.symbols
 !.vscode/settings.json
 
 # Monorepo
+activeContext.md
+productContext.md
+progress.md
+projectBrief.md
+systemPatterns.md
+techContext.md
+lib/core/config/app_config.dart

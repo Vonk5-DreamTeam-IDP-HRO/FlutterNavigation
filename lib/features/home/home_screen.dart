@@ -31,11 +31,13 @@ class HomeScreen extends StatelessWidget {
                         context,
                         listen: false,
                       );
-                      appState.showRouteOnMap();
-
-                      appState.changeTab(MainScreen.mapIndex);
+                      appState.changeTab(
+                        MainScreen.mapIndex,
+                      ); // TODO: Change to CesiumMapScreen index & load route
                     },
-                    child: const Text('View route'),
+                    child: const Text(
+                      'View route',
+                    ), // TODO: Revisit this button's purpose/target
                   ),
                 ],
               ),

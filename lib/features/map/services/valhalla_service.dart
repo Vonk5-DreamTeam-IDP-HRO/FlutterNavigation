@@ -3,16 +3,15 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import '../../../core/config/app_config.dart'; // Import AppConfig
 
 class ValhallaService {
-  // URL of your Valhalla server
-  final String _baseUrl;
+  // Use the configured base URL
+  final String _baseUrl = AppConfig.valhallaUrl;
 
-  /// Constructor for ValhallaService
-  /// [baseUrl] is the URL of the Valhalla server. Default is 'http://145.24.222.95:8002'
-  /// This gives the freedom to set a different server URL if needed.
-  ValhallaService({String? baseUrl})
-    : _baseUrl = baseUrl ?? 'http://145.24.222.95:8002';
+  /// Constructor for ValhallaService.
+  /// The base URL is now read from AppConfig.
+  ValhallaService(); // Removed constructor parameter
 
   /// Main functions of API for requesting optimized routes
   /// Must contain a list of LatLng points (at least 2) to be optimized

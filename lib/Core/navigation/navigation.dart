@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/features/home/home_screen.dart';
 import 'package:osm_navigation/features/map/map_screen.dart';
-import 'package:osm_navigation/features/save/save_screen.dart';
+import 'package:osm_navigation/features/map/cesium_map_screen.dart'; // Updated import path
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
-    const SaveScreen(),
+    const CesiumMapScreen(), // Updated class name
     const Scaffold(
       body: Center(child: Text('Create Route Screen')),
     ), // Placeholder
@@ -38,20 +38,6 @@ class _MainScreenState extends State<MainScreen> {
     final appState = context.watch<AppState>();
     final currentIndex = appState.selectedTabIndex; // Use correct variable name
 
-    // Check if we need to show the route immediately after build
-    // This logic might be better placed within MapScreen listening to AppState
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Use the already fetched appState instance (no need for Provider.of again)
-      // Ensure listen: false if you only need to read state here without rebuilding
-      final appStateReader = context.read<AppState>();
-      if (appStateReader.shouldShowRouteOnMap &&
-          currentIndex == MainScreen.mapIndex) {
-        print(
-          'Navigated to Map tab ($currentIndex), should show route flag is set.',
-        );
-        appStateReader.routeShown();
-      }
-    });
 
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: _screens),
@@ -64,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.save_alt), label: 'Save'),
+          BottomNavigationBarItem(icon: Icon(Icons.public), label: '3D Map'), // Updated label and icon
           BottomNavigationBarItem(
             icon: Icon(Icons.add_road),
             label: 'Create Route',
