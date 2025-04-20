@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/core/navigation/navigation.dart';
@@ -7,7 +8,10 @@ import 'package:osm_navigation/core/navigation/navigation.dart';
 /// https://docs.flutter.dev/app-architecture/guide
 ///
 
-void main() {
+Future<void> main() async {
+  // Load environment variables from .env file
+  // ignore: prefer_single_quotes
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

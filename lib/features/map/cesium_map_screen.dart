@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'dart:convert'; // Added for JSON encoding
+import 'dart:convert';
 import 'package:flutter/material.dart';
-// import 'package:flutter_map/flutter_map.dart'; // Removed unused import
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/config/app_config.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'services/valhalla_service.dart'; // Import ValhallaService - Corrected path
+import 'services/valhalla_service.dart';
 
 class CesiumMapScreen extends StatefulWidget {
   const CesiumMapScreen({super.key});
@@ -38,6 +38,7 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
   final ValhallaService _valhallaService =
       ValhallaService(); // Instantiate ValhallaService
 
+  ///TODO: Remove hardcoded data, require data from correct ViewModel
   // Waypoint data to use when route is requested
   final List<LatLng> _waypointsData = [
     const LatLng(51.9201, 4.4869), // Markthal
@@ -77,9 +78,17 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
             ),
           );
 
+    final cesiumToken = AppConfig.cesiumIonToken;
+
+    /// Takes the HTML content from the assets folder and replaces the token placeholder with the actual token
+    /// This is done to prevent the token from being hardcoded in the HTML file
     loadHtmlContent()
         .then((htmlContent) {
-          _controller.loadHtmlString(htmlContent);
+          final finalHtmlContent = htmlContent.replaceAll(
+            '__CESIUM_TOKEN_PLACEHOLDER__',
+            cesiumToken,
+          );
+          _controller.loadHtmlString(finalHtmlContent);
         })
         .catchError((error) {
           if (kDebugMode) {
@@ -88,9 +97,9 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
         });
   }
 
-  // Check if Cesium is fully initialized and ready
-  // This is for preventing that Cesium is not ready when the user clicks on the button
-  // to move the camera to the center of Rotterdam
+  /// Check if Cesium is fully initialized and ready
+  /// This is for preventing that Cesium is not ready when the user clicks on the button
+  /// to move the camera to the center of Rotterdam
   Future<void> _checkCesiumReady() async {
     if (!_cesiumLoaded) return;
 
@@ -130,9 +139,9 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
     }
   }
 
-  // Method to get current Cesium camera position
-  // This is used to synchronize the map and Cesium views
-  // This is possibly needed in the future.
+  /// Method to get current Cesium camera position
+  /// This is used to synchronize the map and Cesium views
+  /// This is possibly needed in the future for navigation syncing.
   Future<Map<String, dynamic>?> _getCesiumCameraPosition() async {
     try {
       final result = await _controller.runJavaScriptReturningResult(
@@ -165,8 +174,6 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
       return null;
     }
   }
-
-  // Removed unused _syncMapAndCesium method
 
   // Function to load and display the Valhalla route
   Future<void> _loadAndDisplayValhallaRoute() async {
@@ -207,15 +214,12 @@ class _CesiumMapScreenState extends State<CesiumMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rotterdam 3D Viewer'),
-        // Removed unused sync button from actions
-      ),
+      appBar: AppBar(title: const Text('Rotterdam 3D Viewer')),
       body: Stack(
         children: [
-          // 3D Cesium layer with transparent background
-          // This is a WebView that loads the Cesium HTML content
-          // and displays the 3D map and with all the selected layers.
+          /// 3D Cesium layer with transparent background
+          /// This is a WebView that loads the Cesium HTML content
+          /// and displays the 3D map and with all the selected layers.
           WebViewWidget(controller: _controller),
 
           // Loading indicator
