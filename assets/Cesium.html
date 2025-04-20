@@ -49,9 +49,8 @@
     <script>
       console.log("Initializing Cesium with Rotterdam 3D data");
 
-      // Configure Cesium ion
-      Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4NDMzMDlmNC05YmE4LTQxZDEtYTY2OS01NDdjZThkYjU1NjAiLCJpZCI6MjkwOTMyLCJpYXQiOjE3NDM3NzYzNzl9.RNrsjvHimJihaGS_fU6lcO7RUx_G5KLkPuWiRmmFOyk";
+      // Configure Cesium ion - Token will be injected by Flutter
+      Cesium.Ion.defaultAccessToken = "__CESIUM_TOKEN_PLACEHOLDER__";
 
       // Initialize the scene asynchronously
       async function initScene() {

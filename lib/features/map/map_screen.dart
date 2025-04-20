@@ -1,200 +1,120 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:osm_navigation/services/valhalla_service.dart';
 import 'package:provider/provider.dart';
+import './map_viewmodel.dart';
 
-import 'package:osm_navigation/providers/app_state.dart'; // Correct import for AppState
-
-class MapScreen extends StatefulWidget {
-  // We don't need this parameter anymore as we're using AppState
+/// MapScreen: The View component for the map feature.
+///
+/// This widget is implemented as a StatelessWidget according to MVVM principles.
+/// It observes state changes from [MapViewModel] and delegates user interactions
+/// back to the ViewModel.
+class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  final ValhallaService _valhallaService = ValhallaService();
-  final MapController _mapController = MapController();
-
-  //Initial focus point when opening map
-  final LatLng _center = const LatLng(51.92, 4.48);
-
-  //TODO: Fix hardcoded & import data from database
-  //Start with empty waypoints list - will be populated when route is requested
-  List<LatLng> _waypoints = [];
-
-  // Waypoint data to use when route is requested
-  final List<LatLng> _waypointsData = [
-    const LatLng(51.9201, 4.4869), // Markthal
-    const LatLng(51.9249, 4.4692), // Centraal Station
-    const LatLng(51.9206, 4.4733), // Schouwburgplein
-    const LatLng(51.9135, 4.4879), // Boompjeskade
-    const LatLng(51.9093, 4.4884), // Erasmusbrug
-    const LatLng(51.9144, 4.4735), // Museum Boijmans
-  ];
-
-  List<LatLng> _routePoints = [];
-  String _tripSummary = '';
-
-  @override
   Widget build(BuildContext context) {
+    /// Use context.watch<MapViewModel>() here in the build method.
+    /// This ensures the widget rebuilds whenever the MapViewModel calls notifyListeners(),
+    /// keeping the UI synchronized with the state.
+    final viewModel = context.watch<MapViewModel>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Valhalla Navigation'),
-      ),
-      body: Column(
-        children: [
-          if (_tripSummary.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(_tripSummary,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-          ),
-
-          // Map in the middle (expanding to fill space)
-          Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _center,
-                initialZoom: 13.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.osm_navigation',
+        title: const Text('Rotterdam Map (MVVM)'),
+        actions: [
+          // Display a loading indicator in the AppBar when the ViewModel is busy.
+          if (viewModel.isLoading)
+            const Padding(
+              padding: EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 ),
-
-                // Display all waypoint markers
-                if (_waypoints.isNotEmpty)
-                  MarkerLayer(
-                    markers: _waypoints
-                        .map((point) => Marker(
-                              point: point,
-                              child: const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 30,
-                              ),
-                            ))
-                        .toList(),
-                  ),
-
-                // Display route polyline if available
-                if (_routePoints.isNotEmpty)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: _routePoints,
-                        strokeWidth: 4.0,
-                        color: Colors.blue,
-                        strokeJoin: StrokeJoin.round,
-                      ),
-                    ],
-                  ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
-    );
-  }
+      body: Stack(
+        // Stack allows overlaying elements like error messages or loading indicators.
+        children: [
+          FlutterMap(
+            mapController: viewModel.mapController,
+            options: MapOptions(
+              initialCenter: viewModel.currentCenter,
+              initialZoom: viewModel.currentZoom,
+              onPositionChanged: viewModel.onMapPositionChanged,
 
-  Future<void> _getOptimizedRoute() async {
-    // Store context to avoid async gap issues
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    try {
-      // First set the waypoints from the waypoints data
-      if (mounted) {
-        setState(() {
-          _waypoints = List.from(_waypointsData);
-        });
-      }
-
-      final List<LatLng> roundTripWaypoints = [
-        _waypointsData.first,
-        ..._waypointsData,
-        _waypointsData.first,
-      ];
-
-      final response =
-          await _valhallaService.getOptimizedRoute(roundTripWaypoints);
-
-      if (response.containsKey('trip') &&
-          response['trip'].containsKey('legs')) {
-        final List<LatLng> allPoints = [];
-
-        for (var leg in response['trip']['legs']) {
-          if (leg.containsKey('shape')) {
-            final List<LatLng> legPoints =
-                _valhallaService.decodePolyline(leg['shape']);
-            allPoints.addAll(legPoints);
-          }
-        }
-
-        // Extract summary information
-        if (response['trip'].containsKey('summary')) {
-          final summary = response['trip']['summary'];
-          final totalDistance = summary['length'].toStringAsFixed(2);
-          final totalTimeMin = (summary['time'] / 60).round();
-
-          if (mounted) {
-            setState(() {
-              _tripSummary =
-                  'Distance: $totalDistance km, Time: $totalTimeMin minutes';
-            });
-          }
-        }
-        if (mounted) {
-          setState(() {
-            _routePoints = allPoints;
-          });
-        }
-
-        if (allPoints.isNotEmpty) {
-          final bounds = LatLngBounds.fromPoints(allPoints);
-
-          _mapController.fitCamera(
-            CameraFit.bounds(
-              bounds: bounds,
-              padding: const EdgeInsets.all(50),
+              /// TODO: Example for future implementation:
+              /// onTap: (tapPosition, point) => context.read<MapViewModel>().handleMapTap(point),
             ),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching route: $e');
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.osm_navigation',
+              ),
+              // Draw the route polyline based on the data held in the ViewModel.
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: viewModel.routePolyline,
+                    strokeWidth: 5.0,
+                    color: Colors.deepOrange,
+                  ),
+                ],
+              ),
 
-      if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Error fetching route: $e'),
-            backgroundColor: Colors.red,
+              /// TODO: Future extension: Markers could be added here, sourced from viewModel.markers
+              /// MarkerLayer(markers: viewModel.markers),
+            ],
           ),
-        );
-      }
-    }
-  }
+          // Display an error message overlay if the ViewModel reports an error.
+          if (viewModel.errorMessage != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                color: Colors.redAccent.withValues(alpha: 0.8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 8.0,
+                ),
+                child: Text(
+                  viewModel.errorMessage!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          /// TODO: Move this logic to the ViewModel.
+          // Define sample waypoints for demonstration. Replace with actual user input logic later.
+          final List<LatLng> waypoints = [
+            const LatLng(51.9225, 4.47917), // Rotterdam Centraal
+            const LatLng(51.9175, 4.4883), // Markthal
+            const LatLng(51.9230, 4.4670), // Euromast
+          ];
 
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final appState = Provider.of<AppState>(context, listen: false);
-
-        if (appState.shouldShowRouteOnMap) {
-          _getOptimizedRoute();
-          appState.routeShown();
-        }
-      }
-    });
+          /// Use context.read<MapViewModel>() within callbacks like onPressed.
+          /// This accesses the ViewModel to call methods without listening for changes,
+          /// preventing unnecessary rebuilds of this widget when the action is triggered.
+          context.read<MapViewModel>().fetchRoute(waypoints);
+        },
+        tooltip: 'Fetch Sample Route',
+        child: const Icon(Icons.route),
+      ),
+    );
   }
 }

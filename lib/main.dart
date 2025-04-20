@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart';
 
-// Corrected import path for AppState
-import 'package:osm_navigation/providers/app_state.dart';
-// Import for the moved MainScreen
-import 'package:osm_navigation/navigation/main_screen.dart';
+/// This application is build according the MVVM architectural pattern
+/// https://docs.flutter.dev/app-architecture/guide
+///
 
-void main() {
+Future<void> main() async {
+  // Ensure Flutter bindings are initialized before using plugins or async operations.
+  // This is especially important when using plugins that must be loaded before the app starts.
+  // For example, if you are using plugins that require native code. Kotlin or Swift.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables from .env file
+  await dotenv.load(fileName: '.env');
   runApp(const MyApp());
 }
 
@@ -15,7 +24,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure AppState is provided
     return ChangeNotifierProvider(
       create: (context) => AppState(),
       child: MaterialApp(
@@ -24,12 +32,8 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
-        // MainScreen will be defined in navigation/main_screen.dart
-        home: MainScreen.instance(),
+        home: const MainScreen(),
       ),
     );
   }
 }
-
-// AppState class has been moved to lib/providers/app_state.dart
-// MainScreen and _MainScreenState classes will be moved to lib/navigation/main_screen.dart
