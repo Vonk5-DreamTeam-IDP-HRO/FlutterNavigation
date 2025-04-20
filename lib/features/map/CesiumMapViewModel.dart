@@ -12,8 +12,7 @@ class CesiumMapViewModel extends ChangeNotifier {
   // --- Dependencies ---
   final ValhallaService _valhallaService = ValhallaService();
   late final WebViewController _webViewController;
-  WebViewController get webViewController =>
-      _webViewController;
+  WebViewController get webViewController => _webViewController;
 
   // --- State ---
   bool _isCesiumLoaded = false;
@@ -220,7 +219,8 @@ class CesiumMapViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-// --- Public Actions for View ---
+
+  // --- Public Actions for View ---
   void reloadWebView() {
     _isCesiumLoaded = false;
     _isCesiumReady = false;

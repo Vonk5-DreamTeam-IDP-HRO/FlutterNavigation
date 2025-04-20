@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/features/home/home_screen.dart';
-import 'package:osm_navigation/features/home/home_viewmodel.dart';
+import 'package:osm_navigation/features/home/new_home_screen.dart';
+import 'package:osm_navigation/features/saved_routes/saved_routes_screen.dart';
+import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/map/map_screen.dart';
 import 'package:osm_navigation/features/map/map_viewmodel.dart';
-import 'package:osm_navigation/features/map/cesium_map_screen.dart';
-import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
+import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
+import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
+import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
+import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -29,25 +32,35 @@ class MainScreen extends StatefulWidget {
 /// TODO: Build CreateRouteView and CreateRouteViewModel
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
-    // Provide HomeViewModel to the HomeScreen subtree.
+    // 0: Home Screen
     ChangeNotifierProvider(
-      create: (_) => HomeViewModel(),
-      child: const HomeScreen(),
+      create: (_) => NewHomeViewModel(),
+      child: const NewHomeScreen(),
     ),
-    // Provide CesiumMapViewModel to the CesiumMapScreen subtree.
-    ChangeNotifierProvider(
-      create: (_) => CesiumMapViewModel(),
-      child: const CesiumMapScreen(),
-    ),
-    const Scaffold(
-      body: Center(child: Text('Create Route Screen')),
-    ), // Placeholder
 
+    // 1: Saved Routes Screen - Now providing SavedRoutesViewModel
+    ChangeNotifierProvider(
+      create: (_) => SavedRoutesViewModel(),
+      child: const SavedRoutesScreen(),
+    ),
+
+    // 2: Create Route Screen
+    ChangeNotifierProvider(
+      create: (_) => CreateRouteViewModel(),
+      child: const CreateRouteScreen(),
+    ),
+
+    // 3: Map Screen (2D Map)
     ChangeNotifierProvider(
       create: (_) => MapViewModel(),
       child: const MapScreen(),
     ),
-    const SettingsScreen(),
+
+    // 4: Settings Screen
+    ChangeNotifierProvider(
+      create: (_) => SettingsViewModel(),
+      child: const SettingsScreen(),
+    ),
   ];
 
   @override
@@ -66,13 +79,26 @@ class _MainScreenState extends State<MainScreen> {
           context.read<AppState>().changeTab(index);
         },
         items: const [
+          // 0: Home
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.public), label: '3D Map'),
+          // 1: Save routes
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_road),
+            icon: Icon(Icons.save_alt_outlined),
+            label: 'Save routes',
+          ), // Changed icon and label
+          // 2: Create Route
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.add_circle_outline,
+            ), // Using a standard add icon for now
             label: 'Create Route',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+          // 3: Show Map
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map_outlined),
+            label: 'Show Map',
+          ), // Changed label, adjusted icon
+          // 4: Settings
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',

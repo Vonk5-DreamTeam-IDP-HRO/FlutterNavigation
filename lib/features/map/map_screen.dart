@@ -14,9 +14,9 @@ class MapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /// Use context.watch<MapViewModel>() here in the build method.
-    /// This ensures the widget rebuilds whenever the MapViewModel calls notifyListeners(),
-    /// keeping the UI synchronized with the state.
+    // Use context.watch<MapViewModel>() here in the build method.
+    // This ensures the widget rebuilds whenever the MapViewModel calls notifyListeners(),
+    // keeping the UI synchronized with the state.
     final viewModel = context.watch<MapViewModel>();
 
     return Scaffold(
@@ -50,27 +50,28 @@ class MapScreen extends StatelessWidget {
               initialZoom: viewModel.currentZoom,
               onPositionChanged: viewModel.onMapPositionChanged,
 
-              /// TODO: Example for future implementation:
-              /// onTap: (tapPosition, point) => context.read<MapViewModel>().handleMapTap(point),
+              // TODO: Example for future implementation:
+              // onTap: (tapPosition, point) => context.read<MapViewModel>().handleMapTap(point),
             ),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.osm_navigation',
               ),
-              // Draw the route polyline based on the data held in the ViewModel.
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: viewModel.routePolyline,
-                    strokeWidth: 5.0,
-                    color: Colors.deepOrange,
-                  ),
-                ],
-              ),
+              // Only draw the PolylineLayer if the routePolyline is not empty
+              if (viewModel.routePolyline.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: viewModel.routePolyline,
+                      strokeWidth: 5.0,
+                      color: Colors.deepOrange,
+                    ),
+                  ],
+                ),
 
-              /// TODO: Future extension: Markers could be added here, sourced from viewModel.markers
-              /// MarkerLayer(markers: viewModel.markers),
+              // TODO: Future extension: Markers could be added here, sourced from viewModel.markers
+              // MarkerLayer(markers: viewModel.markers),
             ],
           ),
           // Display an error message overlay if the ViewModel reports an error.
@@ -99,7 +100,7 @@ class MapScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          /// TODO: Move this logic to the ViewModel.
+          // TODO: Move this logic to the ViewModel.
           // Define sample waypoints for demonstration. Replace with actual user input logic later.
           final List<LatLng> waypoints = [
             const LatLng(51.9225, 4.47917), // Rotterdam Centraal
@@ -107,9 +108,9 @@ class MapScreen extends StatelessWidget {
             const LatLng(51.9230, 4.4670), // Euromast
           ];
 
-          /// Use context.read<MapViewModel>() within callbacks like onPressed.
-          /// This accesses the ViewModel to call methods without listening for changes,
-          /// preventing unnecessary rebuilds of this widget when the action is triggered.
+          // Use context.read<MapViewModel>() within callbacks like onPressed.
+          // This accesses the ViewModel to call methods without listening for changes,
+          // preventing unnecessary rebuilds of this widget when the action is triggered.
           context.read<MapViewModel>().fetchRoute(waypoints);
         },
         tooltip: 'Fetch Sample Route',
