@@ -20,7 +20,8 @@ class CesiumMapScreen extends StatelessWidget {
     // This avoids passing context directly into the ViewModel
     // We use addPostFrameCallback to ensure the build is complete before showing SnackBar
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (viewModel.errorMessage != null && ModalRoute.of(context)?.isCurrent == true) {
+      if (viewModel.errorMessage != null &&
+          ModalRoute.of(context)?.isCurrent == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(viewModel.errorMessage!),
@@ -61,32 +62,40 @@ class CesiumMapScreen extends StatelessWidget {
               children: [
                 FloatingActionButton(
                   heroTag: 'home_3d', // Ensure unique heroTags
-                  onPressed: () => context.read<CesiumMapViewModel>().moveCameraToHome(),
+                  onPressed:
+                      () =>
+                          context.read<CesiumMapViewModel>().moveCameraToHome(),
                   tooltip: 'Go to Home View',
                   child: const Icon(Icons.home),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton(
                   heroTag: 'refresh_3d', // Ensure unique heroTags
-                  onPressed: () => context.read<CesiumMapViewModel>().reloadWebView(),
+                  onPressed:
+                      () => context.read<CesiumMapViewModel>().reloadWebView(),
                   tooltip: 'Refresh Map',
                   child: const Icon(Icons.refresh),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton(
                   heroTag: 'valhalla_route_3d', // Ensure unique heroTags
-                  onPressed: () => context.read<CesiumMapViewModel>().loadAndDisplayRoute(),
+                  onPressed:
+                      () =>
+                          context
+                              .read<CesiumMapViewModel>()
+                              .loadAndDisplayRoute(),
                   tooltip: 'Load Valhalla Route',
-                  child: viewModel.isLoadingRoute
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.route),
+                  child:
+                      viewModel.isLoadingRoute
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Icon(Icons.route),
                 ),
               ],
             ),
