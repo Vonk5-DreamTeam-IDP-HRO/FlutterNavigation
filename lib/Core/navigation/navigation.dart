@@ -6,6 +6,7 @@ import 'package:osm_navigation/features/home/home_viewmodel.dart';
 import 'package:osm_navigation/features/map/map_screen.dart';
 import 'package:osm_navigation/features/map/map_viewmodel.dart';
 import 'package:osm_navigation/features/map/cesium_map_screen.dart';
+import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -33,7 +34,11 @@ class _MainScreenState extends State<MainScreen> {
       create: (_) => HomeViewModel(),
       child: const HomeScreen(),
     ),
-    const CesiumMapScreen(), // Updated class name
+    // Provide CesiumMapViewModel to the CesiumMapScreen subtree.
+    ChangeNotifierProvider(
+      create: (_) => CesiumMapViewModel(),
+      child: const CesiumMapScreen(),
+    ),
     const Scaffold(
       body: Center(child: Text('Create Route Screen')),
     ), // Placeholder
