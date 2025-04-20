@@ -9,6 +9,7 @@ import 'package:osm_navigation/features/map/map_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
 import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
+import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart'; // Import the service
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
 
@@ -29,7 +30,6 @@ class MainScreen extends StatefulWidget {
 
 /// Provide the MapViewModel specifically to the MapScreen subtree.
 /// This creates a new MapViewModel instance when MainScreen builds.
-/// TODO: Build CreateRouteView and CreateRouteViewModel
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     // 0: Home Screen
@@ -38,9 +38,13 @@ class _MainScreenState extends State<MainScreen> {
       child: const NewHomeScreen(),
     ),
 
-    // 1: Saved Routes Screen - Now providing SavedRoutesViewModel
+    // 1: Saved Routes Screen
     ChangeNotifierProvider(
-      create: (_) => SavedRoutesViewModel(),
+      // Create the ApiService and pass it to the ViewModel
+      // Instantiate the service here to ensure it's available for the ViewModel
+      create: (_) => SavedRoutesViewModel(
+        apiService: RouteApiService(), 
+      ),
       child: const SavedRoutesScreen(),
     ),
 
