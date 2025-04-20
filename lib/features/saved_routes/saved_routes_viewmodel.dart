@@ -1,38 +1,29 @@
 import 'package:flutter/material.dart';
-
-// TODO: Define a RouteModel class to represent route data structure
-// For now, using a simple Map or a placeholder class
-// This class might be moved to a common 'models' directory later
-class RouteSummary {
-  final String id;
-  final String title;
-  final String subtitle;
-
-  RouteSummary({required this.id, required this.title, required this.subtitle});
-}
+import 'package:osm_navigation/core/models/app_route.dart';
+import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
 
 /// SavedRoutesViewModel: Manages the state and logic for the Saved Routes screen.
 class SavedRoutesViewModel extends ChangeNotifier {
+  // --- Dependencies ---
+  final RouteApiService _apiService;
+
   // --- State ---
+  List<AppRoute> _routes = []; // Use AppRoute model
+  List<AppRoute> get routes => List.unmodifiable(_routes);
 
-  // testDataSet
-  final List<RouteSummary> _routes = [
-    RouteSummary(
-      id: 'route_1',
-      title: 'Route_1',
-      subtitle: 'Along best places in R"dam',
-    ),
-  ];
-  List<RouteSummary> get routes => List.unmodifiable(_routes);
-
-  bool _isLoading = false;
+  bool _isLoading = true; // Start loading initially
   bool get isLoading => _isLoading;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
   // --- Initialization ---
-  SavedRoutesViewModel() {}
+  // Constructor requires the ApiService
+  // Fetch routes when the ViewModel is created
+  SavedRoutesViewModel({required RouteApiService apiService})
+    : _apiService = apiService {
+    fetchRoutes();
+  }
 
   // --- Actions ---
 
@@ -41,13 +32,9 @@ class SavedRoutesViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-
     try {
-      // TODO: Fetch routes from the backend
-      // Right now it is using hardcoded data in _routes
-      // If fetching fails, set _errorMessage
+      // Fetch routes from the backend API service
+      _routes = await _apiService.getAllRoutes();
     } catch (e) {
       _errorMessage = 'Failed to load routes: $e';
     } finally {

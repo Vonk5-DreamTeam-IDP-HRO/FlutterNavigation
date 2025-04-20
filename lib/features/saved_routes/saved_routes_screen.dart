@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
+import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
 import './saved_routes_viewmodel.dart';
 
@@ -66,8 +68,8 @@ class SavedRoutesScreen extends StatelessWidget {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.route_outlined),
-                title: Text(route.title),
-                subtitle: Text(route.subtitle),
+                title: Text(route.name),
+                subtitle: Text(route.description),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -78,7 +80,7 @@ class SavedRoutesScreen extends StatelessWidget {
                       onPressed: () {
                         // Use read() in callbacks to trigger ViewModel actions.
                         context.read<SavedRoutesViewModel>().editRoute(
-                          route.id,
+                          route.routeId.toString(),
                         );
                       },
                       child: const Text('Edit'),
@@ -86,8 +88,17 @@ class SavedRoutesScreen extends StatelessWidget {
                     const SizedBox(width: 8), // Spacing between buttons
                     TextButton(
                       onPressed: () {
-                        context.read<SavedRoutesViewModel>().viewRoute(
-                          route.id,
+                        // Navigate to the Cesium 3D Map screen
+                        // TODO: Pass route.id and modify CesiumMapViewModel to load the specific route
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ChangeNotifierProvider(
+                                  create: (_) => CesiumMapViewModel(),
+                                  child: const CesiumMapScreen(),
+                                ),
+                          ),
                         );
                       },
                       child: const Text('View Route'),
