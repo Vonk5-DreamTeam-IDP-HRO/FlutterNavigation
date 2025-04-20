@@ -3,20 +3,16 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import '../../../core/config/app_config.dart'; // Import AppConfig
+import '../../../core/config/app_config.dart';
 
 class ValhallaService {
   // Use the configured base URL
   final String _baseUrl = AppConfig.valhallaUrl;
-
-  /// Constructor for ValhallaService.
-  /// The base URL is now read from AppConfig.
-  ValhallaService(); // Removed constructor parameter
+  ValhallaService();
 
   /// Main functions of API for requesting optimized routes
   /// Must contain a list of LatLng points (at least 2) to be optimized
   /// Returns a Map with the route information from Valhalla
-  ///
   /// TODO: Add more get-function for different route options
   Future<Map<String, dynamic>> getOptimizedRoute(List<LatLng> waypoints) async {
     if (waypoints.length < 2) {
@@ -49,7 +45,8 @@ class ValhallaService {
         final List<LatLng> fullDecodedPolyline = [];
 
         // Iterate through all legs and decode/combine their shapes
-        if (routeData.containsKey('trip') && routeData['trip'].containsKey('legs')) {
+        if (routeData.containsKey('trip') &&
+            routeData['trip'].containsKey('legs')) {
           final legs = routeData['trip']['legs'] as List;
           for (var leg in legs) {
             if (leg.containsKey('shape')) {
