@@ -105,10 +105,10 @@
           try {
             const rotterdamTerrainProvider =
               await Cesium.CesiumTerrainProvider.fromUrl(
-                "https://www.3drotterdam.nl/datasource-data/d60bdba8-c40b-42e2-bc47-78c8adabbb29" , // Rotterdam Terrein-actueel
+                "https://www.3drotterdam.nl/datasource-data/d60bdba8-c40b-42e2-bc47-78c8adabbb29", // Rotterdam Terrein-actueel
                 {
                   requestVertexNormals: true,
-                              }
+                }
               );
             viewer.scene.terrainProvider = rotterdamTerrainProvider;
             console.log("Rotterdam terrain layer added successfully");
@@ -120,7 +120,8 @@
               terrainError
             );
             try {
-              viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
+              viewer.scene.terrainProvider =
+                await Cesium.createWorldTerrainAsync();
               console.log("World terrain provider set successfully");
             } catch (worldTerrainError) {
               console.warn("Failed to set world terrain:", worldTerrainError);
@@ -158,7 +159,6 @@
             }
           }
 
-          
           try {
             console.log("Attempting to Load in Rotterdam bridges...");
             const tilesetBridgesTextured = await Cesium.Cesium3DTileset.fromUrl(
@@ -255,10 +255,12 @@
       // Add a method to get current camera position for two-way communication
       window.getCesiumCameraPosition = function () {
         if (!window.cesiumViewer || window.cesiumViewer.isDestroyed()) {
-          console.warn("Cesium viewer is not initialized or has been destroyed");
+          console.warn(
+            "Cesium viewer is not initialized or has been destroyed"
+          );
           return null;
         }
-        
+
         try {
           const camera = window.cesiumViewer.camera;
           const ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -286,7 +288,7 @@
       // --- Function to display a route polyline received from Flutter ---
       let currentRouteEntity = null; // Keep track of the current route entity
 
-      window.showRouteOnMap = function(polylineData) {
+      window.showRouteOnMap = function (polylineData) {
         const viewer = window.cesiumViewer; // Use the global viewer reference
         if (!viewer || viewer.isDestroyed()) {
           console.error("Cesium viewer not ready or destroyed.");
@@ -301,56 +303,162 @@
           console.log("Previous route removed.");
         }
 
-        if (!polylineData || !Array.isArray(polylineData) || polylineData.length < 2) {
-           console.warn("Invalid or insufficient polyline data received. Cannot draw route.");
-           return;
+        if (
+          !polylineData ||
+          !Array.isArray(polylineData) ||
+          polylineData.length < 2
+        ) {
+          console.warn(
+            "Invalid or insufficient polyline data received. Cannot draw route."
+          );
+          return;
         }
 
         try {
           // Convert {lat, lng} array to Cesium Cartesian3 positions
-          const positions = polylineData.map(p => {
-             if (typeof p.lng !== 'number' || typeof p.lat !== 'number') {
-                 throw new Error(`Invalid coordinate in polyline: ${JSON.stringify(p)}`);
-             }
-             return Cesium.Cartesian3.fromDegrees(p.lng, p.lat);
+          const positions = polylineData.map((p) => {
+            if (typeof p.lng !== "number" || typeof p.lat !== "number") {
+              throw new Error(
+                `Invalid coordinate in polyline: ${JSON.stringify(p)}`
+              );
+            }
+            return Cesium.Cartesian3.fromDegrees(p.lng, p.lat);
           });
 
-            // Add the new polyline entity
-            currentRouteEntity = viewer.entities.add({
-            name: 'Valhalla Route',
+          // Add the new polyline entity
+          currentRouteEntity = viewer.entities.add({
+            name: "Valhalla Route",
             polyline: {
               positions: positions,
-              width: 10, // Line width in pixels
+              width: 5, // Line width in pixels
               material: new Cesium.GridMaterialProperty({
-              lineCount: new Cesium.Cartesian2(20, 0),
-              cellAlpha: 0,
-              lineOffset: new Cesium.Cartesian2(0, 0.5),
-              lineThickness: new Cesium.Cartesian2(10, 0)
+                color: Cesium.Color.BLUE,
+                lineCount: new Cesium.Cartesian2(20, 0),
+                cellAlpha: 0,
+                lineOffset: new Cesium.Cartesian2(0, 0.2),
+                lineThickness: new Cesium.Cartesian2(5, 0),
               }),
-              clampToGround: false, // Drape the line onto the terrain
+              clampToGround: true, // Drape the line onto the terrain
               // depthFailMaterial: Cesium.Color.DODGERBLUE.withAlpha(0.3) // Optional: Style when behind terrain
-            }
-            });
-            console.log("New route entity added.");
+            },
+          });
+          console.log("New route entity added.");
 
           // Optional: Fly camera to the newly added route
-          viewer.flyTo(currentRouteEntity).then(() => {
-             console.log("Camera flew to the new route.");
-          }).catch(error => {
-             console.error("Error flying camera to route:", error);
-          });
-
+          viewer
+            .flyTo(currentRouteEntity)
+            .then(() => {
+              console.log("Camera flew to the new route.");
+            })
+            .catch((error) => {
+              console.error("Error flying camera to route:", error);
+            });
         } catch (error) {
-            console.error("Error processing or drawing route polyline:", error);
-            // Clean up partially added entity if error occurred mid-process
-            if (currentRouteEntity) {
-               viewer.entities.remove(currentRouteEntity);
-               currentRouteEntity = null;
-            }
+          console.error("Error processing or drawing route polyline:", error);
+          // Clean up partially added entity if error occurred mid-process
+          if (currentRouteEntity) {
+            viewer.entities.remove(currentRouteEntity);
+            currentRouteEntity = null;
+          }
         }
       };
       // --- End of showRouteOnMap function ---
 
+      // --- Function to plot individual locations received from Flutter ---
+      let locationEntities = []; // Keep track of location entities
+
+      window.plotLocations = function (locationsData) {
+        const viewer = window.cesiumViewer;
+        if (!viewer || viewer.isDestroyed()) {
+          console.error(
+            "Cesium viewer not ready or destroyed. Cannot plot locations."
+          );
+          return;
+        }
+        console.log("Received locations data:", locationsData);
+
+        // Clear previous location markers
+        if (locationEntities.length > 0) {
+          console.log(
+            `Clearing ${locationEntities.length} previous location markers.`
+          );
+          locationEntities.forEach((entity) => viewer.entities.remove(entity));
+          locationEntities = []; // Reset the array
+        } else {
+          console.log("No previous location markers to clear.");
+        }
+
+        if (
+          !locationsData ||
+          !Array.isArray(locationsData) ||
+          locationsData.length === 0
+        ) {
+          console.warn(
+            "Invalid or empty locations data received. Cannot plot locations."
+          );
+          return;
+        }
+
+        console.log(`Attempting to plot ${locationsData.length} locations.`);
+        try {
+          locationsData.forEach((loc, index) => {
+            // Use 'lon' and 'lat' as specified in the Dart model mapping plan
+            if (
+              typeof loc.lon !== "number" ||
+              typeof loc.lat !== "number" ||
+              typeof loc.name !== "string"
+            ) {
+              console.warn(
+                `Skipping invalid location data at index ${index}:`,
+                loc
+              );
+              return; // Skip this invalid location
+            }
+
+            const position = Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat);
+            const pointEntity = viewer.entities.add({
+              name: loc.name,
+              position: position,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2,
+                // Optional: Disable depth test for points to always be visible
+                // disableDepthTestDistance: Number.POSITIVE_INFINITY
+              },
+              label: {
+                text: loc.name,
+                font: "14pt monospace",
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -12), // Offset label above the point
+                // Optional: Disable depth test for labels
+                // disableDepthTestDistance: Number.POSITIVE_INFINITY
+              },
+            });
+            locationEntities.push(pointEntity); // Track the added entity
+            console.log(`Added point and label for: ${loc.name}`);
+          });
+          console.log(
+            `Successfully plotted ${locationEntities.length} locations.`
+          );
+        } catch (error) {
+          console.error("Error processing or plotting locations:", error);
+          // Attempt to clean up any entities added before the error
+          if (locationEntities.length > 0) {
+            console.log(
+              "Attempting cleanup of partially plotted locations due to error."
+            );
+            locationEntities.forEach((entity) =>
+              viewer.entities.remove(entity)
+            );
+            locationEntities = [];
+          }
+        }
+      };
+      // --- End of plotLocations function ---
     </script>
   </body>
 </html>

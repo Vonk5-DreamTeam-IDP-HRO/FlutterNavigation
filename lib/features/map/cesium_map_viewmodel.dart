@@ -44,6 +44,9 @@ class CesiumMapViewModel extends ChangeNotifier {
     4.48,
   ); // Rotterdam coordinates
 
+  // Keep track of whether we need to plot locations once Cesium is ready
+  bool _pendingLocationPlot = false;
+
   // --- Initialization ---
   CesiumMapViewModel({
     required int routeId,
@@ -132,6 +135,14 @@ class CesiumMapViewModel extends ChangeNotifier {
         notifyListeners();
         // Once ready, move camera to default position
         moveCameraTo(_defaultCenter.latitude, _defaultCenter.longitude, 14.0);
+        
+        // If we have pending locations to plot, do it now
+        if (_pendingLocationPlot && _locations.isNotEmpty) {
+          debugPrint('CesiumMapViewModel: Cesium now ready, plotting pending locations');
+          _plotLocationsOnMap(_locations);
+          // If we've successfully plotted locations, also calculate and display path
+          _calculateAndDisplayPath(_locations);
+        }
       } else {
         // Schedule next check if not ready
         _scheduleNextReadinessCheck();
@@ -200,6 +211,15 @@ class CesiumMapViewModel extends ChangeNotifier {
       debugPrint(
         'CesiumMapViewModel: Successfully loaded ${_locations.length} locations for route $_routeId',
       );
+      
+      // Check if Cesium is ready before plotting
+      if (_isCesiumReady && _locations.isNotEmpty) {
+        _plotLocationsOnMap(_locations);
+      } else if (_locations.isNotEmpty) {
+        // If not ready, mark that we have pending locations to plot
+        _pendingLocationPlot = true;
+        debugPrint('CesiumMapViewModel: Marking locations for plotting when Cesium is ready');
+      }
     } catch (e) {
       _locationsErrorMessage = 'Failed to load route locations: $e';
       debugPrint(
@@ -208,8 +228,9 @@ class CesiumMapViewModel extends ChangeNotifier {
     } finally {
       _isLoadingLocations = false;
       notifyListeners();
-      // If locations loaded successfully, proceed to calculate and display the path
-      if (_locations.isNotEmpty && _locationsErrorMessage == null) {
+      
+      // Only attempt to calculate path if Cesium is ready
+      if (_locations.isNotEmpty && _locationsErrorMessage == null && _isCesiumReady) {
         _calculateAndDisplayPath(_locations);
       }
     }
@@ -259,6 +280,55 @@ class CesiumMapViewModel extends ChangeNotifier {
     } finally {
       _isLoadingRoute = false;
       notifyListeners();
+    }
+  }
+
+  /// Plots the individual locations on the Cesium map as points with labels.
+  Future<void> _plotLocationsOnMap(List<Location> locations) async {
+    if (!_isCesiumReady) {
+      debugPrint(
+        'CesiumMapViewModel: Cesium not ready, skipping location plotting.',
+      );
+      return;
+    }
+    if (locations.isEmpty) {
+      debugPrint('CesiumMapViewModel: No locations provided to plot.');
+      // Optionally, call JS to clear existing points if needed
+      // await _webViewController.runJavaScript('if (window.plotLocations) { window.plotLocations([]); }');
+      return;
+    }
+
+    try {
+      // Format data for JavaScript: List<Map<String, dynamic>> with 'lat', 'lon', 'name'
+      final locationsJsonData =
+          locations
+              .map(
+                (loc) => {
+                  'lat': loc.latitude,
+                  'lon': loc.longitude,
+                  'name': loc.name,
+                },
+              )
+              .toList();
+
+      final locationsJsonString = jsonEncode(locationsJsonData);
+
+      // Escape the JSON string for safe injection into JavaScript
+      // Note: runJavaScript handles basic escaping, but complex strings might need more care.
+      // For this structure, it should be fine.
+
+      debugPrint(
+        'CesiumMapViewModel: Calling plotLocations with ${locations.length} locations.',
+      );
+      await _webViewController.runJavaScript(
+        'if (window.plotLocations) { window.plotLocations($locationsJsonString); } else { console.error("plotLocations function not found!"); }',
+      );
+      debugPrint('CesiumMapViewModel: Successfully called plotLocations.');
+    } catch (e) {
+      _errorMessage = 'Failed to plot locations on map: $e';
+      debugPrint('CesiumMapViewModel: $_errorMessage');
+      // We might not need to notifyListeners() here unless we want to show this specific error
+      // notifyListeners();
     }
   }
 

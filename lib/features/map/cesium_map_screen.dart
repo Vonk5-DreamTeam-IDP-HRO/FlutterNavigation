@@ -47,13 +47,6 @@ class CesiumMapScreen extends StatelessWidget {
       }
     });
 
-    // Placeholder: Print locations when loaded (replace with actual plotting later)
-    if (!viewModel.isLoadingLocations && viewModel.locations.isNotEmpty) {
-      debugPrint('CesiumMapScreen: Locations loaded: ${viewModel.locations}');
-      // TODO: Call JavaScript to plot viewModel.locations on the map
-      // Example: viewModel.plotLocationsOnMap(viewModel.locations);
-    }
-
     return Scaffold(
       // Update AppBar title dynamically if needed, e.g., show route name
       appBar: AppBar(title: Text('Route $routeId')),
@@ -79,7 +72,7 @@ class CesiumMapScreen extends StatelessWidget {
           if (viewModel.isLoadingLocations || viewModel.isLoadingRoute)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black,
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
