@@ -24,11 +24,7 @@ class Location {
 
   /// Converts this Location instance to a JSON map.
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'latitude': latitude,
-      'longitude': longitude,
-    };
+    return {'name': name, 'latitude': latitude, 'longitude': longitude};
   }
 
   @override
