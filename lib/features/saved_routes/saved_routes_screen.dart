@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
+import 'package:osm_navigation/features/map/cesium_map_viewmodel.dart';
 import 'package:osm_navigation/features/map/cesium_map_screen.dart';
+import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
 import 'package:provider/provider.dart';
 import './saved_routes_viewmodel.dart';
 
@@ -90,13 +91,25 @@ class SavedRoutesScreen extends StatelessWidget {
                       onPressed: () {
                         // Navigate to the Cesium 3D Map screen
                         // TODO: Pass route.id and modify CesiumMapViewModel to load the specific route
+                        // Navigate to CesiumMapScreen, providing the ViewModel with dependencies
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => ChangeNotifierProvider(
-                                  create: (_) => CesiumMapViewModel(),
-                                  child: const CesiumMapScreen(),
+                                (innerContext) => ChangeNotifierProvider(
+                                  create:
+                                      (_) => CesiumMapViewModel(
+                                        routeId: route.routeId,
+                                        // Create a new ApiService instance here.
+                                        // Consider using dependency injection (like get_it or Provider)
+                                        // for better service management in larger apps.
+                                        routeApiService: RouteApiService(),
+                                      ),
+                                  // Pass routeId to the screen as well if needed directly by the screen,
+                                  // though often the ViewModel is sufficient.
+                                  child: CesiumMapScreen(
+                                    routeId: route.routeId,
+                                  ),
                                 ),
                           ),
                         );

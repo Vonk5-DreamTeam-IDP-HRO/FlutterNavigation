@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import './CesiumMapViewModel.dart'; // Import the ViewModel
+import 'cesium_map_viewmodel.dart'; // Import the ViewModel
 
 /// CesiumMapScreen: The View component for the 3D map feature.
 ///
@@ -9,7 +9,8 @@ import './CesiumMapViewModel.dart'; // Import the ViewModel
 /// It observes state changes from [CesiumMapViewModel] and delegates user interactions
 /// back to the ViewModel.
 class CesiumMapScreen extends StatelessWidget {
-  const CesiumMapScreen({super.key});
+  final int routeId;
+  const CesiumMapScreen({required this.routeId, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,21 +21,42 @@ class CesiumMapScreen extends StatelessWidget {
     // This avoids passing context directly into the ViewModel
     // We use addPostFrameCallback to ensure the build is complete before showing SnackBar
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentContext = context; // Capture context
+      if (!currentContext.mounted) return; // Check if widget is still mounted
+
+      // Handle general WebView/Cesium errors
       if (viewModel.errorMessage != null &&
-          ModalRoute.of(context)?.isCurrent == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ModalRoute.of(currentContext)?.isCurrent == true) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
           SnackBar(
-            content: Text(viewModel.errorMessage!),
+            content: Text('Map Error: ${viewModel.errorMessage!}'),
             backgroundColor: Colors.redAccent,
           ),
         );
-        // TODO: Add a method to ViewModel to clear the error message after it's shown
-        // viewModel.clearErrorMessage();
+      }
+
+      // Handle specific location loading errors
+      if (viewModel.locationsErrorMessage != null &&
+          ModalRoute.of(currentContext)?.isCurrent == true) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          SnackBar(
+            content: Text('Route Error: ${viewModel.locationsErrorMessage!}'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
       }
     });
 
+    // Placeholder: Print locations when loaded (replace with actual plotting later)
+    if (!viewModel.isLoadingLocations && viewModel.locations.isNotEmpty) {
+      debugPrint('CesiumMapScreen: Locations loaded: ${viewModel.locations}');
+      // TODO: Call JavaScript to plot viewModel.locations on the map
+      // Example: viewModel.plotLocationsOnMap(viewModel.locations);
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Rotterdam 3D Viewer (MVVM)')),
+      // Update AppBar title dynamically if needed, e.g., show route name
+      appBar: AppBar(title: Text('Route $routeId')),
       body: Stack(
         children: [
           // Display the WebView, controller sourced from ViewModel
@@ -50,6 +72,29 @@ class CesiumMapScreen extends StatelessWidget {
                   SizedBox(height: 16),
                   Text('Loading 3D map...'),
                 ],
+              ),
+            ),
+
+          // Combined loading indicator for fetching locations and calculating route path
+          if (viewModel.isLoadingLocations || viewModel.isLoadingRoute)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        viewModel.isLoadingLocations
+                            ? 'Loading route locations...'
+                            : 'Calculating route path...', // Show different text based on state
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
@@ -75,27 +120,6 @@ class CesiumMapScreen extends StatelessWidget {
                       () => context.read<CesiumMapViewModel>().reloadWebView(),
                   tooltip: 'Refresh Map',
                   child: const Icon(Icons.refresh),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton(
-                  heroTag: 'valhalla_route_3d', // Ensure unique heroTags
-                  onPressed:
-                      () =>
-                          context
-                              .read<CesiumMapViewModel>()
-                              .loadAndDisplayRoute(),
-                  tooltip: 'Load Valhalla Route',
-                  child:
-                      viewModel.isLoadingRoute
-                          ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Icon(Icons.route),
                 ),
               ],
             ),

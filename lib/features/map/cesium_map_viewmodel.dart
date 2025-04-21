@@ -6,11 +6,15 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:latlong2/latlong.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../core/config/app_config.dart';
+import '../../core/models/location.dart';
+import '../saved_routes/services/route_api_service.dart';
 import './services/valhalla_service.dart';
 
 class CesiumMapViewModel extends ChangeNotifier {
   // --- Dependencies ---
   final ValhallaService _valhallaService = ValhallaService();
+  final RouteApiService _routeApiService;
+  final int _routeId;
   late final WebViewController _webViewController;
   WebViewController get webViewController => _webViewController;
 
@@ -27,15 +31,13 @@ class CesiumMapViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // TODO: Make waypoints dynamic, loaded from elsewhere (e.g., user input, backend)
-  final List<LatLng> _waypointsData = [
-    const LatLng(51.9201, 4.4869), // Markthal
-    const LatLng(51.9249, 4.4692), // Centraal Station
-    const LatLng(51.9206, 4.4733), // Schouwburgplein
-    const LatLng(51.9135, 4.4879), // Boompjeskade
-    const LatLng(51.9093, 4.4884), // Erasmusbrug
-    const LatLng(51.9144, 4.4735), // Museum Boijmans
-  ];
+  // State for specific route locations
+  List<Location> _locations = [];
+  List<Location> get locations => List.unmodifiable(_locations);
+  bool _isLoadingLocations = true;
+  bool get isLoadingLocations => _isLoadingLocations;
+  String? _locationsErrorMessage;
+  String? get locationsErrorMessage => _locationsErrorMessage;
 
   final LatLng _defaultCenter = const LatLng(
     51.92,
@@ -43,8 +45,13 @@ class CesiumMapViewModel extends ChangeNotifier {
   ); // Rotterdam coordinates
 
   // --- Initialization ---
-  CesiumMapViewModel() {
+  CesiumMapViewModel({
+    required int routeId,
+    required RouteApiService routeApiService,
+  }) : _routeId = routeId,
+       _routeApiService = routeApiService {
     _initialize();
+    fetchRouteDetails();
   }
 
   Future<void> _initialize() async {
@@ -182,22 +189,55 @@ class CesiumMapViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> loadAndDisplayRoute() async {
-    if (!_isCesiumReady || _isLoadingRoute) return;
-
-    _isLoadingRoute = true;
-    _errorMessage = null;
+  /// Fetches the specific locations for the route associated with this ViewModel instance.
+  Future<void> fetchRouteDetails() async {
+    _isLoadingLocations = true;
+    _locationsErrorMessage = null;
     notifyListeners();
 
     try {
-      final routeResult = await _valhallaService.getOptimizedRoute(
-        _waypointsData,
+      _locations = await _routeApiService.getRouteLocations(_routeId);
+      debugPrint(
+        'CesiumMapViewModel: Successfully loaded ${_locations.length} locations for route $_routeId',
       );
+    } catch (e) {
+      _locationsErrorMessage = 'Failed to load route locations: $e';
+      debugPrint(
+        'CesiumMapViewModel: Error loading locations for route $_routeId: $e',
+      );
+    } finally {
+      _isLoadingLocations = false;
+      notifyListeners();
+      // If locations loaded successfully, proceed to calculate and display the path
+      if (_locations.isNotEmpty && _locationsErrorMessage == null) {
+        _calculateAndDisplayPath(_locations);
+      }
+    }
+  }
+
+  /// Calculates a route using Valhalla based on the provided locations and displays it.
+  Future<void> _calculateAndDisplayPath(List<Location> locations) async {
+    if (!_isCesiumReady) return; // Don't proceed if Cesium isn't ready
+
+    _isLoadingRoute = true; // Reuse state for loading indicator
+    _errorMessage = null; // Clear previous errors
+    notifyListeners();
+
+    try {
+      // Convert Location objects to LatLng for ValhallaService
+      final waypoints =
+          locations.map((loc) => LatLng(loc.latitude, loc.longitude)).toList();
+
+      if (waypoints.length < 2) {
+        throw Exception("At least 2 points are needed to calculate a route.");
+      }
+
+      final routeResult = await _valhallaService.getOptimizedRoute(waypoints);
       final decodedPolyline = routeResult['decodedPolyline'] as List<LatLng>;
 
       if (decodedPolyline.isEmpty) {
-        _errorMessage = 'Route found, but no shape data available.';
-        if (kDebugMode) print(_errorMessage);
+        _errorMessage = 'Route path calculated, but no shape data available.';
+        debugPrint('CesiumMapViewModel: $_errorMessage');
       } else {
         final polylineJson = jsonEncode(
           decodedPolyline
@@ -205,15 +245,17 @@ class CesiumMapViewModel extends ChangeNotifier {
               .toList(),
         );
 
+        // Pass the polylineJson directly, as it's already a valid JSON string literal
         await _webViewController.runJavaScript(
-          'if (window.displayValhallaRoute) { window.displayValhallaRoute(\'$polylineJson\'); }',
+          'if (window.showRouteOnMap) { window.showRouteOnMap($polylineJson); } else { console.error("showRouteOnMap function not found!"); }',
+        );
+        debugPrint(
+          'CesiumMapViewModel: Called showRouteOnMap with polyline data.',
         );
       }
     } catch (e) {
-      _errorMessage = 'Failed to load route: $e';
-      if (kDebugMode) {
-        print(_errorMessage);
-      }
+      _errorMessage = 'Failed to calculate or display route path: $e';
+      debugPrint('CesiumMapViewModel: $_errorMessage');
     } finally {
       _isLoadingRoute = false;
       notifyListeners();
