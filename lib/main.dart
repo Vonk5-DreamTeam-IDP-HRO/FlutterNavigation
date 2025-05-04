@@ -4,6 +4,7 @@ import 'package:osm_navigation/screens/setting_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/screens/home_screen.dart';
 import 'package:osm_navigation/screens/map_screen.dart';
+import 'package:osm_navigation/screens/create_route_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -74,8 +75,7 @@ class _MainScreenState extends State<MainScreen> {
   List<Widget> get _screens => [
         const HomeScreen(),
         const SaveScreen(),
-        const Scaffold(
-            body: Center(child: Text('Create Route Screen'))), // Placeholder
+        const CreateRouteScreen(),
         const MapScreen(),
        const SettingsScreen(),
       ];
