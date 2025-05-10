@@ -10,6 +10,7 @@ import 'package:osm_navigation/features/map/map_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
 import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
+import 'package:dio/dio.dart'; // Import Dio
 import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
 import 'package:osm_navigation/core/services/location_api_service.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
@@ -63,7 +64,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     // 2: Create Route Screen (This is one of the SpeedDial targets)
     ChangeNotifierProvider(
-      create: (_) => CreateRouteViewModel(LocationApiService()),
+      create: (_) => CreateRouteViewModel(LocationApiService(Dio())),
       child: const CreateRouteScreen(),
     ),
 
@@ -125,8 +126,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         curve: Curves.bounceIn,
         overlayColor: Colors.black,
         overlayOpacity: 0.5,
-        onOpen: () => print('SPEED DIAL CHILDREN OPENED'),
-        onClose: () => print('SPEED DIAL CHILDREN CLOSED'),
+        onOpen: () => debugPrint('SPEED DIAL CHILDREN OPENED'),
+        onClose: () => debugPrint('SPEED DIAL CHILDREN CLOSED'),
         tooltip: 'Create Options',
         heroTag:
             'speed-dial-hero-tag', // Still good for animations if any part animates
@@ -149,7 +150,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 context.read<AppState>().changeTab(MainScreen.createRouteIndex);
               }
               _isDialOpen.value = false; // Close dial children
-              print('Create Route tapped');
+              debugPrint('Create Route tapped');
             },
           ),
           SpeedDialChild(

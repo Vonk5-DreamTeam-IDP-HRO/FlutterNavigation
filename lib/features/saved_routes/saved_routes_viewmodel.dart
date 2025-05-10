@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:osm_navigation/core/models/app_route.dart';
+import 'package:osm_navigation/core/models/route.dart' as app_route;
 import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
 
 /// SavedRoutesViewModel: Manages the state and logic for the Saved Routes screen.
@@ -8,9 +8,8 @@ class SavedRoutesViewModel extends ChangeNotifier {
   final RouteApiService _apiService;
 
   // --- State ---
-  List<AppRoute> _routes = []; // Use AppRoute model
-  List<AppRoute> get routes => List.unmodifiable(_routes);
-
+  List<app_route.Route> _routes = [];
+  List<app_route.Route> get routes => List.unmodifiable(_routes);
   bool _isLoading = true; // Start loading initially
   bool get isLoading => _isLoading;
 
