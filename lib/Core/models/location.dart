@@ -5,6 +5,7 @@ class Location {
   final double latitude;
   final double longitude;
   final String? description; // Nullable
+  final String? category; // Added for DTOs that might include it directly
   final String? createdAt; // nullable
   final String? updatedAt; // nullable
 
@@ -15,6 +16,7 @@ class Location {
     required this.latitude,
     required this.longitude,
     this.description,
+    this.category,
     this.createdAt,
     this.updatedAt,
   });
@@ -35,13 +37,15 @@ class Location {
       return null;
     }
 
+    // Backend might use 'locationId' or 'location_id'. Prioritize 'locationId'.
+    final locId = parseInt(json['locationId'] ?? json['location_id']);
     final latValue = parseDouble(json['latitude']);
     final longValue = parseDouble(json['longitude']);
-    final locId = parseInt(json['location_id']);
+    
 
     if (locId == null) {
       throw FormatException(
-        "Invalid or missing 'location_id' in Location JSON: ${json['location_id']}",
+        "Invalid or missing 'locationId' or 'location_id' in Location JSON: ${json['locationId'] ?? json['location_id']}",
       );
     }
     if (json['name'] == null) {
@@ -63,33 +67,36 @@ class Location {
     // this is an key-value pair that matches the Location class properties
     return Location(
       locationId: locId,
-      userId: parseInt(json['user_id']),
+      userId: parseInt(json['userId'] ?? json['user_id']),
       name: json['name'] as String,
       latitude: latValue,
       longitude: longValue,
       description: json['description'] as String?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
+      category: json['category'] as String?, // Added
+      createdAt: json['createdAt'] ?? json['created_at'] as String?,
+      updatedAt: json['updatedAt'] ?? json['updated_at'] as String?,
     );
   }
 
   // returning a new Location object with parsed values
   // reverse Location object to json
   Map<String, dynamic> toJson() {
-    return {
-      'location_id': locationId,
-      'user_id': userId,
+    final map = <String, dynamic>{
+      'locationId': locationId, // Prefer camelCase for JSON consistency if possible
       'name': name,
       'latitude': latitude,
       'longitude': longitude,
-      'description': description,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
     };
+    if (userId != null) map['userId'] = userId;
+    if (description != null) map['description'] = description;
+    if (category != null) map['category'] = category; // Added
+    if (createdAt != null) map['createdAt'] = createdAt;
+    if (updatedAt != null) map['updatedAt'] = updatedAt;
+    return map;
   }
 
   @override
   String toString() {
-    return 'Location(locationId: $locationId, name: $name, latitude: $latitude, longitude: $longitude, userId: $userId, description: $description, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Location(locationId: $locationId, name: $name, latitude: $latitude, longitude: $longitude, userId: $userId, description: $description, category: $category, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
