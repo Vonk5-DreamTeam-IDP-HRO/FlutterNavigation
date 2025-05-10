@@ -1,16 +1,16 @@
-class AppRoute {
+class Route {
   final int routeId;
   final String name;
   final String description;
 
   // Constructor
-  AppRoute({
+  Route({
     required this.routeId,
     required this.name,
     required this.description,
   });
 
-  factory AppRoute.fromJson(Map<String, dynamic> json) {
+  factory Route.fromJson(Map<String, dynamic> json) {
     // TODO: Ensure 'route_id' is not null and is an int before casting.
     // If it can be null or missing, more robust error handling or default values might be needed.
     // It went wrong in the past.
@@ -36,7 +36,7 @@ class AppRoute {
       }
     }
 
-    return AppRoute(
+    return Route(
       routeId: json['route_id'] as int,
       name: json['name'] as String,
       description: json['description'] as String,
