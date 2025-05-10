@@ -27,7 +27,8 @@ class LocationApiException implements Exception {
         errorDataContent = dioError.response?.data;
         if (errorDataContent is Map && errorDataContent.containsKey('title')) {
           errorMessage = errorDataContent['title'];
-        } else if (errorDataContent is Map && errorDataContent.containsKey('message')) {
+        } else if (errorDataContent is Map &&
+            errorDataContent.containsKey('message')) {
           errorMessage = errorDataContent['message'];
         } else if (errorDataContent is String && errorDataContent.isNotEmpty) {
           errorMessage = errorDataContent;
@@ -36,7 +37,7 @@ class LocationApiException implements Exception {
     } else {
       errorMessage = dioError.message ?? 'Network request failed';
     }
-    
+
     // Check for specific DioException types for more tailored messages
     if (dioError.type == DioExceptionType.connectionTimeout ||
         dioError.type == DioExceptionType.sendTimeout ||
@@ -46,18 +47,17 @@ class LocationApiException implements Exception {
       // but we can use the LocationApiNetworkException structure if desired.
       // For simplicity here, we'll use the generic LocationApiException.
     }
-    
-    if (httpStatusCode == 404) {
-        return LocationNotFoundException(
-            dioError.requestOptions.path.contains('/') ? 
-            'Resource at ${dioError.requestOptions.path.substring(dioError.requestOptions.path.lastIndexOf('/') + 1)} not found.' :
-            'Resource not found.', // Generic 404 if path parsing is tricky
-            errorData: errorDataContent,
-            originalException: dioError,
-            stackTrace: dioError.stackTrace,
-        );
-    }
 
+    if (httpStatusCode == 404) {
+      return LocationNotFoundException(
+        dioError.requestOptions.path.contains('/')
+            ? 'Resource at ${dioError.requestOptions.path.substring(dioError.requestOptions.path.lastIndexOf('/') + 1)} not found.'
+            : 'Resource not found.', // Generic 404 if path parsing is tricky
+        errorData: errorDataContent,
+        originalException: dioError,
+        stackTrace: dioError.stackTrace,
+      );
+    }
 
     return LocationApiException(
       errorMessage,
@@ -87,9 +87,7 @@ class LocationNotFoundException extends LocationApiException {
     super.errorData,
     super.stackTrace,
     super.originalException,
-  }) : super(
-          statusCode: 404,
-        );
+  }) : super(statusCode: 404);
 }
 
 class LocationApiNetworkException extends LocationApiException {
@@ -103,9 +101,7 @@ class LocationApiNetworkException extends LocationApiException {
     dynamic errorData,
     super.stackTrace,
     super.originalException,
-  }) : super(
-          errorData: errorData ?? statusMessage,
-        );
+  }) : super(errorData: errorData ?? statusMessage);
 
   @override
   String toString() {
@@ -123,9 +119,9 @@ class LocationApiParseException extends LocationApiException {
     StackTrace? stackTrace,
     dynamic originalException,
   }) : super(
-          'Failed to parse API response: $message',
-          errorData: errorData,
-          stackTrace: stackTrace,
-          originalException: originalException,
-        );
+         'Failed to parse API response: $message',
+         errorData: errorData,
+         stackTrace: stackTrace,
+         originalException: originalException,
+       );
 }

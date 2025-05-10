@@ -41,7 +41,6 @@ class Location {
     final locId = parseInt(json['locationId'] ?? json['location_id']);
     final latValue = parseDouble(json['latitude']);
     final longValue = parseDouble(json['longitude']);
-    
 
     if (locId == null) {
       throw FormatException(
@@ -82,7 +81,8 @@ class Location {
   // reverse Location object to json
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{
-      'locationId': locationId, // Prefer camelCase for JSON consistency if possible
+      'locationId':
+          locationId, // Prefer camelCase for JSON consistency if possible
       'name': name,
       'latitude': latitude,
       'longitude': longitude,

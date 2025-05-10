@@ -4,7 +4,8 @@ import 'opening_time.dart';
 /// Represents detailed information about a location.
 class LocationDetails extends Location {
   // locationId, name, latitude, longitude, description, category are inherited from Location
-  final int? locationDetailsId; // This specific ID for the details record, if separate
+  final int?
+  locationDetailsId; // This specific ID for the details record, if separate
   final String? address;
   final String? city;
   final String? country;
@@ -39,11 +40,12 @@ class LocationDetails extends Location {
   factory LocationDetails.fromJson(Map<String, dynamic> json) {
     var openingTimesList = <OpeningTime>[];
     if (json['openingTimes'] != null && json['openingTimes'] is List) {
-      openingTimesList = (json['openingTimes'] as List)
-          .map((i) => OpeningTime.fromJson(i as Map<String, dynamic>))
-          .toList();
+      openingTimesList =
+          (json['openingTimes'] as List)
+              .map((i) => OpeningTime.fromJson(i as Map<String, dynamic>))
+              .toList();
     }
-    
+
     int? parseInt(dynamic value) {
       if (value is int) return value;
       if (value is String) return int.tryParse(value);
@@ -62,7 +64,9 @@ class LocationDetails extends Location {
       category: categoryFromJson, // Using the explicitly extracted variable
       createdAt: json['createdAt'] ?? json['created_at'] as String?,
       updatedAt: json['updatedAt'] ?? json['updated_at'] as String?,
-      locationDetailsId: parseInt(json['locationDetailsId'] ?? json['location_details_id']),
+      locationDetailsId: parseInt(
+        json['locationDetailsId'] ?? json['location_details_id'],
+      ),
       address: json['address'] as String?,
       city: json['city'] as String?,
       country: json['country'] as String?,
@@ -77,12 +81,12 @@ class LocationDetails extends Location {
   /// Converts this LocationDetails instance to a JSON map.
   @override
   Map<String, dynamic> toJson() {
-    final map = super.toJson(); 
+    final map = super.toJson();
     map.addAll({
       'address': address,
       'city': city,
       'country': country,
-      'zipCode': zipCode, 
+      'zipCode': zipCode,
       'phoneNumber': phoneNumber,
       'website': website,
       'accessibility': accessibility,

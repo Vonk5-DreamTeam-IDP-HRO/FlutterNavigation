@@ -4,11 +4,7 @@ class Route {
   final String description;
 
   // Constructor
-  Route({
-    required this.routeId,
-    required this.name,
-    required this.description,
-  });
+  Route({required this.routeId, required this.name, required this.description});
 
   factory Route.fromJson(Map<String, dynamic> json) {
     // TODO: Ensure 'route_id' is not null and is an int before casting.

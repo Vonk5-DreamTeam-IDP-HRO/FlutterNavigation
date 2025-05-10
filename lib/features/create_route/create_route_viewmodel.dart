@@ -59,7 +59,7 @@ class CreateRouteViewModel extends ChangeNotifier {
           await _locationApiService.getGroupedSelectableLocations();
       _error = null;
     } catch (e) {
-      _error = "Failed to load locations: $e";
+      _error = 'Failed to load locations: $e';
       _groupedLocations = {};
     } finally {
       _isLoading = false;
@@ -87,12 +87,9 @@ class CreateRouteViewModel extends ChangeNotifier {
 
     if (canSave) {
       // In the future, this would trigger the API call
-      print('Validation successful. Ready to save (not implemented).');
-      print('Name: ${nameController.text}');
-      print('Description: ${descriptionController.text}');
-      print('Selected IDs: $_selectedLocationIds');
+      debugPrint('Validation successful. Ready to save (not implemented).');
     } else {
-      print('Validation failed.');
+      debugPrint('Validation failed.');
     }
   }
 

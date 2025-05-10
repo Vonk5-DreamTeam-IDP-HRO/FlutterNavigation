@@ -34,7 +34,10 @@ void main() {
     service = LocationApiService(mockDio);
   });
 
-  Response<List<dynamic>> createSuccessResponse(List<dynamic> data, String fullRequestPath) {
+  Response<List<dynamic>> createSuccessResponse(
+    List<dynamic> data,
+    String fullRequestPath,
+  ) {
     return Response(
       data: data,
       statusCode: 200,
@@ -90,7 +93,10 @@ void main() {
       final result = await service.getGroupedSelectableLocations();
 
       expect(result, isA<Map<String, List<SelectableLocation>>>());
-      expect(result.keys, containsAll(['Category One', 'Category Two', 'Uncategorized']));
+      expect(
+        result.keys,
+        containsAll(['Category One', 'Category Two', 'Uncategorized']),
+      );
       expect(result['Category One']?.length, 1);
       expect(result['Category One']?[0].name, 'Location Alpha');
       expect(result['Category Two']?.length, 1);
@@ -102,80 +108,124 @@ void main() {
       verify(mockDio.get(fullDetailsUrl)).called(1);
     });
 
-    test('throws LocationApiNetworkException if locations API call fails', () async {
-      when(mockDio.get(fullLocationsUrl)).thenThrow(
-        createDioError(statusCode: 404, fullRequestPath: fullLocationsUrl, statusMessage: 'Not Found'),
-      );
-      when(mockDio.get(fullDetailsUrl)).thenAnswer( // This might not be called if Future.wait short-circuits
-        (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
-      );
+    test(
+      'throws LocationApiNetworkException if locations API call fails',
+      () async {
+        when(mockDio.get(fullLocationsUrl)).thenThrow(
+          createDioError(
+            statusCode: 404,
+            fullRequestPath: fullLocationsUrl,
+            statusMessage: 'Not Found',
+          ),
+        );
+        when(mockDio.get(fullDetailsUrl)).thenAnswer(
+          // This might not be called if Future.wait short-circuits
+          (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
+        );
 
-      expect(
-        () => service.getGroupedSelectableLocations(),
-        throwsA(isA<LocationApiNetworkException>().having(
-          (e) => e.statusCode, 'statusCode', 404
-        ).having(
-          (e) => e.message, 'message', contains('Network error during fetching locations')
-        )),
-      );
-      verify(mockDio.get(fullLocationsUrl)).called(1);
-      // verifyNever(mockDio.get(fullDetailsUrl)); // Future.wait behavior can vary
-    });
+        expect(
+          () => service.getGroupedSelectableLocations(),
+          throwsA(
+            isA<LocationApiNetworkException>()
+                .having((e) => e.statusCode, 'statusCode', 404)
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('Network error during fetching locations'),
+                ),
+          ),
+        );
+        verify(mockDio.get(fullLocationsUrl)).called(1);
+        // verifyNever(mockDio.get(fullDetailsUrl)); // Future.wait behavior can vary
+      },
+    );
 
-    test('throws LocationApiNetworkException if details API call fails', () async {
-      when(mockDio.get(fullLocationsUrl)).thenAnswer(
-        (_) async => createSuccessResponse(mockLocationsJson, fullLocationsUrl),
-      );
-      when(mockDio.get(fullDetailsUrl)).thenThrow(
-        createDioError(statusCode: 500, fullRequestPath: fullDetailsUrl, statusMessage: 'Server Error'),
-      );
+    test(
+      'throws LocationApiNetworkException if details API call fails',
+      () async {
+        when(mockDio.get(fullLocationsUrl)).thenAnswer(
+          (_) async =>
+              createSuccessResponse(mockLocationsJson, fullLocationsUrl),
+        );
+        when(mockDio.get(fullDetailsUrl)).thenThrow(
+          createDioError(
+            statusCode: 500,
+            fullRequestPath: fullDetailsUrl,
+            statusMessage: 'Server Error',
+          ),
+        );
 
-      expect(
-        () => service.getGroupedSelectableLocations(),
-        throwsA(isA<LocationApiNetworkException>().having(
-          (e) => e.statusCode, 'statusCode', 500
-        ).having(
-          (e) => e.message, 'message', contains('Network error during fetching location details')
-        )),
-      );
-       verify(mockDio.get(fullLocationsUrl)).called(1);
-       verify(mockDio.get(fullDetailsUrl)).called(1);
-    });
+        expect(
+          () => service.getGroupedSelectableLocations(),
+          throwsA(
+            isA<LocationApiNetworkException>()
+                .having((e) => e.statusCode, 'statusCode', 500)
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('Network error during fetching location details'),
+                ),
+          ),
+        );
+        verify(mockDio.get(fullLocationsUrl)).called(1);
+        verify(mockDio.get(fullDetailsUrl)).called(1);
+      },
+    );
 
-    test('throws LocationApiNetworkException on timeout for locations API', () async {
-      when(mockDio.get(fullLocationsUrl)).thenThrow(createTimeoutDioError(fullLocationsUrl));
-      when(mockDio.get(fullDetailsUrl)).thenAnswer(
-         (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
-      );
+    test(
+      'throws LocationApiNetworkException on timeout for locations API',
+      () async {
+        when(
+          mockDio.get(fullLocationsUrl),
+        ).thenThrow(createTimeoutDioError(fullLocationsUrl));
+        when(mockDio.get(fullDetailsUrl)).thenAnswer(
+          (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
+        );
 
-      expect(
-        () => service.getGroupedSelectableLocations(),
-        throwsA(isA<LocationApiNetworkException>().having(
-          (e) => e.message, 'message', contains('Request timed out during fetching locations')
-        )),
-      );
-    });
+        expect(
+          () => service.getGroupedSelectableLocations(),
+          throwsA(
+            isA<LocationApiNetworkException>().having(
+              (e) => e.message,
+              'message',
+              contains('Request timed out during fetching locations'),
+            ),
+          ),
+        );
+      },
+    );
 
-    test('throws LocationApiParseException if locations response is not a list', () async {
-      when(mockDio.get(fullLocationsUrl)).thenAnswer(
-        (_) async => Response(data: {'not': 'a list'}, statusCode: 200, requestOptions: RequestOptions(path: fullLocationsUrl)),
-      );
-      when(mockDio.get(fullDetailsUrl)).thenAnswer(
-        (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
-      );
+    test(
+      'throws LocationApiParseException if locations response is not a list',
+      () async {
+        when(mockDio.get(fullLocationsUrl)).thenAnswer(
+          (_) async => Response(
+            data: {'not': 'a list'},
+            statusCode: 200,
+            requestOptions: RequestOptions(path: fullLocationsUrl),
+          ),
+        );
+        when(mockDio.get(fullDetailsUrl)).thenAnswer(
+          (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
+        );
 
-      expect(
-        () => service.getGroupedSelectableLocations(),
-        throwsA(isA<LocationApiParseException>().having(
-          (e) => e.message, 'message', 'Invalid format for locations: Expected a List.'
-        )),
-      );
-    });
+        expect(
+          () => service.getGroupedSelectableLocations(),
+          throwsA(
+            isA<LocationApiParseException>().having(
+              (e) => e.message,
+              'message',
+              'Invalid format for locations: Expected a List.',
+            ),
+          ),
+        );
+      },
+    );
 
     test('handles empty list from locations API correctly', () async {
-      when(mockDio.get(fullLocationsUrl)).thenAnswer(
-        (_) async => createSuccessResponse([], fullLocationsUrl),
-      );
+      when(
+        mockDio.get(fullLocationsUrl),
+      ).thenAnswer((_) async => createSuccessResponse([], fullLocationsUrl));
       when(mockDio.get(fullDetailsUrl)).thenAnswer(
         (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),
       );
@@ -185,20 +235,24 @@ void main() {
       expect(result.isEmpty, isTrue);
     });
 
-    test('handles empty list from details API correctly (all locations uncategorized)', () async {
-      when(mockDio.get(fullLocationsUrl)).thenAnswer(
-        (_) async => createSuccessResponse(mockLocationsJson, fullLocationsUrl),
-      );
-      when(mockDio.get(fullDetailsUrl)).thenAnswer(
-        (_) async => createSuccessResponse([], fullDetailsUrl),
-      );
+    test(
+      'handles empty list from details API correctly (all locations uncategorized)',
+      () async {
+        when(mockDio.get(fullLocationsUrl)).thenAnswer(
+          (_) async =>
+              createSuccessResponse(mockLocationsJson, fullLocationsUrl),
+        );
+        when(
+          mockDio.get(fullDetailsUrl),
+        ).thenAnswer((_) async => createSuccessResponse([], fullDetailsUrl));
 
-      final result = await service.getGroupedSelectableLocations();
-      expect(result.keys, contains('Uncategorized'));
-      expect(result['Uncategorized']?.length, mockLocationsJson.length);
-    });
+        final result = await service.getGroupedSelectableLocations();
+        expect(result.keys, contains('Uncategorized'));
+        expect(result['Uncategorized']?.length, mockLocationsJson.length);
+      },
+    );
 
-     test('handles location data with missing id or name gracefully', () async {
+    test('handles location data with missing id or name gracefully', () async {
       final faultyLocationsJson = [
         {'locationid': 1, 'name': 'Location Alpha'},
         {'name': 'Location Missing ID'},
@@ -206,7 +260,8 @@ void main() {
         {'locationid': 4, 'name': 'Location Delta'},
       ];
       when(mockDio.get(fullLocationsUrl)).thenAnswer(
-        (_) async => createSuccessResponse(faultyLocationsJson, fullLocationsUrl),
+        (_) async =>
+            createSuccessResponse(faultyLocationsJson, fullLocationsUrl),
       );
       when(mockDio.get(fullDetailsUrl)).thenAnswer(
         (_) async => createSuccessResponse(mockDetailsJson, fullDetailsUrl),

@@ -18,6 +18,5 @@ class CreateLocationViewModel extends ChangeNotifier {
 
   CreateLocationViewModel() {
     // Initialization logic if needed
-    print('CreateLocationViewModel initialized');
   }
 }

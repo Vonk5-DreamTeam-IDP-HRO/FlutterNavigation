@@ -166,7 +166,7 @@ class CesiumMapViewModel extends ChangeNotifier {
         'JSON.stringify(window.getCesiumCameraPosition ? window.getCesiumCameraPosition() : null)',
       );
 
-      if (result == 'null' || result == null) return null;
+      if (result == 'null') return null;
 
       // More robust JSON parsing
       final dynamic decodedResult = jsonDecode(result.toString());
