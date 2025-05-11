@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/models/route.dart' as app_route;
-import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
 
 /// SavedRoutesViewModel: Manages the state and logic for the Saved Routes screen.
 class SavedRoutesViewModel extends ChangeNotifier {

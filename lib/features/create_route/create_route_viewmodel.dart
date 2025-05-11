@@ -57,7 +57,6 @@ class CreateRouteViewModel extends ChangeNotifier {
   // The method is asynchronous and updates the loading state and error messages accordingly.
   // It also notifies listeners when the state changes.
 
-  /*
   Future<void> loadLocations() async {
     _isLoading = true;
     _error = null;
@@ -77,7 +76,6 @@ class CreateRouteViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-  */
 
   void toggleLocationSelection(int locationId) {
     if (_selectedLocationIds.contains(locationId)) {

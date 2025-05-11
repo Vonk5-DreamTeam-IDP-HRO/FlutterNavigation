@@ -1,6 +1,7 @@
 import 'package:osm_navigation/core/models/location.dart';
 import 'package:osm_navigation/core/models/location_details.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';
+import 'package:osm_navigation/core/models/selectable_location.dart'; // Added import
 
 // --- Interface for the Location API Service ---
 // Defines the contract for location-related API operations.
@@ -26,4 +27,8 @@ abstract class ILocationApiService {
 
   /// Deletes a location by its ID.
   Future<void> deleteLocation(int id);
+
+  /// Fetches selectable locations grouped by their category.
+  /// The map key is the category name, and the value is a list of [SelectableLocation] objects.
+  Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
 }

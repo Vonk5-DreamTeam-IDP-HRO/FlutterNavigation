@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'create_location_viewmodel.dart';
 
 class CreateLocationScreen extends StatefulWidget {
   const CreateLocationScreen({Key? key}) : super(key: key);
@@ -15,14 +17,74 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   String? _category;
 
   @override
+  void dispose() {
+    _addressController.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _submitForm(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      final viewModel = Provider.of<CreateLocationViewModel>(
+        context,
+        listen: false,
+      );
+      viewModel.clearMessages(); // Clear previous messages
+
+      final success = await viewModel.submitLocation(
+        name: _nameController.text,
+        address: _addressController.text,
+        description: _descriptionController.text,
+        category: _category!,
+      );
+
+      if (success) {
+        // Clear form fields
+        _formKey.currentState?.reset();
+        _addressController.clear();
+        _nameController.clear();
+        _descriptionController.clear();
+        setState(() {
+          _category = null;
+        });
+        // Optionally, show success message from ViewModel or navigate away
+        if (mounted && viewModel.successMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(viewModel.successMessage!),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Show error message from ViewModel
+        if (mounted && viewModel.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(viewModel.errorMessage!),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Access the ViewModel
+    final viewModel = Provider.of<CreateLocationViewModel>(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Create Location')),
-      body: Padding(
+      body: SingleChildScrollView(
+        // Added SingleChildScrollView for smaller screens
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
                 controller: _addressController,
@@ -55,7 +117,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
+                  labelText: 'Description (Optional)',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -77,6 +139,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     value: 'attraction',
                     child: Text('Attraction'),
                   ),
+                  // TODO: Add more categories or fetch dynamically
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -91,27 +154,28 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                 },
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Process the data
-                    final address = _addressController.text;
-                    final name = _nameController.text;
-                    final description = _descriptionController.text;
-                    final category = _category!;
-
-                    // You can now use these values to create a location object
-                    // and save it to your data store.
-
-                    // For now, let's just print the values
-                    debugPrint('Address: $address');
-                    debugPrint('Name: $name');
-                    debugPrint('Description: $description');
-                    debugPrint('Category: $category');
-                  }
-                },
-                child: const Text('Create Location'),
-              ),
+              if (viewModel.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  ),
+                  onPressed: () => _submitForm(context),
+                  child: const Text('Create Location'),
+                ),
+              // Display error/success messages from ViewModel if needed,
+              // though SnackBar is used above.
+              // if (viewModel.errorMessage != null)
+              //   Padding(
+              //     padding: const EdgeInsets.only(top: 8.0),
+              //     child: Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
+              //   ),
+              // if (viewModel.successMessage != null && !viewModel.isLoading) // Show success only if not loading
+              //   Padding(
+              //     padding: const EdgeInsets.only(top: 8.0),
+              //     child: Text(viewModel.successMessage!, style: const TextStyle(color: Colors.green)),
+              //   ),
             ],
           ),
         ),
