@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:osm_navigation/core/config/app_config.dart'; // Added import for AppConfig
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/core/navigation/navigation.dart';
@@ -14,8 +15,9 @@ Future<void> main() async {
   // For example, if you are using plugins that require native code. Kotlin or Swift.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  await dotenv.load(fileName: '.env');
+  // Load environment variables from .env file and initialize AppConfig
+  // AppConfig.load() will internally call dotenv.load()
+  await AppConfig.load();
   runApp(const MyApp());
 }
 
