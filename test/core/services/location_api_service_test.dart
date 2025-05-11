@@ -24,7 +24,7 @@ void main() {
 
   setUpAll(() async {
     dotenv.testLoad(fileInput: 'tempREST_API_URL=http://fake-test-api.com');
-    await AppConfig.load();
+    await dotenv.load();
     fullLocationsUrl = '${AppConfig.tempRESTUrl}/$locationsEndpoint';
     fullDetailsUrl = '${AppConfig.tempRESTUrl}/$detailsEndpoint';
   });
@@ -71,7 +71,7 @@ void main() {
     );
   }
 
-/*
+  /*
   group('LocationApiService - getGroupedSelectableLocations', () {
     final mockLocationsJson = [
       {'locationid': 1, 'name': 'Location Alpha'},

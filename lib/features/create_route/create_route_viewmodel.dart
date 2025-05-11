@@ -9,7 +9,15 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // --- Constructor ---
   CreateRouteViewModel(this._locationApiService) {
+    nameController.addListener(_onNameChanged);
     //loadLocations();
+  }
+
+  // --- Private methods for internal event handling ---
+  void _onNameChanged() {
+    // Notify listeners when the name text changes, allowing UI to update
+    // based on properties like isNameValid or canSave.
+    notifyListeners();
   }
 
   // --- State Variables ---
@@ -48,7 +56,7 @@ class CreateRouteViewModel extends ChangeNotifier {
   // It uses the new LocationApiService to fetch the data.
   // The method is asynchronous and updates the loading state and error messages accordingly.
   // It also notifies listeners when the state changes.
-  
+
   /*
   Future<void> loadLocations() async {
     _isLoading = true;
@@ -101,6 +109,7 @@ class CreateRouteViewModel extends ChangeNotifier {
   // Dispose of the controllers to free up resources when the ViewModel is no longer needed
   @override
   void dispose() {
+    nameController.removeListener(_onNameChanged);
     nameController.dispose();
     descriptionController.dispose();
     super.dispose();

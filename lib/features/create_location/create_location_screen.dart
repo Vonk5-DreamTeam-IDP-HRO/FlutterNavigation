@@ -17,9 +17,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Location'),
-      ),
+      appBar: AppBar(title: const Text('Create Location')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -74,10 +72,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     value: 'restaurant',
                     child: Text('Restaurant'),
                   ),
-                  DropdownMenuItem(
-                    value: 'hotel',
-                    child: Text('Hotel'),
-                  ),
+                  DropdownMenuItem(value: 'hotel', child: Text('Hotel')),
                   DropdownMenuItem(
                     value: 'attraction',
                     child: Text('Attraction'),
@@ -100,19 +95,19 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     // Process the data
-                    String address = _addressController.text;
-                    String name = _nameController.text;
-                    String description = _descriptionController.text;
-                    String category = _category!;
+                    final address = _addressController.text;
+                    final name = _nameController.text;
+                    final description = _descriptionController.text;
+                    final category = _category!;
 
                     // You can now use these values to create a location object
                     // and save it to your data store.
 
                     // For now, let's just print the values
-                    print('Address: $address');
-                    print('Name: $name');
-                    print('Description: $description');
-                    print('Category: $category');
+                    debugPrint('Address: $address');
+                    debugPrint('Name: $name');
+                    debugPrint('Description: $description');
+                    debugPrint('Category: $category');
                   }
                 },
                 child: const Text('Create Location'),

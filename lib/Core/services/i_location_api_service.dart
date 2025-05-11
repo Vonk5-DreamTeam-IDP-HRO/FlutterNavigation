@@ -1,4 +1,3 @@
-import 'package:osm_navigation/core/models/selectable_location.dart';
 import 'package:osm_navigation/core/models/location.dart';
 import 'package:osm_navigation/core/models/location_details.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';

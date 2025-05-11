@@ -33,8 +33,8 @@ class CreateRouteScreen extends StatelessWidget {
                 builder: (context, isNameValid, _) {
                   return TextField(
                     controller: viewModel.nameController,
-                    // Add listener directly to controller to trigger validation check
-                    onChanged: (_) => viewModel.notifyListeners(),
+                    // The ViewModel now listens to this controller internally
+                    // and calls notifyListeners() when the text changes.
                     decoration: InputDecoration(
                       labelText: 'Route Name*',
                       hintText: 'Enter the name for your route',

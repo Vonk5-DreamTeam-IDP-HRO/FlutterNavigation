@@ -1,11 +1,8 @@
 import 'dart:async';
-// Still needed for manual parsing if not using dio's transformers extensively for this specific structure
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:collection/collection.dart';
 import 'package:osm_navigation/core/models/location.dart';
 import 'package:osm_navigation/core/models/location_details.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';
 import 'i_location_api_service.dart';
 import 'location_api_exceptions.dart';
