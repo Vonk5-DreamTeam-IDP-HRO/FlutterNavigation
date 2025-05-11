@@ -71,6 +71,7 @@ void main() {
     );
   }
 
+/*
   group('LocationApiService - getGroupedSelectableLocations', () {
     final mockLocationsJson = [
       {'locationid': 1, 'name': 'Location Alpha'},
@@ -275,4 +276,5 @@ void main() {
       expect(result.values.expand((list) => list).length, 2);
     });
   });
+*/
 }

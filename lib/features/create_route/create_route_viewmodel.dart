@@ -9,7 +9,7 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // --- Constructor ---
   CreateRouteViewModel(this._locationApiService) {
-    loadLocations();
+    //loadLocations();
   }
 
   // --- State Variables ---
@@ -42,11 +42,14 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // -- Methods --
 
+  // This method is currently commented out because the API is not ready yet.
   // TODO: Call the correct API method to load grouped locations when API is ready
   // This method loads locations from the API and groups them by category
   // It uses the new LocationApiService to fetch the data.
   // The method is asynchronous and updates the loading state and error messages accordingly.
   // It also notifies listeners when the state changes.
+  
+  /*
   Future<void> loadLocations() async {
     _isLoading = true;
     _error = null;
@@ -66,6 +69,7 @@ class CreateRouteViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+  */
 
   void toggleLocationSelection(int locationId) {
     if (_selectedLocationIds.contains(locationId)) {
