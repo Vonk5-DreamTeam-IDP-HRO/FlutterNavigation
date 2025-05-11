@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'create_location_viewmodel.dart';
 
 class CreateLocationScreen extends StatefulWidget {
   const CreateLocationScreen({Key? key}) : super(key: key);
