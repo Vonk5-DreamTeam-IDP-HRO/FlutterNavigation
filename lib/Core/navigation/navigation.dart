@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/features/home/new_home_screen.dart';
@@ -11,7 +12,6 @@ import 'package:osm_navigation/features/setting/setting_screen.dart';
 import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
 import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
 import 'package:dio/dio.dart'; // Import Dio
-import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
 import 'package:osm_navigation/core/services/location_api_service.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
@@ -83,7 +83,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // 5: Create Location Screen (This is another SpeedDial target)
     // This screen is part of the stack but not directly mapped to a BottomNavBar item.
     ChangeNotifierProvider(
-      create: (_) => CreateLocationViewModel(),
+      create: (_) => CreateLocationViewModel(locationApiService: LocationApiService(Dio())),
       child: const CreateLocationScreen(),
     ),
   ];
@@ -165,7 +165,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 MaterialPageRoute(
                   builder:
                       (context) => ChangeNotifierProvider(
-                        create: (_) => CreateLocationViewModel(),
+                        create: (_) => CreateLocationViewModel(locationApiService: LocationApiService(Dio())),
                         child: const CreateLocationScreen(),
                       ),
                 ),
