@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';
-import 'package:osm_navigation/core/services/location/i_location_api_service.dart';
+import 'package:osm_navigation/core/repositories/i_location_repository.dart';
 import 'package:osm_navigation/core/services/location/location_api_exceptions.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
-  final ILocationApiService _locationApiService;
+  final ILocationRepository _locationRepository;
 
-  CreateLocationViewModel({required ILocationApiService locationApiService})
-    : _locationApiService = locationApiService;
+  CreateLocationViewModel({required ILocationRepository locationRepository})
+    : _locationRepository = locationRepository;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -57,17 +57,16 @@ class CreateLocationViewModel extends ChangeNotifier {
         name: name,
         description: description ?? '', // Ensure description is not null
         latitude:
-            placeholderLatitude, // Still placeholder, geocoding TODO remains
+            placeholderLatitude, // TODO: Still placeholder, geocoding remains
         longitude:
-            placeholderLongitude, // Still placeholder, geocoding TODO remains
+            placeholderLongitude, // TODO: Still placeholder, geocoding todo remains
         details: detailPayload,
       );
-
       debugPrint(
         '[CreateLocationViewModel] Creating location with payload: ${payload.toJson()}',
       );
-      // Assuming createLocation returns the created LocationDetails or similar
-      await _locationApiService.createLocation(payload);
+      // Now using the repository to create the location
+      await _locationRepository.createLocation(payload);
 
       _successMessage = 'Location created successfully!';
       _isLoading = false;

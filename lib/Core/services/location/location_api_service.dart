@@ -5,8 +5,12 @@ import 'package:osm_navigation/core/models/location.dart';
 import 'package:osm_navigation/core/models/location_details.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';
 import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'i_location_api_service.dart';
+import 'ILocationApiService.dart';
 import 'location_api_exceptions.dart';
+import 'package:osm_navigation/core/services/api_exceptions.dart'
+    as generic_api_exceptions;
+import 'package:osm_navigation/core/utils/api_error_handler.dart'
+    as api_error_handler;
 import 'package:osm_navigation/core/config/app_config.dart';
 
 // --- Concrete Implementation of the Location API Service ---
@@ -17,45 +21,42 @@ class LocationApiService implements ILocationApiService {
   // Define primary and fallback base URLs
   static final String _primaryBaseApiUrl =
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.tempRESTPort}';
+  static final String _fallbackBaseApiUrl = 'http://192.168.1.109:5247';
 
   // Constructor requires a pre-configured Dio instance.
   LocationApiService(this._dio);
 
-  // Helper to handle Dio errors and convert them to custom exceptions
-  LocationApiException _handleDioError(
-    DioException e,
-    String operation,
-    String urlAttempted,
+  // Helper to wrap generic API exceptions into domain-specific LocationApiExceptions
+  LocationApiException _wrapGenericApiException(
+    generic_api_exceptions.ApiException e,
+    String operation, // Operation name for context
   ) {
-    debugPrint(
-      '[LocationApiService] DioError during $operation at $urlAttempted: ${e.message}',
-    );
-    if (e.response != null) {
+    if (e is generic_api_exceptions.ApiNetworkException) {
       return LocationApiNetworkException(
-        'Network error during $operation: ${e.response?.statusCode}',
-        statusCode: e.response?.statusCode,
-        statusMessage: e.response?.statusMessage,
-        uri: e.requestOptions.uri,
-        originalException: e,
+        e.message, // Use message from generic exception
+        statusCode: e.statusCode,
+        statusMessage: e.statusMessage,
+        uri: e.uri,
+        originalException: e.originalException,
         stackTrace: e.stackTrace,
       );
-    } else if (e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.sendTimeout ||
-        e.type == DioExceptionType.receiveTimeout) {
-      return LocationApiNetworkException(
-        'Request timed out during $operation',
-        uri: e.requestOptions.uri,
-        originalException: e,
+    } else if (e is generic_api_exceptions.ApiNotFoundException) {
+      return LocationNotFoundException(
+        e.message, // Use message from generic exception
+        stackTrace: e.stackTrace,
+      );
+    } else if (e is generic_api_exceptions.ApiParseException) {
+      return LocationApiParseException(
+        e.message, // Use message from generic exception
+        originalException: e.originalException,
         stackTrace: e.stackTrace,
       );
     }
-    // Use named parameters as per the updated LocationApiException constructor
+    // Fallback for other ApiException types
     return LocationApiException(
-      'Failed $operation: ${e.message}',
+      e.message, // Use message from generic exception
+      originalException: e.originalException,
       stackTrace: e.stackTrace,
-      originalException: e,
     );
   }
 
@@ -86,9 +87,6 @@ class LocationApiService implements ILocationApiService {
       debugPrint(
         '[LocationApiService] Primary URL request for $operationName failed with non-Dio error: $e. Attempting fallback.',
       );
-      // We don't have a DioException here, so we'll just rethrow if fallback also fails with a generic message.
-      // Or, wrap it in a generic LocationApiException if preferred.
-      // For now, let fallback attempt proceed.
     }
 
     // If primary attempt failed, try fallback
@@ -103,21 +101,38 @@ class LocationApiService implements ILocationApiService {
       );
       // If primary also had a DioError, use that for more specific error handling
       // Otherwise, use the fallback error.
-      throw _handleDioError(e, operationName, e.requestOptions.uri.toString());
+      final genericException = api_error_handler.handleDioError(
+        e,
+        operationName,
+        e.requestOptions.uri.toString(),
+      );
+      throw _wrapGenericApiException(genericException, operationName);
     } catch (fallbackGeneralError) {
       debugPrint(
         '[LocationApiService] Fallback URL request for $operationName also failed with non-Dio error: $fallbackGeneralError',
       );
       if (primaryError != null) {
         // Prefer to report the primary Dio error if it existed, as it was the first point of failure.
-        throw _handleDioError(primaryError, operationName, primaryErrorUrl);
+        final genericException = api_error_handler.handleDioError(
+          primaryError,
+          operationName,
+          primaryErrorUrl,
+        );
+        throw _wrapGenericApiException(genericException, operationName);
       }
       // If primary attempt also had a non-Dio error, or if primary succeeded but something else went wrong before fallback
-      // we throw a more generic exception.
-      throw LocationApiException(
-        'All API attempts for $operationName failed. Primary error: ${primaryError?.message ?? "Non-Dio error"}, Fallback error: ${fallbackGeneralError.toString()}',
-        originalException: fallbackGeneralError,
-      );
+      // we throw a more generic LocationApiException.
+      // Note: fallbackGeneralError might not be an Exception, so ensure it's handled.
+      final String errorMessage =
+          'All API attempts for $operationName failed. Primary error: ${primaryError?.message ?? "Non-Dio error"}, Fallback error: ${fallbackGeneralError.toString()}';
+      if (fallbackGeneralError is Exception) {
+        throw LocationApiException(
+          errorMessage,
+          originalException: fallbackGeneralError,
+        );
+      } else {
+        throw LocationApiException(errorMessage);
+      }
     }
   }
 
@@ -133,7 +148,9 @@ class LocationApiService implements ILocationApiService {
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
         // debugPrint is now handled by _makeApiRequest for the attempt itself
-        // debugPrint('[LocationApiService] Fetching all locations from: $fullUrl');
+        debugPrint(
+          '[LocationApiService] Fetching all locations from: $fullUrl',
+        );
         try {
           final response = await _dio.get(fullUrl);
           if (response.statusCode == 200 && response.data is List) {
@@ -150,7 +167,6 @@ class LocationApiService implements ILocationApiService {
             );
           }
         } on DioException {
-          // Re-throw DioExceptions to be caught by _makeApiRequest
           rethrow;
         } catch (e, s) {
           // Catch other unexpected errors from this attempt
@@ -383,10 +399,8 @@ class LocationApiService implements ILocationApiService {
         debugPrint('[LocationApiService] $operationName at: $fullUrl');
         try {
           final response = await _dio.delete(fullUrl);
-          // Successful deletion typically returns 204 No Content
+          // Successful deletion typically returns 204 No Content according our API
           if (response.statusCode != 204) {
-            // Also check for 200 or 202 if the API might return those on delete
-            // For now, strictly 204
             throw DioException(
               requestOptions: RequestOptions(path: fullUrl),
               response: response,
@@ -415,8 +429,6 @@ class LocationApiService implements ILocationApiService {
   Future<Map<String, List<SelectableLocation>>>
   getGroupedSelectableLocations() async {
     const String operationName = 'fetching grouped selectable locations';
-    // Assuming an endpoint like this based on typical API design and the C# controller action name.
-    // This needs to be confirmed with the actual backend API documentation.
     const String endpoint = 'api/Location/GroupedSelectableLocations';
 
     return _makeApiRequest<Map<String, List<SelectableLocation>>>(
@@ -438,9 +450,7 @@ class LocationApiService implements ILocationApiService {
                     locationsJson
                         .map(
                           (json) => SelectableLocation(
-                            locationId:
-                                json['locationId']
-                                    as int, // Assuming DTO fields
+                            locationId: json['locationId'] as int,
                             name: json['name'] as String,
                             category: json['category'] as String,
                           ),

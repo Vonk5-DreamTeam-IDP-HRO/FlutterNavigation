@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/models/route.dart' as app_route;
-import 'package:osm_navigation/core/services/route/route_api_service.dart';
+import 'package:osm_navigation/core/repositories/Route/IRouteRepository.dart';
 
 /// SavedRoutesViewModel: Manages the state and logic for the Saved Routes screen.
 class SavedRoutesViewModel extends ChangeNotifier {
   // --- Dependencies ---
-  final RouteApiService _apiService;
+  final IRouteRepository _routeRepository;
 
   // --- State ---
   List<app_route.Route> _routes = [];
@@ -17,10 +17,10 @@ class SavedRoutesViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // --- Initialization ---
-  // Constructor requires the ApiService
+  // Constructor requires the IRouteRepository
   // Fetch routes when the ViewModel is created
-  SavedRoutesViewModel({required RouteApiService apiService})
-    : _apiService = apiService {
+  SavedRoutesViewModel({required IRouteRepository routeRepository})
+    : _routeRepository = routeRepository {
     fetchRoutes();
   }
 
@@ -32,8 +32,8 @@ class SavedRoutesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch routes from the backend API service
-      _routes = await _apiService.getAllRoutes();
+      // Fetch routes from the repository
+      _routes = await _routeRepository.getAllRoutes();
     } catch (e) {
       _errorMessage = 'Failed to load routes: $e';
     } finally {

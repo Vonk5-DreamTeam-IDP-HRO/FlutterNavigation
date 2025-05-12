@@ -3,6 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/core/navigation/navigation.dart';
+import 'package:osm_navigation/core/services/dio_factory.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/repositories/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/location_repository.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
@@ -26,8 +32,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AppState(),
+    // Create a single Dio instance for the app.
+    // This instance can be shared across the app, ensuring consistent configuration.
+    // It is used for making network requests and catch expections to show to the user.
+    final dio = DioFactory.createDio();
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AppState()),
+        Provider<Dio>(create: (context) => dio),
+        Provider<ILocationApiService>(
+          create: (context) => LocationApiService(context.read<Dio>()),
+        ),
+        Provider<ILocationRepository>(
+          create:
+              (context) =>
+                  LocationRepository(context.read<ILocationApiService>()),
+        ),
+      ],
       child: MaterialApp(
         title: 'OSM Navigation',
         theme: ThemeData(

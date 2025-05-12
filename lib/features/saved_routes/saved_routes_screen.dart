@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
 import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:osm_navigation/features/create_route/create_route_screen.dart';
+import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
+import 'package:osm_navigation/core/repositories/i_location_repository.dart';
 import './saved_routes_viewmodel.dart';
 
 /// SavedRoutesScreen: The View component for the saved routes list feature.
@@ -68,7 +71,7 @@ class SavedRoutesScreen extends StatelessWidget {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.route_outlined),
-                title: Text(route.name),
+                title: Text(route.displayName),
                 subtitle: Text(route.description),
               ),
               Padding(
@@ -78,9 +81,23 @@ class SavedRoutesScreen extends StatelessWidget {
                   children: <Widget>[
                     TextButton(
                       onPressed: () {
-                        // Use read() in callbacks to trigger ViewModel actions.
-                        context.read<SavedRoutesViewModel>().editRoute(
-                          route.routeId.toString(),
+                        // Create the ViewModel, initialize for edit, then navigate
+                        final locationRepo = Provider.of<ILocationRepository>(
+                          // Explicit type
+                          context,
+                          listen: false,
+                        );
+                        final viewModel = CreateRouteViewModel(locationRepo);
+                        viewModel.initializeForEdit(route);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ChangeNotifierProvider.value(
+                                  value: viewModel,
+                                  child: const CreateRouteScreen(),
+                                ),
+                          ),
                         );
                       },
                       child: const Text('Edit'),
