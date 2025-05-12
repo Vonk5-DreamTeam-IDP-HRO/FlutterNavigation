@@ -18,6 +18,44 @@ class CreateLocationViewModel extends ChangeNotifier {
   String? _successMessage;
   String? get successMessage => _successMessage;
 
+  // Properties for categories
+  List<String> _categories = [];
+  List<String> get categories => _categories;
+
+  bool _isLoadingCategories = false;
+  bool get isLoadingCategories => _isLoadingCategories;
+
+  String? _categoriesErrorMessage;
+  String? get categoriesErrorMessage => _categoriesErrorMessage;
+
+  Future<void> fetchCategories() async {
+    _isLoadingCategories = true;
+    _categoriesErrorMessage = null;
+    notifyListeners();
+
+    try {
+      _categories = await _locationRepository.getUniqueCategories();
+    } on LocationApiException catch (e) {
+      // Catch specific API exceptions
+      _categoriesErrorMessage = 'Failed to load categories: ${e.message}';
+      _categories = []; // Clear categories on error
+      debugPrint(
+        '[CreateLocationViewModel] LocationApiException fetching categories: $e',
+      );
+    } catch (e) {
+      // Catch any other unexpected errors
+      _categoriesErrorMessage =
+          'An unexpected error occurred while fetching categories: ${e.toString()}';
+      _categories = []; // Clear categories on error
+      debugPrint(
+        '[CreateLocationViewModel] Unexpected error fetching categories: $e',
+      );
+    } finally {
+      _isLoadingCategories = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> submitLocation({
     required String name,
     required String address, // Address from the form

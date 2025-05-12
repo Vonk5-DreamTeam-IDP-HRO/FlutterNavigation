@@ -31,4 +31,7 @@ abstract class ILocationApiService {
   /// Fetches selectable locations grouped by their category.
   /// The map key is the category name, and the value is a list of [SelectableLocation] objects.
   Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
+
+  /// Fetches a list of unique category names.
+  Future<List<String>> getUniqueCategories();
 }

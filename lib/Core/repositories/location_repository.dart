@@ -51,8 +51,6 @@ class LocationRepository implements ILocationRepository {
   Future<LocationDetails> getLocationById(int id) async {
     // Get location by ID and convert to domain model
     final locationDetails = await _locationApiService.getLocationById(id);
-    // LocationDetails is already a domain model in our current implementation
-    // In a more complex system, we might have a LocationDetailsDto and use a mapper here
     return locationDetails;
   }
 
@@ -82,10 +80,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<LocationDetails> createLocation(CreateLocationPayload payload) async {
-    // Create a new location
     final locationDetails = await _locationApiService.createLocation(payload);
-    // LocationDetails is already a domain model in our current implementation
-    // but we explicitly return it to maintain consistency in our repository pattern
     return locationDetails;
   }
 
@@ -99,8 +94,6 @@ class LocationRepository implements ILocationRepository {
       id,
       payload,
     );
-    // LocationDetails is already a domain model in our current implementation
-    // but we explicitly return it to maintain consistency in our repository pattern
     return locationDetails;
   }
 
@@ -116,8 +109,12 @@ class LocationRepository implements ILocationRepository {
     // Get grouped selectable locations
     final groupedLocations =
         await _locationApiService.getGroupedSelectableLocations();
-    // SelectableLocation is already a domain model in our current implementation
-    // In a more complex system, we might have a SelectableLocationDto and use a mapper here
     return groupedLocations;
+  }
+
+  @override
+  Future<List<String>> getUniqueCategories() async {
+    final categories = await _locationApiService.getUniqueCategories();
+    return categories;
   }
 }

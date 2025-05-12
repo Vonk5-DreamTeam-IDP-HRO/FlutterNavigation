@@ -25,4 +25,7 @@ abstract class ILocationRepository {
 
   /// Fetches selectable locations grouped by their category
   Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
+
+  /// Fetches a list of unique category names from the underlying data source.
+  Future<List<String>> getUniqueCategories();
 }

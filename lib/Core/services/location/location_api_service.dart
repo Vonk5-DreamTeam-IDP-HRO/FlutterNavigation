@@ -492,4 +492,48 @@ class LocationApiService implements ILocationApiService {
       },
     );
   }
+
+  @override
+  Future<List<String>> getUniqueCategories() async {
+    const String operationName = 'fetching unique categories';
+    const String endpoint = 'api/Location/categories';
+
+    return _makeApiRequest<List<String>>(
+      operationName: operationName,
+      attemptRequest: (baseUrl) async {
+        final String fullUrl = '$baseUrl/$endpoint';
+        debugPrint(
+          '[LocationApiService] Fetching unique categories from: $fullUrl',
+        );
+        try {
+          final response = await _dio.get(fullUrl);
+          if (response.statusCode == 200 && response.data is List) {
+            return (response.data as List)
+                .where((item) => item is String)
+                .map((item) => item as String)
+                .toList();
+          } else {
+            throw DioException(
+              requestOptions: RequestOptions(path: fullUrl),
+              response: response,
+              message:
+                  'Failed to load unique categories: ${response.statusCode}',
+            );
+          }
+        } on DioException {
+          rethrow; // Handled by _makeApiRequest
+        } catch (e, s) {
+          // Catch other unexpected errors from this attempt
+          debugPrint(
+            '[LocationApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+          );
+          throw LocationApiException(
+            'An unexpected error occurred during $operationName attempt: ${e.toString()}',
+            stackTrace: s,
+            originalException: e,
+          );
+        }
+      },
+    );
+  }
 }

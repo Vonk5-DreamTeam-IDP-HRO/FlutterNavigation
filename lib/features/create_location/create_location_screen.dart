@@ -17,6 +17,20 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   String? _category;
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch categories when the screen initializes.
+    // Use addPostFrameCallback to ensure that the context is fully available
+    // and that the ViewModel provider has been initialized.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CreateLocationViewModel>(
+        context,
+        listen: false,
+      ).fetchCategories();
+    });
+  }
+
+  @override
   void dispose() {
     _addressController.dispose();
     _nameController.dispose();
@@ -30,7 +44,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
         context,
         listen: false,
       );
-      viewModel.clearMessages(); // Clear previous messages
+      viewModel.clearMessages();
 
       final success = await viewModel.submitLocation(
         name: _nameController.text,
@@ -129,23 +143,34 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   border: OutlineInputBorder(),
                 ),
                 value: _category,
-                items: const [
-                  DropdownMenuItem(
-                    value: 'restaurant',
-                    child: Text('Restaurant'),
-                  ),
-                  DropdownMenuItem(value: 'hotel', child: Text('Hotel')),
-                  DropdownMenuItem(
-                    value: 'attraction',
-                    child: Text('Attraction'),
-                  ),
-                  // TODO: Add more categories or fetch dynamically
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _category = value;
-                  });
-                },
+                hint: viewModel.isLoadingCategories
+                    ? const Text('Loading categories...')
+                    : viewModel.categoriesErrorMessage != null
+                        ? const Text('Error loading categories', style: TextStyle(color: Colors.red))
+                        : viewModel.categories.isEmpty
+                            ? const Text('No categories available')
+                            : null, // Default hint if categories are loaded but none selected
+                disabledHint: viewModel.isLoadingCategories ? const Text('Loading...') : null,
+                items: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
+                    ? [] // Show no items if loading or error
+                    : viewModel.categories.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                onChanged: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
+                    ? null // Disable dropdown if loading or error
+                    : (value) {
+                        // When a category is selected, ensure _category is updated
+                        // and if there was a previous error, it might be good to clear it
+                        // or allow re-fetch, though current logic doesn't do that on change.
+                        setState(() {
+                          _category = value;
+                        });
+                      },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select a category';
@@ -153,6 +178,14 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   return null;
                 },
               ),
+              if (viewModel.categoriesErrorMessage != null && !viewModel.isLoadingCategories)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Error details: ${viewModel.categoriesErrorMessage}',
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
               const SizedBox(height: 32),
               if (viewModel.isLoading)
                 const Center(child: CircularProgressIndicator())
@@ -164,18 +197,6 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   onPressed: () => _submitForm(context),
                   child: const Text('Create Location'),
                 ),
-              // Display error/success messages from ViewModel if needed,
-              // though SnackBar is used above.
-              // if (viewModel.errorMessage != null)
-              //   Padding(
-              //     padding: const EdgeInsets.only(top: 8.0),
-              //     child: Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
-              //   ),
-              // if (viewModel.successMessage != null && !viewModel.isLoading) // Show success only if not loading
-              //   Padding(
-              //     padding: const EdgeInsets.only(top: 8.0),
-              //     child: Text(viewModel.successMessage!, style: const TextStyle(color: Colors.green)),
-              //   ),
             ],
           ),
         ),
