@@ -1,6 +1,6 @@
 // --- Imports ---
 import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'package:osm_navigation/core/services/location_api_service.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:flutter/material.dart';
 
 // --- Class Definition ---

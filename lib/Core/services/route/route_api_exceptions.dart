@@ -29,27 +29,25 @@ class RouteApiNetworkException extends RouteApiException {
     super.uri,
     super.statusCode,
     String? statusMessage,
-  }) : super(
-          '$message (Status: $statusCode - $statusMessage)',
-        );
+  }) : super('$message (Status: $statusCode - $statusMessage)');
 }
 
 /// Exception for when a route or its related data is not found.
 class RouteNotFoundException extends RouteApiException {
   RouteNotFoundException(
-    String message, {
+    super.message, {
     super.originalException,
     super.stackTrace,
     super.uri,
-  }) : super(message, statusCode: 404);
+  }) : super(statusCode: 404);
 }
 
 /// Exception for errors during parsing of Route API response data.
 class RouteApiParseException extends RouteApiException {
   RouteApiParseException(
-    String message, {
+    super.message, {
     super.originalException,
     super.stackTrace,
     super.uri,
-  }) : super(message);
+  });
 }

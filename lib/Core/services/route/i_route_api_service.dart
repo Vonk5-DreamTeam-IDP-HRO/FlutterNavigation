@@ -1,5 +1,6 @@
 import 'package:osm_navigation/core/models/location.dart';
-import 'package:osm_navigation/core/models/route.dart' as core_route; // Aliased to avoid conflict if any
+import 'package:osm_navigation/core/models/route.dart'
+    as core_route; // Aliased to avoid conflict if any
 import 'package:osm_navigation/core/models/selectable_location.dart';
 
 /// Interface for the Route API Service.

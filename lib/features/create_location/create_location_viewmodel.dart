@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/core/models/location_request_dtos.dart';
-import 'package:osm_navigation/core/services/i_location_api_service.dart';
-import 'package:osm_navigation/core/services/location_api_exceptions.dart';
+import 'package:osm_navigation/core/services/location/i_location_api_service.dart';
+import 'package:osm_navigation/core/services/location/location_api_exceptions.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
   final ILocationApiService _locationApiService;
 
   CreateLocationViewModel({required ILocationApiService locationApiService})
-      : _locationApiService = locationApiService;
+    : _locationApiService = locationApiService;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -35,12 +35,15 @@ class CreateLocationViewModel extends ChangeNotifier {
       const double placeholderLatitude = 0.0;
       const double placeholderLongitude = 0.0;
 
-      if (address.isEmpty && (placeholderLatitude == 0.0 && placeholderLongitude == 0.0)) {
+      if (address.isEmpty &&
+          (placeholderLatitude == 0.0 && placeholderLongitude == 0.0)) {
         // A more robust check or actual geocoding would be needed.
         // For now, if address is empty and we are using placeholders, this is an issue.
         // However, the form validation should catch empty address.
         // This is more about the geocoding step being missing.
-        debugPrint("[CreateLocationViewModel] Warning: Address is present, but using placeholder lat/lng (0.0, 0.0) as geocoding is not implemented.");
+        debugPrint(
+          '[CreateLocationViewModel] Warning: Address is present, but using placeholder lat/lng (0.0, 0.0) as geocoding is not implemented.',
+        );
       }
 
       // Create the details payload first
@@ -53,12 +56,16 @@ class CreateLocationViewModel extends ChangeNotifier {
       final payload = CreateLocationPayload(
         name: name,
         description: description ?? '', // Ensure description is not null
-        latitude: placeholderLatitude, // Still placeholder, geocoding TODO remains
-        longitude: placeholderLongitude, // Still placeholder, geocoding TODO remains
+        latitude:
+            placeholderLatitude, // Still placeholder, geocoding TODO remains
+        longitude:
+            placeholderLongitude, // Still placeholder, geocoding TODO remains
         details: detailPayload,
       );
 
-      debugPrint('[CreateLocationViewModel] Creating location with payload: ${payload.toJson()}');
+      debugPrint(
+        '[CreateLocationViewModel] Creating location with payload: ${payload.toJson()}',
+      );
       // Assuming createLocation returns the created LocationDetails or similar
       await _locationApiService.createLocation(payload);
 

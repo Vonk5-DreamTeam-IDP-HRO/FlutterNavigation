@@ -413,7 +413,7 @@ class LocationApiService implements ILocationApiService {
 
   @override
   Future<Map<String, List<SelectableLocation>>>
-      getGroupedSelectableLocations() async {
+  getGroupedSelectableLocations() async {
     const String operationName = 'fetching grouped selectable locations';
     // Assuming an endpoint like this based on typical API design and the C# controller action name.
     // This needs to be confirmed with the actual backend API documentation.
@@ -428,19 +428,24 @@ class LocationApiService implements ILocationApiService {
           if (response.statusCode == 200 && response.data is Map) {
             final Map<String, dynamic> data =
                 response.data as Map<String, dynamic>;
-            
+
             // The backend sends Map<string, List<SomeSelectableLocationDto>>
             // We need to parse this into Map<String, List<SelectableLocation>>
             final Map<String, List<SelectableLocation>> groupedLocations = {};
             data.forEach((category, locationsJson) {
               if (locationsJson is List) {
-                groupedLocations[category] = locationsJson
-                    .map((json) => SelectableLocation(
-                          locationId: json['locationId'] as int, // Assuming DTO fields
-                          name: json['name'] as String,
-                          category: json['category'] as String,
-                        ))
-                    .toList();
+                groupedLocations[category] =
+                    locationsJson
+                        .map(
+                          (json) => SelectableLocation(
+                            locationId:
+                                json['locationId']
+                                    as int, // Assuming DTO fields
+                            name: json['name'] as String,
+                            category: json['category'] as String,
+                          ),
+                        )
+                        .toList();
               }
             });
             return groupedLocations;
@@ -459,7 +464,9 @@ class LocationApiService implements ILocationApiService {
             '[LocationApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
           );
           // Check if it's a parsing error related to SelectableLocation structure
-          if (e.toString().contains('locationId') || e.toString().contains('name') || e.toString().contains('category')) {
+          if (e.toString().contains('locationId') ||
+              e.toString().contains('name') ||
+              e.toString().contains('category')) {
             throw LocationApiParseException(
               'Error parsing $operationName response from $fullUrl: ${e.toString()}',
               stackTrace: s,
