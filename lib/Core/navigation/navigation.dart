@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
+import 'package:osm_navigation/core/repositories/location_repository.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
@@ -58,13 +60,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     // 1: Saved Routes Screen
     ChangeNotifierProvider(
-      create: (_) => SavedRoutesViewModel(apiService: RouteApiService()),
+      create: (context) {
+        final dio =
+            context.read<Dio>(); // Get the Dio instance from the context
+        final routeApiService = RouteApiService(
+          dio,
+        ); // Create the RouteApiService and pass on the Dio instance
+        final routeRepository = RouteRepository(routeApiService);
+        return SavedRoutesViewModel(routeRepository: routeRepository);
+      },
       child: const SavedRoutesScreen(),
-    ),
-
-    // 2: Create Route Screen (This is one of the SpeedDial targets)
+    ), // 2: Create Route Screen (This is one of the SpeedDial targets)
     ChangeNotifierProvider(
-      create: (_) => CreateRouteViewModel(LocationApiService(Dio())),
+      create: (context) {
+        final locationApiService = LocationApiService(context.read<Dio>());
+        final locationRepository = LocationRepository(locationApiService);
+        return CreateRouteViewModel(locationRepository);
+      },
       child: const CreateRouteScreen(),
     ),
 
@@ -78,15 +90,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ChangeNotifierProvider(
       create: (_) => SettingsViewModel(),
       child: const SettingsScreen(),
-    ),
-
-    // 5: Create Location Screen (This is another SpeedDial target)
+    ), // 5: Create Location Screen (This is another SpeedDial target)
     // This screen is part of the stack but not directly mapped to a BottomNavBar item.
     ChangeNotifierProvider(
-      create:
-          (_) => CreateLocationViewModel(
-            locationApiService: LocationApiService(Dio()),
-          ),
+      create: (context) {
+        final locationApiService = LocationApiService(context.read<Dio>());
+        final locationRepository = LocationRepository(locationApiService);
+        return CreateLocationViewModel(locationRepository: locationRepository);
+      },
       child: const CreateLocationScreen(),
     ),
   ];
@@ -146,14 +157,26 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             label: 'Create Route',
             labelStyle: const TextStyle(fontSize: 18.0),
             onTap: () {
-              // First, ensure the CreateRouteScreen tab is active
-              // Use context.read directly as appState might be stale if tab changes.
-              if (context.read<AppState>().selectedTabIndex !=
-                  MainScreen.createRouteIndex) {
-                context.read<AppState>().changeTab(MainScreen.createRouteIndex);
-              }
-              _isDialOpen.value = false; // Close dial children
-              debugPrint('Create Route tapped');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => ChangeNotifierProvider(
+                        create: (context) {
+                          // Logic to create CreateRouteViewModel, similar to _screens setup
+                          final dio = context.read<Dio>();
+                          final locationApiService = LocationApiService(dio);
+                          final locationRepository = LocationRepository(
+                            locationApiService,
+                          );
+                          return CreateRouteViewModel(locationRepository);
+                        },
+                        child: const CreateRouteScreen(),
+                      ),
+                ),
+              );
+              _isDialOpen.value = false; // Close dial
+              debugPrint('Create Route tapped - Pushed as new route');
             },
           ),
           SpeedDialChild(
@@ -168,10 +191,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 MaterialPageRoute(
                   builder:
                       (context) => ChangeNotifierProvider(
-                        create:
-                            (_) => CreateLocationViewModel(
-                              locationApiService: LocationApiService(Dio()),
-                            ),
+                        create: (context) {
+                          final locationApiService = LocationApiService(
+                            context.read<Dio>(),
+                          );
+                          final locationRepository = LocationRepository(
+                            locationApiService,
+                          );
+                          return CreateLocationViewModel(
+                            locationRepository: locationRepository,
+                          );
+                        },
                         child: const CreateLocationScreen(),
                       ),
                 ),

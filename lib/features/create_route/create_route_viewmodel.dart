@@ -1,14 +1,14 @@
 // --- Imports ---
 import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/repositories/i_location_repository.dart';
 import 'package:flutter/material.dart';
 
 // --- Class Definition ---
 class CreateRouteViewModel extends ChangeNotifier {
-  final LocationApiService _locationApiService;
+  final ILocationRepository _locationRepository;
 
   // --- Constructor ---
-  CreateRouteViewModel(this._locationApiService) {
+  CreateRouteViewModel(this._locationRepository) {
     nameController.addListener(_onNameChanged);
     //loadLocations();
   }
@@ -56,7 +56,6 @@ class CreateRouteViewModel extends ChangeNotifier {
   // It uses the new LocationApiService to fetch the data.
   // The method is asynchronous and updates the loading state and error messages accordingly.
   // It also notifies listeners when the state changes.
-
   Future<void> loadLocations() async {
     _isLoading = true;
     _error = null;
@@ -64,9 +63,9 @@ class CreateRouteViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch grouped locations directly from the new service
+      // Fetch grouped locations from the repository
       _groupedLocations =
-          await _locationApiService.getGroupedSelectableLocations();
+          await _locationRepository.getGroupedSelectableLocations();
       _error = null;
     } catch (e) {
       _error = 'Failed to load locations: $e';
@@ -83,24 +82,26 @@ class CreateRouteViewModel extends ChangeNotifier {
     } else {
       _selectedLocationIds.add(locationId);
     }
-    // Notify listeners to update UI (e.g., checkbox state and save button state)
+    // Notify listeners to update UI
     notifyListeners();
   }
 
-  // TODO: Implement a method to save the route using the selected locations
-  // This must be implemented in the future when the API is ready
-  // For now, we will just print the selected locations to the console
-
-  // Call this when saving is attempted (currently just for validation feedback)
   void attemptSave() {
     notifyListeners();
 
     if (canSave) {
-      // In the future, this would trigger the API call
       debugPrint('Validation successful. Ready to save (not implemented).');
     } else {
       debugPrint('Validation failed.');
     }
+  }
+
+  // -- Edit Initialization --
+  void initializeForEdit(dynamic route) {
+    // Accepts a Route object (with displayName and description)
+    nameController.text = route.displayName;
+    descriptionController.text = route.description;
+    notifyListeners();
   }
 
   // -- Cleanup --

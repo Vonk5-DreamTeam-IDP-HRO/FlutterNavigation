@@ -1,7 +1,9 @@
 import 'package:osm_navigation/core/models/location.dart';
 import 'package:osm_navigation/core/models/route.dart'
-    as core_route; // Aliased to avoid conflict if any
+    as core_route; //specified to avoid name conflicts
+import 'package:osm_navigation/core/models/route_dto.dart';
 import 'package:osm_navigation/core/models/selectable_location.dart';
+import 'package:osm_navigation/core/models/route_dtos.dart';
 
 /// Interface for the Route API Service.
 ///
@@ -13,7 +15,7 @@ abstract class IRouteApiService {
   ///
   /// Returns a list of [core_route.Route] objects.
   /// Throws an exception if fetching fails.
-  Future<List<core_route.Route>> getAllRoutes();
+  Future<List<RouteDto>> getAllRoutes();
 
   /// Fetches the list of locations associated with a specific route ID.
   ///
@@ -27,4 +29,18 @@ abstract class IRouteApiService {
   /// Returns a list of [SelectableLocation] objects.
   /// Throws an exception if fetching fails.
   Future<List<SelectableLocation>> getSelectableLocations();
+
+  /// Fetches a specific route by its ID.
+  ///
+  /// [routeId] is the ID of the route to fetch.
+  /// Returns a [core_route.Route] object.
+  /// Throws an exception if the request fails or if the route is not found.
+  Future<RouteDto?> getRouteById(int routeId);
+
+  /// Adds a new route.
+  ///
+  /// [createRouteDto] is the DTO containing the data for the new route.
+  /// Returns the created [RouteDto] object.
+  /// Throws an exception if the request fails.
+  Future<RouteDto> addRoute(CreateRouteDto createRouteDto);
 }
