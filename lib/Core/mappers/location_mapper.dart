@@ -1,6 +1,5 @@
 import '../models/location_dto.dart';
 import '../models/location.dart';
-import '../models/location_details.dart';
 
 /// Mapper class to convert between Location domain models and DTOs
 class LocationMapper {

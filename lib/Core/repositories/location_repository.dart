@@ -1,10 +1,10 @@
-import '../models/location.dart';
-import '../models/location_details.dart';
-import '../models/location_dto.dart';
-import '../models/selectable_location.dart';
-import '../models/location_request_dtos.dart';
-import '../services/location/ILocationApiService.dart';
-import '../mappers/location_mapper.dart';
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/location_details.dart';
+import 'package:osm_navigation/Core/models/location_dto.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/location_request_dtos.dart';
+import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/Core/mappers/location_mapper.dart';
 import './i_location_repository.dart';
 
 /// Implementation of the Location Repository

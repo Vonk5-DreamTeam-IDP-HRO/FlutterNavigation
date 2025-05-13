@@ -1,7 +1,7 @@
-import 'package:osm_navigation/core/models/location.dart';
-import 'package:osm_navigation/core/models/location_details.dart';
-import 'package:osm_navigation/core/models/location_request_dtos.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart'; // Added import
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/location_details.dart';
+import 'package:osm_navigation/Core/models/location_request_dtos.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
 
 // --- Interface for the Location API Service ---
 // Defines the contract for location-related API operations.

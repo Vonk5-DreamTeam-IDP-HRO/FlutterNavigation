@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/core/models/location.dart';
-import 'package:osm_navigation/core/models/location_details.dart';
-import 'package:osm_navigation/core/models/location_request_dtos.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/location_details.dart';
+import 'package:osm_navigation/Core/models/location_request_dtos.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
 import 'ILocationApiService.dart';
 import 'location_api_exceptions.dart';
-import 'package:osm_navigation/core/services/api_exceptions.dart'
+import 'package:osm_navigation/Core/services/api_exceptions.dart'
     as generic_api_exceptions;
-import 'package:osm_navigation/core/utils/api_error_handler.dart'
+import 'package:osm_navigation/Core/utils/api_error_handler.dart'
     as api_error_handler;
-import 'package:osm_navigation/core/config/app_config.dart';
+import 'package:osm_navigation/Core/config/app_config.dart';
 
 // --- Concrete Implementation of the Location API Service ---
 // Provides the actual implementation for fetching location data using Dio.
@@ -509,8 +509,8 @@ class LocationApiService implements ILocationApiService {
           final response = await _dio.get(fullUrl);
           if (response.statusCode == 200 && response.data is List) {
             return (response.data as List)
-                .where((item) => item is String)
-                .map((item) => item as String)
+                .whereType<String>()
+                .map((item) => item)
                 .toList();
           } else {
             throw DioException(

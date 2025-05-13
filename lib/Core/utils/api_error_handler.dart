@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:osm_navigation/core/services/api_exceptions.dart';
+import 'package:osm_navigation/Core/services/api_exceptions.dart';
 
 /// Handles Dio errors and converts them to generic [ApiException] types.
 ///

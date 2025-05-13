@@ -1,9 +1,9 @@
-import 'package:osm_navigation/core/models/location.dart';
-import 'package:osm_navigation/core/models/route.dart'
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/route.dart'
     as core_route; //specified to avoid name conflicts
-import 'package:osm_navigation/core/models/route_dto.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'package:osm_navigation/core/models/route_dtos.dart';
+import 'package:osm_navigation/Core/models/route_dto.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/route_dtos.dart';
 
 /// Interface for the Route API Service.
 ///

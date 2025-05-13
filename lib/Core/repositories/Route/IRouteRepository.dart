@@ -1,5 +1,5 @@
-import 'package:osm_navigation/core/models/route.dart';
-import 'package:osm_navigation/core/models/route_dtos.dart';
+import 'package:osm_navigation/Core/models/route.dart';
+import 'package:osm_navigation/Core/models/route_dtos.dart';
 
 abstract class IRouteRepository {
   Future<List<Route>> getAllRoutes();
