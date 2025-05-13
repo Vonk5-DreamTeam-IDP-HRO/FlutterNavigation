@@ -1,29 +1,29 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/core/config/app_config.dart';
-import 'package:osm_navigation/core/models/location.dart';
-import 'package:osm_navigation/core/models/location_details.dart';
-import 'package:osm_navigation/core/models/route_dto.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'package:osm_navigation/core/models/route_dtos.dart';
+import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/location_details.dart';
+import 'package:osm_navigation/Core/models/route_dto.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/route_dtos.dart';
 import 'IRouteApiService.dart';
 import 'route_api_exceptions.dart';
-import 'package:osm_navigation/core/services/api_exceptions.dart'
+import 'package:osm_navigation/Core/services/api_exceptions.dart'
     as generic_api_exceptions;
-import 'package:osm_navigation/core/utils/api_error_handler.dart'
+import 'package:osm_navigation/Core/utils/api_error_handler.dart'
     as api_error_handler;
 
 class RouteApiService implements IRouteApiService {
   final Dio _dio;
 
   // Define primary and fallback base URLs
-  static final String _primaryBaseApiUrl = 'http://192.168.1.109:5247';
+  static final String _primaryBaseApiUrl = 'http://192.168.1.10:50891';
   // This is a placeholder. Replace with the actual primary base URL when API is live.
   // static final String _primaryBaseApiUrl =
   //    '${AppConfig.url}:${AppConfig.backendApiPort}';
   static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.tempRESTPort}';
+      '${AppConfig.tempRESTUrl}:${AppConfig.backendApiPort}';
 
   RouteApiService(this._dio);
 
@@ -105,7 +105,7 @@ class RouteApiService implements IRouteApiService {
         requestOptions: RequestOptions(path: 'unknown_primary_path'),
         error: e,
         message:
-            "A non-Dio error occurred during primary attempt: ${e.toString()}",
+            'A non-Dio error occurred during primary attempt: ${e.toString()}',
       );
       debugPrint(
         '[RouteApiService] Primary URL request for $operationName failed (General Error): $e. Attempting fallback.',
@@ -126,7 +126,7 @@ class RouteApiService implements IRouteApiService {
         '[RouteApiService] Fallback URL request for $operationName also failed (DioException): $e',
       );
       final genericException = api_error_handler.handleDioError(
-        primaryError!,
+        primaryError,
         operationName,
         primaryErrorUrl,
       );

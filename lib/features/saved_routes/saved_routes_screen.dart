@@ -4,7 +4,7 @@ import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
-import 'package:osm_navigation/core/repositories/i_location_repository.dart';
+import 'package:osm_navigation/Core/repositories/i_location_repository.dart'; // Changed to Core
 import './saved_routes_viewmodel.dart';
 
 /// SavedRoutesScreen: The View component for the saved routes list feature.

@@ -151,11 +151,7 @@ class ApiNotFoundException extends ApiException {
 
 /// Exception for errors during parsing of API responses.
 class ApiParseException extends ApiException {
-  ApiParseException(
-    super.message, {
-    super.stackTrace,
-    super.originalException,
-  });
+  ApiParseException(super.message, {super.stackTrace, super.originalException});
 
   @override
   String toString() {

@@ -143,34 +143,45 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   border: OutlineInputBorder(),
                 ),
                 value: _category,
-                hint: viewModel.isLoadingCategories
-                    ? const Text('Loading categories...')
-                    : viewModel.categoriesErrorMessage != null
-                        ? const Text('Error loading categories', style: TextStyle(color: Colors.red))
+                hint:
+                    viewModel.isLoadingCategories
+                        ? const Text('Loading categories...')
+                        : viewModel.categoriesErrorMessage != null
+                        ? const Text(
+                          'Error loading categories',
+                          style: TextStyle(color: Colors.red),
+                        )
                         : viewModel.categories.isEmpty
-                            ? const Text('No categories available')
-                            : null, // Default hint if categories are loaded but none selected
-                disabledHint: viewModel.isLoadingCategories ? const Text('Loading...') : null,
-                items: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                    ? [] // Show no items if loading or error
-                    : viewModel.categories.map<DropdownMenuItem<String>>((
-                        String value,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                onChanged: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                    ? null // Disable dropdown if loading or error
-                    : (value) {
-                        // When a category is selected, ensure _category is updated
-                        // and if there was a previous error, it might be good to clear it
-                        // or allow re-fetch, though current logic doesn't do that on change.
-                        setState(() {
-                          _category = value;
-                        });
-                      },
+                        ? const Text('No categories available')
+                        : null, // Default hint if categories are loaded but none selected
+                disabledHint:
+                    viewModel.isLoadingCategories
+                        ? const Text('Loading...')
+                        : null,
+                items:
+                    viewModel.isLoadingCategories ||
+                            viewModel.categoriesErrorMessage != null
+                        ? [] // Show no items if loading or error
+                        : viewModel.categories.map<DropdownMenuItem<String>>((
+                          String value,
+                        ) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                onChanged:
+                    viewModel.isLoadingCategories ||
+                            viewModel.categoriesErrorMessage != null
+                        ? null // Disable dropdown if loading or error
+                        : (value) {
+                          // When a category is selected, ensure _category is updated
+                          // and if there was a previous error, it might be good to clear it
+                          // or allow re-fetch, though current logic doesn't do that on change.
+                          setState(() {
+                            _category = value;
+                          });
+                        },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select a category';
@@ -178,7 +189,8 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   return null;
                 },
               ),
-              if (viewModel.categoriesErrorMessage != null && !viewModel.isLoadingCategories)
+              if (viewModel.categoriesErrorMessage != null &&
+                  !viewModel.isLoadingCategories)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
