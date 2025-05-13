@@ -10,7 +10,7 @@ class CreateRouteViewModel extends ChangeNotifier {
   // --- Constructor ---
   CreateRouteViewModel(this._locationRepository) {
     nameController.addListener(_onNameChanged);
-    //loadLocations();
+    loadLocations(); // Load locations in accordion when the ViewModel is initialized
   }
 
   // --- Private methods for internal event handling ---
