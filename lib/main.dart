@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart';
-import 'package:osm_navigation/core/services/dio_factory.dart';
+import 'package:osm_navigation/Core/providers/app_state.dart';
+import 'package:osm_navigation/Core/navigation/navigation.dart';
+import 'package:osm_navigation/Core/services/dio_factory.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
-import 'package:osm_navigation/core/services/location/location_api_service.dart';
-import 'package:osm_navigation/core/repositories/i_location_repository.dart';
-import 'package:osm_navigation/core/repositories/location_repository.dart';
+import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/Core/services/location/location_api_service.dart';
+import 'package:osm_navigation/Core/repositories/i_location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location_repository.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide

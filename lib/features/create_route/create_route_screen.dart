@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart'; // Changed to Core
 import 'package:osm_navigation/core/utils/tuple.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/create_route/widgets/location_accordion_selector.dart';

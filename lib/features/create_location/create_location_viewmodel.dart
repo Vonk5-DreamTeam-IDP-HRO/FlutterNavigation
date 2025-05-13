@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:osm_navigation/core/models/location_request_dtos.dart';
-import 'package:osm_navigation/core/repositories/i_location_repository.dart';
-import 'package:osm_navigation/core/services/location/location_api_exceptions.dart';
+import 'package:osm_navigation/Core/models/location_request_dtos.dart';
+import 'package:osm_navigation/Core/repositories/i_location_repository.dart';
+import 'package:osm_navigation/Core/services/location/location_api_exceptions.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
   final ILocationRepository _locationRepository;
