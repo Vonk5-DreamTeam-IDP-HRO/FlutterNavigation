@@ -9,6 +9,7 @@ import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
 import 'package:osm_navigation/Core/services/location/location_api_service.dart';
 import 'package:osm_navigation/Core/repositories/i_location_repository.dart';
 import 'package:osm_navigation/Core/repositories/location_repository.dart';
+import 'package:osm_navigation/Core/config/app_config.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
@@ -20,9 +21,8 @@ Future<void> main() async {
   // For example, if you are using plugins that require native code. Kotlin or Swift.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file.
-  // AppConfig will then be able to access these variables.
-  await dotenv.load();
+  // Initialize AppConfig with loaded environment variables.
+  await AppConfig.load(); // Added AppConfig.load()
 
   runApp(const MyApp());
 }
