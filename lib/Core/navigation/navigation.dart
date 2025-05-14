@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:osm_navigation/Core/repositories/Route/route_repository.dart';
-import 'package:osm_navigation/Core/repositories/location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
 import 'package:osm_navigation/Core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/Core/providers/app_state.dart';

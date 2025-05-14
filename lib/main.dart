@@ -7,8 +7,8 @@ import 'package:osm_navigation/Core/services/dio_factory.dart';
 import 'package:dio/dio.dart';
 import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
 import 'package:osm_navigation/Core/services/location/location_api_service.dart';
-import 'package:osm_navigation/Core/repositories/i_location_repository.dart';
-import 'package:osm_navigation/Core/repositories/location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
 import 'package:osm_navigation/Core/config/app_config.dart';
 
 /// This application is build according the MVVM architectural pattern
@@ -22,7 +22,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize AppConfig with loaded environment variables.
-  await AppConfig.load(); // Added AppConfig.load()
+  await dotenv.load(fileName: '.env');
 
   runApp(const MyApp());
 }
