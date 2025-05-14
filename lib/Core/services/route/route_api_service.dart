@@ -18,12 +18,10 @@ class RouteApiService implements IRouteApiService {
   final Dio _dio;
 
   // Define primary and fallback base URLs
-  static final String _primaryBaseApiUrl = 'http://192.168.1.10:50891';
-  // This is a placeholder. Replace with the actual primary base URL when API is live.
-  // static final String _primaryBaseApiUrl =
-  //    '${AppConfig.url}:${AppConfig.backendApiPort}';
+  static final String _primaryBaseApiUrl =
+      '${AppConfig.url}:${AppConfig.backendApiPort}';
   static final String _fallbackBaseApiUrl =
-      '${AppConfig.tempRESTUrl}:${AppConfig.backendApiPort}';
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
   RouteApiService(this._dio);
 

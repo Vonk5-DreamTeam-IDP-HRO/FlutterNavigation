@@ -1,6 +1,6 @@
 // --- Imports ---
-import 'package:osm_navigation/Core/models/selectable_location.dart'; // Changed to Core
-import 'package:osm_navigation/Core/repositories/i_location_repository.dart'; // Changed to Core
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
 import 'package:flutter/material.dart';
 
 // --- Class Definition ---
@@ -50,8 +50,6 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // -- Methods --
 
-  // This method is currently commented out because the API is not ready yet.
-  // TODO: Call the correct API method to load grouped locations when API is ready
   // This method loads locations from the API and groups them by category
   // It uses the new LocationApiService to fetch the data.
   // The method is asynchronous and updates the loading state and error messages accordingly.
