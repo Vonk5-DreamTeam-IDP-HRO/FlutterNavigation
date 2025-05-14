@@ -1,7 +1,7 @@
-import '../models/location.dart';
-import '../models/location_details.dart';
-import '../models/selectable_location.dart';
-import '../models/location_request_dtos.dart';
+import 'package:osm_navigation/Core/models/location.dart';
+import 'package:osm_navigation/Core/models/location_details.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/location_request_dtos.dart';
 
 /// Interface for Location Repository
 abstract class ILocationRepository {

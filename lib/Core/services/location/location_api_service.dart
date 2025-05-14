@@ -21,7 +21,8 @@ class LocationApiService implements ILocationApiService {
   // Define primary and fallback base URLs
   static final String _primaryBaseApiUrl =
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl = 'http://192.168.1.109:5247';
+  static final String _fallbackBaseApiUrl =
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
   // Constructor requires a pre-configured Dio instance.
   LocationApiService(this._dio);
@@ -509,8 +510,8 @@ class LocationApiService implements ILocationApiService {
           final response = await _dio.get(fullUrl);
           if (response.statusCode == 200 && response.data is List) {
             return (response.data as List)
-                .whereType<String>()
-                .map((item) => item)
+                .where((item) => item is String)
+                .map((item) => item as String)
                 .toList();
           } else {
             throw DioException(
