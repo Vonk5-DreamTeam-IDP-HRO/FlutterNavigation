@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'create_location_viewmodel.dart';
+import 'add_location_details_screen.dart'; // Import the new screen
 
 class CreateLocationScreen extends StatefulWidget {
   const CreateLocationScreen({super.key});
@@ -15,6 +16,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String? _category;
+  Map<String, dynamic>? _additionalDetails; // To store details from the new screen
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
         address: _addressController.text,
         description: _descriptionController.text,
         category: _category!,
+        additionalDetails: _additionalDetails, // Pass additional details
       );
 
       if (success) {
@@ -61,6 +64,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
         _descriptionController.clear();
         setState(() {
           _category = null;
+          _additionalDetails = null; // Clear additional details
         });
         // Optionally, show success message from ViewModel or navigate away
         if (mounted && viewModel.successMessage != null) {
@@ -196,6 +200,38 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   child: Text(
                     'Error details: ${viewModel.categoriesErrorMessage}',
                     style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () async {
+                  final result = await Navigator.of(context).push<Map<String, dynamic>>(
+                    MaterialPageRoute(
+                      builder: (context) => AddLocationDetailsScreen(
+                        // Pass existing details if you want to support editing them back and forth
+                        // initialDetails: _additionalDetails != null ? LocationDetails.fromJson(_additionalDetails!) : null,
+                      ),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _additionalDetails = result;
+                    });
+                  }
+                },
+                child: Text(
+                  _additionalDetails == null
+                      ? 'Add Additional Info'
+                      : 'Edit Additional Info (${_additionalDetails!.entries.where((e) => e.value != null && e.value.toString().isNotEmpty).length} fields filled)',
+                ),
+              ),
+              if (_additionalDetails != null && _additionalDetails!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    "Additional info added. Tap button above to edit.",
+                    style: TextStyle(color: Theme.of(context).primaryColor),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               const SizedBox(height: 32),

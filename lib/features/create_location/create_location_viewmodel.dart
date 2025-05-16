@@ -61,6 +61,7 @@ class CreateLocationViewModel extends ChangeNotifier {
     required String address, // Address from the form
     String? description,
     required String category,
+    Map<String, dynamic>? additionalDetails, // Added parameter
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -88,7 +89,13 @@ class CreateLocationViewModel extends ChangeNotifier {
       final detailPayload = CreateLocationDetailPayload(
         category: category,
         address: address, // Pass the address to details as well
-        // Other details like city, country can be added here if collected or defaulted
+        city: additionalDetails?['city'] as String?,
+        country: additionalDetails?['country'] as String?,
+        zipCode: additionalDetails?['zipCode'] as String?,
+        phoneNumber: additionalDetails?['phoneNumber'] as String?,
+        website: additionalDetails?['website'] as String?,
+        accessibility: additionalDetails?['accessibility'] as String?,
+        // openingTimes are not handled in this simple example
       );
 
       final payload = CreateLocationPayload(
