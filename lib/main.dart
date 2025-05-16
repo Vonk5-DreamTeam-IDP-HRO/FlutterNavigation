@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart'; // Assuming MainScreen is here
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
+// No need to import LoginScreen here for the home widget directly
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
@@ -24,15 +26,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AppState(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AppState()),
+        ChangeNotifierProvider(create: (context) => AuthViewModel()),
+      ],
       child: MaterialApp(
         title: 'OSM Navigation',
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
-        home: const MainScreen(),
+        home: const MainScreen(), // Always start with MainScreen
+        // routes: {
+        //   // Define routes if you use named navigation for login/register
+        //   // '/login': (context) => const LoginScreen(),
+        //   // '/register': (context) => const RegisterScreen(),
+        // },
       ),
     );
   }
