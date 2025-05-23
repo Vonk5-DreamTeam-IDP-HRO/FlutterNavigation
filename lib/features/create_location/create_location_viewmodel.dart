@@ -1,13 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/Core/models/location_request_dtos.dart';
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:uuid/uuid.dart';
 import 'package:osm_navigation/Core/services/location/location_api_exceptions.dart';
+import 'Services/Photon.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
   final ILocationRepository _locationRepository;
+  final PhotonService _photonService;
 
-  CreateLocationViewModel({required ILocationRepository locationRepository})
-    : _locationRepository = locationRepository;
+  CreateLocationViewModel({
+    required ILocationRepository locationRepository,
+    required PhotonService photonService,
+  }) : _locationRepository = locationRepository,
+       _photonService = photonService;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -18,7 +24,6 @@ class CreateLocationViewModel extends ChangeNotifier {
   String? _successMessage;
   String? get successMessage => _successMessage;
 
-  // Properties for categories
   List<String> _categories = [];
   List<String> get categories => _categories;
 
@@ -28,6 +33,16 @@ class CreateLocationViewModel extends ChangeNotifier {
   String? _categoriesErrorMessage;
   String? get categoriesErrorMessage => _categoriesErrorMessage;
 
+  // For selected location coordinates
+  num? _selectedLatitude;
+  num? _selectedLongitude;
+
+  // Set the selected coordinates when an address is selected from suggestions
+  void setSelectedCoordinates(num latitude, num longitude) {
+    _selectedLatitude = latitude;
+    _selectedLongitude = longitude;
+  }
+
   Future<void> fetchCategories() async {
     _isLoadingCategories = true;
     _categoriesErrorMessage = null;
@@ -36,20 +51,11 @@ class CreateLocationViewModel extends ChangeNotifier {
     try {
       _categories = await _locationRepository.getUniqueCategories();
     } on LocationApiException catch (e) {
-      // Catch specific API exceptions
       _categoriesErrorMessage = 'Failed to load categories: ${e.message}';
-      _categories = []; // Clear categories on error
-      debugPrint(
-        '[CreateLocationViewModel] LocationApiException fetching categories: $e',
-      );
+      _categories = [];
     } catch (e) {
-      // Catch any other unexpected errors
-      _categoriesErrorMessage =
-          'An unexpected error occurred while fetching categories: ${e.toString()}';
-      _categories = []; // Clear categories on error
-      debugPrint(
-        '[CreateLocationViewModel] Unexpected error fetching categories: $e',
-      );
+      _categoriesErrorMessage = 'Unexpected error: ${e.toString()}';
+      _categories = [];
     } finally {
       _isLoadingCategories = false;
       notifyListeners();
@@ -58,7 +64,7 @@ class CreateLocationViewModel extends ChangeNotifier {
 
   Future<bool> submitLocation({
     required String name,
-    required String address, // Address from the form
+    required String address,
     String? description,
     required String category,
   }) async {
@@ -68,64 +74,60 @@ class CreateLocationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Geocode 'address' to get actual latitude and longitude.
-      // Using placeholder values for now.
-      const double placeholderLatitude = 0.0;
-      const double placeholderLongitude = 0.0;
+      // Use pre-selected coordinates if available, otherwise geocode the address
+      late num latitude;
+      late num longitude;
 
-      if (address.isEmpty &&
-          (placeholderLatitude == 0.0 && placeholderLongitude == 0.0)) {
-        // A more robust check or actual geocoding would be needed.
-        // For now, if address is empty and we are using placeholders, this is an issue.
-        // However, the form validation should catch empty address.
-        // This is more about the geocoding step being missing.
-        debugPrint(
-          '[CreateLocationViewModel] Warning: Address is present, but using placeholder lat/lng (0.0, 0.0) as geocoding is not implemented.',
-        );
+      if (_selectedLatitude != null && _selectedLongitude != null) {
+        // Use pre-selected coordinates (from typeahead selection)
+        latitude = _selectedLatitude!;
+        longitude = _selectedLongitude!;
+      } else {
+        // Geocode the address to get coordinates
+        final coordinates = await _photonService.geocodeAddress(address);
+        latitude = coordinates.$1; // This is num
+        longitude = coordinates.$2; // This is num
       }
 
-      // Create the details payload first
       final detailPayload = CreateLocationDetailPayload(
         category: category,
-        address: address, // Pass the address to details as well
-        // Other details like city, country can be added here if collected or defaulted
+        address: address,
       );
+      // TODO: Replace with actual user ID from authentication context
+      // Generate a new Uuid object for userId.
+      final String newUserId = const Uuid().v4();
 
       final payload = CreateLocationPayload(
         name: name,
-        description: description ?? '', // Ensure description is not null
-        latitude:
-            placeholderLatitude, // TODO: Still placeholder, geocoding remains
-        longitude:
-            placeholderLongitude, // TODO: Still placeholder, geocoding todo remains
-        details: detailPayload,
+        description: description ?? '',
+        latitude: latitude.toDouble(),
+        longitude: longitude.toDouble(),
+        userId: newUserId,
+        locationDetail: detailPayload,
       );
-      debugPrint(
-        '[CreateLocationViewModel] Creating location with payload: ${payload.toJson()}',
-      );
-      // Now using the repository to create the location
+
       await _locationRepository.createLocation(payload);
 
+      // Reset selected coordinates
+      _selectedLatitude = null;
+      _selectedLongitude = null;
+
       _successMessage = 'Location created successfully!';
-      _isLoading = false;
-      notifyListeners();
       return true;
     } on LocationApiException catch (e) {
       _errorMessage = 'Failed to create location: ${e.message}';
-      debugPrint('[CreateLocationViewModel] LocationApiException: $e');
     } catch (e) {
-      _errorMessage = 'An unexpected error occurred: ${e.toString()}';
-      debugPrint('[CreateLocationViewModel] Unexpected error: $e');
+      _errorMessage = 'Unexpected error: ${e.toString()}';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
 
-    _isLoading = false;
-    notifyListeners();
     return false;
   }
 
   void clearMessages() {
     _errorMessage = null;
     _successMessage = null;
-    // notifyListeners(); // Optionally notify if UI should react instantly to clearing
   }
 }

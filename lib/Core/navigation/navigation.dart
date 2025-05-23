@@ -3,6 +3,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:osm_navigation/Core/repositories/Route/route_repository.dart';
 import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
 import 'package:osm_navigation/Core/services/route/route_api_service.dart';
+import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/Core/providers/app_state.dart';
 import 'package:osm_navigation/features/home/new_home_screen.dart';
@@ -96,7 +97,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       create: (context) {
         final locationApiService = LocationApiService(context.read<Dio>());
         final locationRepository = LocationRepository(locationApiService);
-        return CreateLocationViewModel(locationRepository: locationRepository);
+        return CreateLocationViewModel(
+          locationRepository: locationRepository,
+          photonService: PhotonService(),
+        );
       },
       child: const CreateLocationScreen(),
     ),
@@ -200,6 +204,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                           );
                           return CreateLocationViewModel(
                             locationRepository: locationRepository,
+                            photonService: PhotonService(),
                           );
                         },
                         child: const CreateLocationScreen(),
