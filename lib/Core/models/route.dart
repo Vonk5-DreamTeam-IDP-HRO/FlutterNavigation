@@ -1,5 +1,5 @@
 class Route {
-  final int id;
+  final String id;
   final String displayName;
   final String description;
 

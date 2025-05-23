@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 class CreateRouteDto {
   final String name;
   final String? description;
-  final List<int> locationIds;
+  final List<String> locationIds;
 
   const CreateRouteDto({
     required this.name,

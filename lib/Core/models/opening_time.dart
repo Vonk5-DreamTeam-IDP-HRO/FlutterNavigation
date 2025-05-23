@@ -1,10 +1,10 @@
 class OpeningTime {
-  final int? openingId; // Nullable if not always present (e.g., new entries)
-  final String dayOfWeek; // e.g., "Monday", "Tuesday"
-  final String? openTime; // e.g., "09:00"
-  final String? closeTime; // e.g., "17:00"
+  final String? openingId;
+  final String dayOfWeek;
+  final String? openTime;
+  final String? closeTime;
   final bool is24Hours;
-  final String? timezone; // e.g., "CEST"
+  final String? timezone;
 
   OpeningTime({
     this.openingId,
@@ -17,7 +17,7 @@ class OpeningTime {
 
   factory OpeningTime.fromJson(Map<String, dynamic> json) {
     return OpeningTime(
-      openingId: json['openingId'] as int?,
+      openingId: json['openingId'] as String?,
       dayOfWeek: json['dayOfWeek'] as String,
       openTime: json['openTime'] as String?,
       closeTime: json['closeTime'] as String?,

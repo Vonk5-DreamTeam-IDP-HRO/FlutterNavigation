@@ -3,9 +3,7 @@ import 'opening_time.dart';
 
 /// Represents detailed information about a location.
 class LocationDetails extends Location {
-  // locationId, name, latitude, longitude, description, category are inherited from Location
-  final int?
-  locationDetailsId; // This specific ID for the details record, if separate
+  final String? locationDetailsId;
   final String? address;
   final String? city;
   final String? country;
@@ -16,15 +14,15 @@ class LocationDetails extends Location {
   final List<OpeningTime> openingTimes;
 
   LocationDetails({
-    required super.locationId,
-    super.userId,
-    required super.name,
-    required super.latitude,
-    required super.longitude,
-    super.description,
-    super.category, // This is a named parameter
-    super.createdAt,
-    super.updatedAt,
+    required String locationId,
+    String? userId,
+    required String name,
+    required double latitude,
+    required double longitude,
+    String? description,
+    String? category,
+    String? createdAt,
+    String? updatedAt,
     this.locationDetailsId,
     this.address,
     this.city,
@@ -34,7 +32,17 @@ class LocationDetails extends Location {
     this.website,
     this.accessibility,
     this.openingTimes = const [],
-  });
+  }) : super(
+         locationId: locationId,
+         userId: userId,
+         name: name,
+         latitude: latitude,
+         longitude: longitude,
+         description: description,
+         category: category,
+         createdAt: createdAt,
+         updatedAt: updatedAt,
+       );
 
   /// Creates a LocationDetails instance from a JSON map.
   factory LocationDetails.fromJson(Map<String, dynamic> json) {
@@ -46,39 +54,45 @@ class LocationDetails extends Location {
               .toList();
     }
 
-    int? parseInt(dynamic value) {
-      if (value is int) return value;
-      if (value is String) return int.tryParse(value);
-      return null;
+    final locationIdString =
+        json['locationId'] as String? ?? json['location_id'] as String?;
+    final userIdString =
+        json['userId'] as String? ?? json['user_id'] as String?;
+    final locationDetailsIdString =
+        json['locationDetailsId'] as String? ??
+        json['location_details_id'] as String?;
+
+    final nameString = json['name'] as String?;
+    if (nameString == null) {
+      throw FormatException("Missing 'name' in LocationDetails JSON");
+    }
+    if (locationIdString == null) {
+      throw FormatException("Missing 'locationId' in LocationDetails JSON");
     }
 
-    final String? categoryFromJson = json['category'] as String?;
-
     return LocationDetails(
-      locationId: parseInt(json['locationId'] ?? json['location_id'])!,
-      userId: parseInt(json['userId'] ?? json['user_id']),
-      name: json['name'] as String,
+      locationId: locationIdString,
+      userId: userIdString,
+      name: nameString,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       description: json['description'] as String?,
-      category: categoryFromJson, // Using the explicitly extracted variable
-      createdAt: json['createdAt'] ?? json['created_at'] as String?,
-      updatedAt: json['updatedAt'] ?? json['updated_at'] as String?,
-      locationDetailsId: parseInt(
-        json['locationDetailsId'] ?? json['location_details_id'],
-      ),
+      category: json['category'] as String?,
+      createdAt: json['createdAt'] as String? ?? json['created_at'] as String?,
+      updatedAt: json['updatedAt'] as String? ?? json['updated_at'] as String?,
+      locationDetailsId: locationDetailsIdString,
       address: json['address'] as String?,
       city: json['city'] as String?,
       country: json['country'] as String?,
-      zipCode: json['zipCode'] ?? json['zip_code'] as String?,
-      phoneNumber: json['phoneNumber'] ?? json['phone_number'] as String?,
+      zipCode: json['zipCode'] as String? ?? json['zip_code'] as String?,
+      phoneNumber:
+          json['phoneNumber'] as String? ?? json['phone_number'] as String?,
       website: json['website'] as String?,
       accessibility: json['accessibility'] as String?,
       openingTimes: openingTimesList,
     );
   }
 
-  /// Converts this LocationDetails instance to a JSON map.
   @override
   Map<String, dynamic> toJson() {
     final map = super.toJson();
@@ -98,6 +112,6 @@ class LocationDetails extends Location {
 
   @override
   String toString() {
-    return 'LocationDetails(locationId: $locationId, name: $name, address: $address, city: $city, openingTimes: ${openingTimes.length}, detailsId: $locationDetailsId)';
+    return 'LocationDetails(${super.toString()}, address: $address, city: $city, openingTimes: ${openingTimes.length}, detailsId: $locationDetailsId)'; // locationDetailsId is already a String?
   }
 }

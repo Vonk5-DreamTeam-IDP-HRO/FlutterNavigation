@@ -1,5 +1,3 @@
-// lib/Core/models/location_request_dtos.dart
-
 class CreateLocationDetailPayload {
   final String? address;
   final String? city;
@@ -13,8 +11,8 @@ class CreateLocationDetailPayload {
 
   CreateLocationDetailPayload({
     this.address,
-    this.city = 'Rotterdam', // Default as per C# DTO plan
-    this.country = 'Netherlands', // Default as per C# DTO plan
+    this.city = 'Rotterdam',
+    this.country = 'Netherlands',
     this.zipCode,
     this.phoneNumber,
     this.website,
@@ -42,16 +40,16 @@ class CreateLocationPayload {
   final double latitude;
   final double longitude;
   final String? description;
-  final int? userId; // Optional: if creating on behalf of a user
-  final CreateLocationDetailPayload? details;
+  final String userId;
+  final CreateLocationDetailPayload? locationDetail;
 
   CreateLocationPayload({
     required this.name,
     required this.latitude,
     required this.longitude,
     this.description,
-    this.userId,
-    this.details,
+    required this.userId, // Now expects a String (UUID string)
+    this.locationDetail,
   });
 
   Map<String, dynamic> toJson() {
@@ -59,41 +57,48 @@ class CreateLocationPayload {
       'name': name,
       'latitude': latitude,
       'longitude': longitude,
+      'userId': userId,
     };
-    if (description != null) map['description'] = description;
-    if (userId != null) map['userId'] = userId;
-    if (details != null) map['details'] = details!.toJson();
+
+    if (description != null) {
+      map['description'] = description;
+    }
+    if (locationDetail != null) {
+      map['locationDetail'] = locationDetail!.toJson();
+    }
     return map;
   }
 }
 
-// UpdateLocationPayload can be very similar or identical to CreateLocationPayload
-// if the backend handles PUT requests by replacing the entity or merging fields.
-// If specific fields are not updatable or partial updates have different structures,
-// this might need to be a distinct class. For now, assuming it's similar.
+// TODO: Check if update is correct and need to be changed
 class UpdateLocationPayload {
-  final String name;
-  final double latitude;
-  final double longitude;
+  final String? locationId;
+  final String? name;
+  final double? latitude;
+  final double? longitude;
   final String? description;
-  final CreateLocationDetailPayload? details; // For updating nested details
+  final String? userId;
+  final CreateLocationDetailPayload?
+  locationDetail; // Renamed from 'details' for consistency
 
   UpdateLocationPayload({
-    required this.name,
-    required this.latitude,
-    required this.longitude,
+    this.locationId,
+    this.name,
+    this.latitude,
+    this.longitude,
     this.description,
-    this.details,
+    this.userId,
+    this.locationDetail, // Renamed
   });
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{
-      'name': name,
-      'latitude': latitude,
-      'longitude': longitude,
-    };
+    final map = <String, dynamic>{};
+    if (name != null) map['name'] = name;
+    if (latitude != null) map['latitude'] = latitude;
+    if (longitude != null) map['longitude'] = longitude;
     if (description != null) map['description'] = description;
-    if (details != null) map['details'] = details!.toJson();
+    if (locationDetail != null)
+      map['locationDetail'] = locationDetail!.toJson();
     return map;
   }
 }

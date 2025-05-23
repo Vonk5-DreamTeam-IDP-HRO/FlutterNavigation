@@ -1,13 +1,15 @@
+import 'location_detail_dto.dart';
+
 class LocationDto {
-  final int locationId;
-  final int? userId;
+  final String locationId;
+  final String? userId;
   final String name;
   final double latitude;
   final double longitude;
   final String? description;
-  final String? category;
   final String? createdAt;
   final String? updatedAt;
+  final LocationDetailDto? locationDetail;
 
   LocationDto({
     required this.locationId,
@@ -16,39 +18,34 @@ class LocationDto {
     required this.latitude,
     required this.longitude,
     this.description,
-    this.category,
     this.createdAt,
     this.updatedAt,
+    this.locationDetail,
   });
 
   factory LocationDto.fromJson(Map<String, dynamic> json) {
-    // Helper to safely parse numbers that might come as int or double
     double? parseDouble(dynamic value) {
       if (value is num) return value.toDouble();
       if (value is String) return double.tryParse(value);
       return null;
     }
 
-    // Helper to safely parse integers
-    int? parseInt(dynamic value) {
-      if (value is int) return value;
-      if (value is String) return int.tryParse(value);
-      return null;
-    }
+    final locIdString =
+        json['locationId'] as String? ?? json['location_id'] as String?;
+    final userIdString =
+        json['userId'] as String? ?? json['user_id'] as String?;
+    final nameString = json['name'] as String?;
 
-    final locId = parseInt(json['locationId'] ?? json['location_id']);
     final latValue = parseDouble(json['latitude']);
     final longValue = parseDouble(json['longitude']);
 
-    if (locId == null) {
+    if (locIdString == null) {
       throw FormatException(
         "Invalid or missing 'locationId' or 'location_id' in LocationDto JSON: ${json['locationId'] ?? json['location_id']}",
       );
     }
-    if (json['name'] == null) {
-      throw FormatException(
-        "Missing 'name' in LocationDto JSON: ${json['name']}",
-      );
+    if (nameString == null) {
+      throw FormatException("Missing 'name' in LocationDto JSON");
     }
     if (latValue == null) {
       throw FormatException(
@@ -61,16 +58,29 @@ class LocationDto {
       );
     }
 
+    LocationDetailDto? locationDetail;
+    if (json['locationDetail'] != null &&
+        json['locationDetail'] is Map<String, dynamic>) {
+      locationDetail = LocationDetailDto.fromJson(
+        json['locationDetail'] as Map<String, dynamic>,
+      );
+    } else if (json['location_detail'] != null &&
+        json['location_detail'] is Map<String, dynamic>) {
+      locationDetail = LocationDetailDto.fromJson(
+        json['location_detail'] as Map<String, dynamic>,
+      );
+    }
+
     return LocationDto(
-      locationId: locId,
-      userId: parseInt(json['userId'] ?? json['user_id']),
-      name: json['name'] as String,
+      locationId: locIdString,
+      userId: userIdString,
+      name: nameString,
       latitude: latValue,
       longitude: longValue,
       description: json['description'] as String?,
-      category: json['category'] as String?,
-      createdAt: json['createdAt'] ?? json['created_at'] as String?,
-      updatedAt: json['updatedAt'] ?? json['updated_at'] as String?,
+      createdAt: json['createdAt'] as String? ?? json['created_at'] as String?,
+      updatedAt: json['updatedAt'] as String? ?? json['updated_at'] as String?,
+      locationDetail: locationDetail,
     );
   }
 
@@ -83,9 +93,11 @@ class LocationDto {
     };
     if (userId != null) map['userId'] = userId;
     if (description != null) map['description'] = description;
-    if (category != null) map['category'] = category;
     if (createdAt != null) map['createdAt'] = createdAt;
     if (updatedAt != null) map['updatedAt'] = updatedAt;
+    if (locationDetail != null) {
+      map['locationDetail'] = locationDetail!.toJson();
+    }
     return map;
   }
 }

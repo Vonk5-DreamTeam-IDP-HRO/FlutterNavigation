@@ -1,5 +1,5 @@
 class RouteDto {
-  final int routeId;
+  final String routeId;
   final String name;
   final String? description;
 
@@ -8,7 +8,7 @@ class RouteDto {
 
   factory RouteDto.fromJson(Map<String, dynamic> json) {
     return RouteDto(
-      routeId: json['routeId'] as int,
+      routeId: json['routeId'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
     );
