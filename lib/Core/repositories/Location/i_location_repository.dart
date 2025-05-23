@@ -9,7 +9,7 @@ abstract class ILocationRepository {
   Future<List<Location>> getAllLocations();
 
   /// Fetches a specific location by its ID
-  Future<LocationDetails> getLocationById(int id);
+  Future<LocationDetails> getLocationById(String id);
 
   /// Fetches locations filtered by a specific category
   Future<List<Location>> getLocationsByCategory(String category);
@@ -18,11 +18,10 @@ abstract class ILocationRepository {
   Future<LocationDetails> createLocation(CreateLocationPayload payload);
 
   /// Updates an existing location identified by its ID
-  Future<LocationDetails> updateLocation(int id, UpdateLocationPayload payload);
+  Future<LocationDetails> updateLocation(String id, UpdateLocationPayload payload);
 
   /// Deletes a location by its ID
-  Future<void> deleteLocation(int id);
-
+  Future<void> deleteLocation(String id);
   /// Fetches selectable locations grouped by their category
   Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
 

@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart'; // Ensure Dio is imported
-
 // --- Custom Exceptions ---
 class LocationApiException implements Exception {
   final String message;

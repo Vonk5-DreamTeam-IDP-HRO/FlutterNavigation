@@ -1,5 +1,6 @@
 import '../models/location_dto.dart';
 import '../models/location.dart';
+import '../models/location_detail_dto.dart';
 
 /// Mapper class to convert between Location domain models and DTOs
 class LocationMapper {
@@ -12,7 +13,7 @@ class LocationMapper {
       latitude: dto.latitude,
       longitude: dto.longitude,
       description: dto.description,
-      category: dto.category,
+      category: dto.locationDetail?.category,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
     );
@@ -27,9 +28,12 @@ class LocationMapper {
       latitude: model.latitude,
       longitude: model.longitude,
       description: model.description,
-      category: model.category,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      locationDetail:
+          model.category != null
+              ? LocationDetailDto(category: model.category)
+              : null, // Create LocationDetailDto for category
     );
   }
 

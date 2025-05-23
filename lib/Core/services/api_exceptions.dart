@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-
 /// Base class for all API service-related exceptions.
 class ApiException implements Exception {
   final String message;

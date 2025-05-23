@@ -22,7 +22,7 @@ abstract class IRouteApiService {
   /// [routeId] is the ID of the route for which to fetch locations.
   /// Returns a list of [Location] objects associated with the route.
   /// Throws an exception if the request fails or if the response is not in the expected format.
-  Future<List<Location>> getRouteLocations(int routeId);
+  Future<List<Location>> getRouteLocations(String routeId);
 
   /// Fetches all locations and their details to create a list of selectable locations with categories.
   ///
@@ -35,7 +35,7 @@ abstract class IRouteApiService {
   /// [routeId] is the ID of the route to fetch.
   /// Returns a [core_route.Route] object.
   /// Throws an exception if the request fails or if the route is not found.
-  Future<RouteDto?> getRouteById(int routeId);
+  Future<RouteDto?> getRouteById(String routeId);
 
   /// Adds a new route.
   ///

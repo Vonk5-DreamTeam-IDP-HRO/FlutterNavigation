@@ -48,7 +48,7 @@ class LocationRepository implements ILocationRepository {
   }
 
   @override
-  Future<LocationDetails> getLocationById(int id) async {
+  Future<LocationDetails> getLocationById(String id) async {
     // Get location by ID and convert to domain model
     final locationDetails = await _locationApiService.getLocationById(id);
     return locationDetails;
@@ -86,7 +86,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<LocationDetails> updateLocation(
-    int id,
+    String id,
     UpdateLocationPayload payload,
   ) async {
     // Update an existing location
@@ -98,7 +98,7 @@ class LocationRepository implements ILocationRepository {
   }
 
   @override
-  Future<void> deleteLocation(int id) async {
+  Future<void> deleteLocation(String id) async {
     // Delete a location - no mapping needed for void return type
     await _locationApiService.deleteLocation(id);
   }

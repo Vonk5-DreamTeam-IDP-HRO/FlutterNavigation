@@ -187,7 +187,7 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<List<Location>> getRouteLocations(int routeId) async {
+  Future<List<Location>> getRouteLocations(String routeId) async {
     final String operationName = 'fetching locations for route $routeId';
     final String endpointPath = '/location_route';
     final Map<String, dynamic> queryParams = {
@@ -298,30 +298,82 @@ class RouteApiService implements IRouteApiService {
                   'Failed to load location details: ${detailsResponse.statusCode}',
             );
           }
-
           final List<dynamic> locationsData = locationsResponse.data;
           final List<dynamic> detailsData = detailsResponse.data;
 
-          final Map<int, String> categoryMap = {};
-          for (var detailItem in detailsData) {
-            final detail = LocationDetails.fromJson(
-              detailItem as Map<String, dynamic>,
-            );
-            categoryMap[detail.locationId] = detail.category ?? 'Uncategorized';
+          // Create a map of Location Uuid to Category from detailsData
+          final Map<String, String> categoryMap = {};
+          for (var detailItemJson in detailsData) {
+            if (detailItemJson is Map<String, dynamic>) {
+              try {
+                // Assuming LocationDetails.fromJson correctly parses locationId as Uuid
+                final detail = LocationDetails.fromJson(detailItemJson);
+                categoryMap[detail.locationId] =
+                    detail.category ?? 'Uncategorized';
+              } catch (e, s) {
+                debugPrint(
+                  '[RouteApiService] Error parsing LocationDetails item in getSelectableLocations: $e. JSON: $detailItemJson',
+                );
+                // Optionally skip this item or rethrow as a RouteApiParseException
+                throw RouteApiParseException(
+                  'Error parsing LocationDetails item in getSelectableLocations: ${e.toString()}',
+                  originalException: e,
+                  stackTrace: s,
+                );
+              }
+            }
           }
 
+          //Create SelectableLocation list from locationsData, using categoryMap
           final List<SelectableLocation> selectableLocations = [];
-          for (var locationItem in locationsData) {
-            final int locationId = locationItem['locationid'] as int;
-            final String name = locationItem['name'] as String;
-            final String category = categoryMap[locationId] ?? 'Uncategorized';
-            selectableLocations.add(
-              SelectableLocation(
-                locationId: locationId,
-                name: name,
-                category: category,
-              ),
-            );
+          for (var locationItemJson in locationsData) {
+            if (locationItemJson is Map<String, dynamic>) {
+              try {
+                // Assume 'locationId' (or 'locationid') from locationsData is a String Guid
+                // The C# SelectableLocationDto has Guid LocationId, so API should send string.
+                // Prioritize 'locationId', fallback to 'locationid'
+                final locationIdString =
+                    locationItemJson['locationId'] as String? ??
+                    locationItemJson['locationid'] as String?;
+                final name = locationItemJson['name'] as String?;
+
+                if (locationIdString == null) {
+                  debugPrint(
+                    '[RouteApiService] Missing locationId in locationItemJson: $locationItemJson',
+                  );
+                  continue; // Skip this item
+                }
+                if (name == null) {
+                  debugPrint(
+                    '[RouteApiService] Missing name in locationItemJson: $locationItemJson',
+                  );
+                  continue; // Skip this item
+                }
+
+                final category =
+                    categoryMap[locationIdString] ?? 'Uncategorized';
+
+                // Using SelectableLocation's constructor directly as per current structure.
+                // SelectableLocation.locationId now expects a String.
+                selectableLocations.add(
+                  SelectableLocation(
+                    locationId: locationIdString,
+                    name: name,
+                    category: category,
+                  ),
+                );
+              } catch (e, s) {
+                debugPrint(
+                  '[RouteApiService] Error processing locationItemJson in getSelectableLocations: $e. JSON: $locationItemJson',
+                );
+                // Optionally skip or rethrow
+                throw RouteApiParseException(
+                  'Error processing locationItemJson in getSelectableLocations: ${e.toString()}',
+                  originalException: e,
+                  stackTrace: s,
+                );
+              }
+            }
           }
           debugPrint(
             '[RouteApiService] Successfully fetched and combined ${selectableLocations.length} selectable locations from $baseUrl',
@@ -345,7 +397,7 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<RouteDto?> getRouteById(int routeId) async {
+  Future<RouteDto?> getRouteById(String routeId) async {
     final String operationName = 'fetching route by ID $routeId';
     final String endpointPath = '/api/Route/$routeId';
 

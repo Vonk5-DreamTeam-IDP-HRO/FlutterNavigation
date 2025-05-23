@@ -17,7 +17,7 @@ class RouteRepository implements IRouteRepository {
   }
 
   @override
-  Future<Route?> getRouteById(int routeId) async {
+  Future<Route?> getRouteById(String routeId) async {
     final RouteDto? routeDto = await _routeApiService.getRouteById(routeId);
     if (routeDto == null) {
       return null;

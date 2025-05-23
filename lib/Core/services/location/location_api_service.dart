@@ -189,7 +189,7 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<LocationDetails> getLocationById(int id) async {
+  Future<LocationDetails> getLocationById(String id) async {
     final String operationName = 'fetching location by ID $id';
     final String endpoint = 'api/Location/$id';
 
@@ -336,7 +336,7 @@ class LocationApiService implements ILocationApiService {
 
   @override
   Future<LocationDetails> updateLocation(
-    int id,
+    String id,
     UpdateLocationPayload payload,
   ) async {
     final String operationName = 'updating location $id';
@@ -389,7 +389,7 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<void> deleteLocation(int id) async {
+  Future<void> deleteLocation(String id) async {
     final String operationName = 'deleting location $id';
     final String endpoint = 'api/Location/$id';
 
@@ -447,16 +447,18 @@ class LocationApiService implements ILocationApiService {
             final Map<String, List<SelectableLocation>> groupedLocations = {};
             data.forEach((category, locationsJson) {
               if (locationsJson is List) {
-                groupedLocations[category] =
-                    locationsJson
-                        .map(
-                          (json) => SelectableLocation(
-                            locationId: json['locationId'] as int,
-                            name: json['name'] as String,
-                            category: json['category'] as String,
-                          ),
-                        )
-                        .toList();
+                try {
+                  groupedLocations[category] = locationsJson
+                      .map((json) => SelectableLocation.fromJson(json as Map<String, dynamic>))
+                      .toList();
+                } catch (e, s) {
+                  debugPrint('[LocationApiService] Error parsing SelectableLocations for category "$category": $e. JSON: $locationsJson');
+                  throw LocationApiParseException(
+                    'Error parsing SelectableLocations for category "$category" in $operationName: ${e.toString()}',
+                    stackTrace: s,
+                    originalException: e,
+                  );
+                }
               }
             });
             return groupedLocations;

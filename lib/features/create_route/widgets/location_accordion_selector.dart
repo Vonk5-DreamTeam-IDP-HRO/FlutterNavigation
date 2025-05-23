@@ -10,7 +10,7 @@ class LocationAccordionSelector extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final Map<String, List<SelectableLocation>> groupedLocations;
-  final CreateRouteViewModel viewModel; // Needed for checkbox interaction
+  final CreateRouteViewModel viewModel;
 
   const LocationAccordionSelector({
     super.key,

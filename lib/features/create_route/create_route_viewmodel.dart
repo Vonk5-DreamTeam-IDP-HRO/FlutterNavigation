@@ -31,8 +31,8 @@ class CreateRouteViewModel extends ChangeNotifier {
   Map<String, List<SelectableLocation>> get groupedLocations =>
       _groupedLocations;
 
-  final Set<int> _selectedLocationIds = {};
-  Set<int> get selectedLocationIds => _selectedLocationIds;
+  final Set<String> _selectedLocationIds = {};
+  Set<String> get selectedLocationIds => _selectedLocationIds;
 
   // --- Controllers for Text Fields ---
 
@@ -74,7 +74,8 @@ class CreateRouteViewModel extends ChangeNotifier {
     }
   }
 
-  void toggleLocationSelection(int locationId) {
+  void toggleLocationSelection(String locationId) {
+    // Changed parameter from Uuid to String
     if (_selectedLocationIds.contains(locationId)) {
       _selectedLocationIds.remove(locationId);
     } else {
