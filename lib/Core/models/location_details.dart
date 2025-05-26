@@ -14,15 +14,15 @@ class LocationDetails extends Location {
   final List<OpeningTime> openingTimes;
 
   LocationDetails({
-    required String locationId,
-    String? userId,
-    required String name,
-    required double latitude,
-    required double longitude,
-    String? description,
-    String? category,
-    String? createdAt,
-    String? updatedAt,
+    required super.locationId,
+    super.userId,
+    required super.name,
+    required super.latitude,
+    required super.longitude,
+    super.description,
+    super.category,
+    super.createdAt,
+    super.updatedAt,
     this.locationDetailsId,
     this.address,
     this.city,
@@ -32,17 +32,7 @@ class LocationDetails extends Location {
     this.website,
     this.accessibility,
     this.openingTimes = const [],
-  }) : super(
-         locationId: locationId,
-         userId: userId,
-         name: name,
-         latitude: latitude,
-         longitude: longitude,
-         description: description,
-         category: category,
-         createdAt: createdAt,
-         updatedAt: updatedAt,
-       );
+  });
 
   /// Creates a LocationDetails instance from a JSON map.
   factory LocationDetails.fromJson(Map<String, dynamic> json) {
@@ -64,10 +54,12 @@ class LocationDetails extends Location {
 
     final nameString = json['name'] as String?;
     if (nameString == null) {
-      throw FormatException("Missing 'name' in LocationDetails JSON");
+      throw const FormatException("Missing 'name' in LocationDetails JSON");
     }
     if (locationIdString == null) {
-      throw FormatException("Missing 'locationId' in LocationDetails JSON");
+      throw const FormatException(
+        "Missing 'locationId' in LocationDetails JSON",
+      );
     }
 
     return LocationDetails(

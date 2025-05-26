@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import '../../../core/config/app_config.dart';
+import '../../../Core/config/app_config.dart';
 
 class ValhallaService {
   // Use the configured base URL

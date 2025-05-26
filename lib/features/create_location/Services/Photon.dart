@@ -33,8 +33,8 @@ class PhotonService {
       }
 
       final firstResult = results.first;
-      final num? latitude = firstResult.coordinates.latitude;
-      final num? longitude = firstResult.coordinates.longitude;
+      final num latitude = firstResult.coordinates.latitude;
+      final num longitude = firstResult.coordinates.longitude;
 
       if (latitude == null || longitude == null) {
         throw PhotonGeocodingException(
@@ -96,15 +96,11 @@ class PhotonResultExtension {
   String? get type => _feature.type;
 
   num get latitude {
-    if (_feature.coordinates.latitude != null)
-      return _feature.coordinates.latitude!;
-    throw StateError('Latitude not available in PhotonFeature');
+    return _feature.coordinates.latitude;
   }
 
   num get longitude {
-    if (_feature.coordinates.longitude != null)
-      return _feature.coordinates.longitude!;
-    throw StateError('Longitude not available in PhotonFeature');
+    return _feature.coordinates.longitude;
   }
 
   String get formattedAddress {

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:latlong2/latlong.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../core/config/app_config.dart';
+import '../../Core/config/app_config.dart';
 import './services/valhalla_service.dart';
 
 class CesiumMapViewModel extends ChangeNotifier {

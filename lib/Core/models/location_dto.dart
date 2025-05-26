@@ -45,7 +45,7 @@ class LocationDto {
       );
     }
     if (nameString == null) {
-      throw FormatException("Missing 'name' in LocationDto JSON");
+      throw const FormatException("Missing 'name' in LocationDto JSON");
     }
     if (latValue == null) {
       throw FormatException(

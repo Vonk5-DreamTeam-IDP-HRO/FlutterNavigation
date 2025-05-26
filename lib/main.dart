@@ -10,6 +10,7 @@ import 'package:osm_navigation/Core/services/location/location_api_service.dart'
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
 import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
 import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
@@ -21,8 +22,18 @@ Future<void> main() async {
   // For example, if you are using plugins that require native code. Kotlin or Swift.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize AppConfig with loaded environment variables.
-  await dotenv.load(fileName: '.env');
+  try {
+    // Initialize environment variables first
+    await dotenv.load(fileName: '.env');
+    // Then initialize AppConfig with loaded environment variables.
+    await AppConfig.load();
+
+    print('Environment loaded successfully');
+    print('URL: ${AppConfig.url}');
+  } catch (e) {
+    print('Error loading environment: $e');
+    // Still run the app, but with potential issues
+  }
 
   runApp(const MyApp());
 }
@@ -49,6 +60,7 @@ class MyApp extends StatelessWidget {
               (context) =>
                   LocationRepository(context.read<ILocationApiService>()),
         ),
+        Provider<PhotonService>(create: (context) => PhotonService()),
       ],
       child: MaterialApp(
         title: 'OSM Navigation',

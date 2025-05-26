@@ -44,7 +44,7 @@ class Location {
     }
     final nameString = json['name'] as String?;
     if (nameString == null) {
-      throw FormatException("Missing 'name' in Location JSON");
+      throw const FormatException("Missing 'name' in Location JSON");
     }
     if (latValue == null) {
       throw FormatException(

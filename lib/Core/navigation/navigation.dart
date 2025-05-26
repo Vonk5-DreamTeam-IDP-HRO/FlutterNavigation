@@ -99,7 +99,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         final locationRepository = LocationRepository(locationApiService);
         return CreateLocationViewModel(
           locationRepository: locationRepository,
-          photonService: PhotonService(),
+          photonService: context.read<PhotonService>(),
         );
       },
       child: const CreateLocationScreen(),

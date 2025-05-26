@@ -21,7 +21,7 @@ class RouteApiService implements IRouteApiService {
   static final String _primaryBaseApiUrl =
       '${AppConfig.url}:${AppConfig.backendApiPort}';
   static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
+      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
 
   RouteApiService(this._dio);
 

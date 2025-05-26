@@ -18,10 +18,14 @@ abstract class ILocationRepository {
   Future<LocationDetails> createLocation(CreateLocationPayload payload);
 
   /// Updates an existing location identified by its ID
-  Future<LocationDetails> updateLocation(String id, UpdateLocationPayload payload);
+  Future<LocationDetails> updateLocation(
+    String id,
+    UpdateLocationPayload payload,
+  );
 
   /// Deletes a location by its ID
   Future<void> deleteLocation(String id);
+
   /// Fetches selectable locations grouped by their category
   Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
 
