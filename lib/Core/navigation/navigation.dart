@@ -91,7 +91,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ChangeNotifierProvider(
       create: (_) => SettingsViewModel(),
       child: const SettingsScreen(),
-    ), // 5: Create Location Screen (This is another SpeedDial target)
+    ),    // 5: Create Location Screen (This is another SpeedDial target)
     // This screen is part of the stack but not directly mapped to a BottomNavBar item.
     ChangeNotifierProvider(
       create: (context) {
@@ -99,7 +99,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         final locationRepository = LocationRepository(locationApiService);
         return CreateLocationViewModel(
           locationRepository: locationRepository,
-          photonService: PhotonService(),
+          photonService: context.read<PhotonService>(),
         );
       },
       child: const CreateLocationScreen(),
