@@ -26,40 +26,44 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    // Use listen: false for initial checks to avoid rebuild cycles
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final appState = Provider.of<AppState>(context, listen: false);
+    // Use Builder to ensure we have the correct context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-    // Check initial state
-    bool shouldShowDialog = !authViewModel.isAuthenticated &&
-                          appState.selectedTabIndex == MainScreen.createRouteIndex &&
-                          !_isLoginDialogShown;
+      Builder(
+        builder: (builderContext) {
+          final authViewModel = Provider.of<AuthViewModel>(builderContext, listen: false);
+          final appState = Provider.of<AppState>(builderContext, listen: false);
 
-    if (shouldShowDialog) {
-      // Use Future.microtask to avoid build-time setState
-      Future.microtask(() {
-        if (mounted && !_isLoginDialogShown) {
-          _showLoginDialog(context);
-          if (mounted) {
-            setState(() {
-              _isLoginDialogShown = true;
-            });
+          // Check initial state
+          bool shouldShowDialog = !authViewModel.isAuthenticated &&
+                                appState.selectedTabIndex == MainScreen.createRouteIndex &&
+                                !_isLoginDialogShown;
+
+          if (shouldShowDialog) {
+            _showLoginDialog(builderContext);
+            if (mounted) {
+              setState(() {
+                _isLoginDialogShown = true;
+              });
+            }
           }
-        }
-      });
-    }
 
-    // Listen for changes with separate Provider.of calls
-    final authChanges = Provider.of<AuthViewModel>(context);
-    final appStateChanges = Provider.of<AppState>(context);
+          // Listen for changes with separate Provider.of calls
+          final authChanges = Provider.of<AuthViewModel>(builderContext);
+          final appStateChanges = Provider.of<AppState>(builderContext);
 
-    if ((authChanges.isAuthenticated || appStateChanges.selectedTabIndex != MainScreen.createRouteIndex) && _isLoginDialogShown) {
-      if (mounted) {
-        setState(() {
-          _isLoginDialogShown = false;
-        });
-      }
-    }
+          if ((authChanges.isAuthenticated || appStateChanges.selectedTabIndex != MainScreen.createRouteIndex) && _isLoginDialogShown) {
+            if (mounted) {
+              setState(() {
+                _isLoginDialogShown = false;
+              });
+            }
+          }
+          return const SizedBox.shrink(); // Builder needs to return a widget
+        },
+      );
+    });
   }
 
   void _showLoginDialog(BuildContext dialogContext) {

@@ -161,15 +161,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider(
-                    create: (context) {
-                      final dio = context.read<Dio>();
-                      final locationApiService = LocationApiService(dio);
-                      final locationRepository = LocationRepository(
-                        locationApiService,
-                      );
-                      return CreateRouteViewModel(locationRepository);
-                    },
+                  builder: (context) => MultiProvider(
+                    providers: [
+                      ChangeNotifierProvider.value(
+                        value: context.read<AppState>(),
+                      ),
+                      ChangeNotifierProvider(
+                        create: (context) {
+                          final dio = context.read<Dio>();
+                          final locationApiService = LocationApiService(dio);
+                          final locationRepository = LocationRepository(
+                            locationApiService,
+                          );
+                          return CreateRouteViewModel(locationRepository);
+                        },
+                      ),
+                    ],
                     child: const CreateRouteScreen(),
                   ),
                 ),
@@ -200,8 +207,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder:
-                      (context) => ChangeNotifierProvider(
+                  builder: (context) => MultiProvider(
+                    providers: [
+                      ChangeNotifierProvider.value(
+                        value: context.read<AppState>(),
+                      ),
+                      ChangeNotifierProvider(
                         create: (context) {
                           final locationApiService = LocationApiService(
                             context.read<Dio>(),
@@ -214,8 +225,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             photonService: PhotonService(),
                           );
                         },
-                        child: const CreateLocationScreen(),
                       ),
+                    ],
+                    child: const CreateLocationScreen(),
+                  ),
                 ),
               );
               _isDialOpen.value = false;
