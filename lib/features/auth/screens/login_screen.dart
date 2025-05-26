@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';
-import 'register_screen.dart'; // Assuming RegisterScreen is in the same directory
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -28,7 +28,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       final success = await authViewModel.login(
-        _emailController.text,
+        _usernameController.text,
         _passwordController.text,
       );
       if (mounted) {
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -85,20 +85,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 24),
           TextFormField(
-            controller: _emailController,
+            controller: _usernameController,
             decoration: InputDecoration(
-              labelText: 'Email',
+              labelText: 'Username',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
+                return 'Please enter your username';
               }
               return null;
             },
