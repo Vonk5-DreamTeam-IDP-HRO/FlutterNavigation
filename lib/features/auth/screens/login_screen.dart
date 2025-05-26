@@ -49,8 +49,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (success) {
           widget.onLoginSuccess?.call();
         } else {
+          final error = authViewModel.error ?? 'Login Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login Failed. Check credentials.')),
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }

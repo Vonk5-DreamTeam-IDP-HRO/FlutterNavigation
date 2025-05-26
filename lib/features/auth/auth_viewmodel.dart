@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/Core/services/auth/auth_api_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final AuthApiService _authService = AuthApiService();
 
   // Keys for secure storage
   static const String _userTokenKey = 'user_token';
@@ -10,13 +13,14 @@ class AuthViewModel extends ChangeNotifier {
 
   String? _token;
   String? _email;
+  String? _error;
 
   String? get token => _token;
   String? get email => _email;
+  String? get error => _error;
   bool get isAuthenticated => _token != null;
 
   AuthViewModel() {
-    // Still load saved credentials but don't trigger any navigation
     _loadUserFromStorage();
   }
 
@@ -27,32 +31,57 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    // In a real app, you would call your backend API here
-    // For now, let's assume login is successful if password is "password"
-    if (password == "password") {
-      _token = "fake_jwt_token"; // Replace with actual token from backend
+    try {
+      _error = null;
+      final token = await _authService.login(email, password);
+      
+      _token = token;
       _email = email;
-      await _secureStorage.write(key: _userTokenKey, value: _token);
-      await _secureStorage.write(key: _userEmailKey, value: _email);
+      await _secureStorage.write(key: _userTokenKey, value: token);
+      await _secureStorage.write(key: _userEmailKey, value: email);
+      
       notifyListeners();
       return true;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        _error = 'Invalid email or password';
+      } else {
+        _error = 'Login failed: ${e.message}';
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'An unexpected error occurred';
+      notifyListeners();
+      return false;
     }
-    return false;
   }
 
   Future<bool> register(String email, String password) async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    // In a real app, you would call your backend API here
-    // For now, let's assume registration is successful
-    _token = "fake_jwt_token_after_register"; // Replace with actual token
-    _email = email;
-    await _secureStorage.write(key: _userTokenKey, value: _token);
-    await _secureStorage.write(key: _userEmailKey, value: _email);
-    notifyListeners();
-    return true;
+    try {
+      _error = null;
+      final token = await _authService.register(email, password);
+      
+      _token = token;
+      _email = email;
+      await _secureStorage.write(key: _userTokenKey, value: token);
+      await _secureStorage.write(key: _userEmailKey, value: email);
+      
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        _error = e.response?.data['message'] ?? 'Invalid registration data';
+      } else {
+        _error = 'Registration failed: ${e.message}';
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'An unexpected error occurred';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> logout() async {
