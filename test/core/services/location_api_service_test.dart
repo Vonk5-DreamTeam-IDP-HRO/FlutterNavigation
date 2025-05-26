@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:osm_navigation/core/config/app_config.dart';
-import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/Core/services/location/location_api_service.dart';
 
 @GenerateMocks([Dio])
 import 'location_api_service_test.mocks.dart'; // Will be generated
