@@ -23,7 +23,10 @@ abstract class ILocationApiService {
 
   /// Updates an existing location identified by its ID (which is a Uuid string) with the given payload.
   /// Returns the details of the updated location.
-  Future<LocationDetails> updateLocation(String id, UpdateLocationPayload payload);
+  Future<LocationDetails> updateLocation(
+    String id,
+    UpdateLocationPayload payload,
+  );
 
   /// Deletes a location by its ID (which is a Uuid string).
   Future<void> deleteLocation(String id);

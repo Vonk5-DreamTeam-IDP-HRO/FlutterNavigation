@@ -27,7 +27,7 @@ Future<void> main() async {
     await dotenv.load(fileName: '.env');
     // Then initialize AppConfig with loaded environment variables.
     await AppConfig.load();
-    
+
     print('Environment loaded successfully');
     print('URL: ${AppConfig.url}');
   } catch (e) {
@@ -48,7 +48,8 @@ class MyApp extends StatelessWidget {
     // It is used for making network requests and catch expections to show to the user.
     final dio = DioFactory.createDio();
 
-    return MultiProvider(      providers: [
+    return MultiProvider(
+      providers: [
         ChangeNotifierProvider(create: (context) => AppState()),
         Provider<Dio>(create: (context) => dio),
         Provider<ILocationApiService>(
@@ -59,9 +60,7 @@ class MyApp extends StatelessWidget {
               (context) =>
                   LocationRepository(context.read<ILocationApiService>()),
         ),
-        Provider<PhotonService>(
-          create: (context) => PhotonService(),
-        ),
+        Provider<PhotonService>(create: (context) => PhotonService()),
       ],
       child: MaterialApp(
         title: 'OSM Navigation',

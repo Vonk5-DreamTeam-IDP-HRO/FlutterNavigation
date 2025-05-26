@@ -1,6 +1,7 @@
 import 'package:osm_navigation/Core/models/location.dart';
 import 'package:osm_navigation/Core/models/location_details.dart';
 import 'package:osm_navigation/Core/models/location_dto.dart';
+import 'package:osm_navigation/Core/models/location_detail_dto.dart';
 import 'package:osm_navigation/Core/models/selectable_location.dart';
 import 'package:osm_navigation/Core/models/location_request_dtos.dart';
 import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
@@ -38,9 +39,17 @@ class LocationRepository implements ILocationRepository {
                 latitude: loc.latitude,
                 longitude: loc.longitude,
                 description: loc.description,
-                category: loc.category,
                 createdAt: loc.createdAt,
                 updatedAt: loc.updatedAt,
+                // Category is handled through LocationDetailDto if available
+                locationDetail:
+                    loc.category != null
+                        ? LocationDetailDto(
+                          locationDetailId:
+                              '', // You might need to provide this
+                          category: loc.category,
+                        )
+                        : null,
               ),
             )
             .toList();
@@ -69,9 +78,17 @@ class LocationRepository implements ILocationRepository {
                 latitude: loc.latitude,
                 longitude: loc.longitude,
                 description: loc.description,
-                category: loc.category,
                 createdAt: loc.createdAt,
                 updatedAt: loc.updatedAt,
+                // Category is handled through LocationDetailDto if available
+                locationDetail:
+                    loc.category != null
+                        ? LocationDetailDto(
+                          locationDetailId:
+                              '', // You might need to provide this
+                          category: loc.category,
+                        )
+                        : null,
               ),
             )
             .toList();

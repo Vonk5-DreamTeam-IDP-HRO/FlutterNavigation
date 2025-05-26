@@ -22,7 +22,7 @@ class LocationApiService implements ILocationApiService {
   static final String _primaryBaseApiUrl =
       '${AppConfig.url}:${AppConfig.backendApiPort}';
   static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
+      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
 
   // Constructor requires a pre-configured Dio instance.
   LocationApiService(this._dio);
@@ -448,11 +448,18 @@ class LocationApiService implements ILocationApiService {
             data.forEach((category, locationsJson) {
               if (locationsJson is List) {
                 try {
-                  groupedLocations[category] = locationsJson
-                      .map((json) => SelectableLocation.fromJson(json as Map<String, dynamic>))
-                      .toList();
+                  groupedLocations[category] =
+                      locationsJson
+                          .map(
+                            (json) => SelectableLocation.fromJson(
+                              json as Map<String, dynamic>,
+                            ),
+                          )
+                          .toList();
                 } catch (e, s) {
-                  debugPrint('[LocationApiService] Error parsing SelectableLocations for category "$category": $e. JSON: $locationsJson');
+                  debugPrint(
+                    '[LocationApiService] Error parsing SelectableLocations for category "$category": $e. JSON: $locationsJson',
+                  );
                   throw LocationApiParseException(
                     'Error parsing SelectableLocations for category "$category" in $operationName: ${e.toString()}',
                     stackTrace: s,
@@ -512,7 +519,7 @@ class LocationApiService implements ILocationApiService {
           final response = await _dio.get(fullUrl);
           if (response.statusCode == 200 && response.data is List) {
             return (response.data as List)
-                .where((item) => item is String)
+                .whereType<String>()
                 .map((item) => item as String)
                 .toList();
           } else {
