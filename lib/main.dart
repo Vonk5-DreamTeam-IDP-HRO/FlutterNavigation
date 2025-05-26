@@ -10,6 +10,7 @@ import 'package:osm_navigation/Core/services/location/location_api_service.dart'
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
 import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
 import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart'; // Added import
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 
 /// This application is build according the MVVM architectural pattern
@@ -60,6 +61,7 @@ class MyApp extends StatelessWidget {
               (context) =>
                   LocationRepository(context.read<ILocationApiService>()),
         ),
+        ChangeNotifierProvider(create: (context) => AuthViewModel()), // Added AuthViewModel
         Provider<PhotonService>(create: (context) => PhotonService()),
       ],
       child: MaterialApp(

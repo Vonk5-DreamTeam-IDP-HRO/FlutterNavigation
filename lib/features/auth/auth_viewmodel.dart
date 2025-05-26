@@ -16,13 +16,14 @@ class AuthViewModel extends ChangeNotifier {
   bool get isAuthenticated => _token != null;
 
   AuthViewModel() {
+    // Still load saved credentials but don't trigger any navigation
     _loadUserFromStorage();
   }
 
   Future<void> _loadUserFromStorage() async {
     _token = await _secureStorage.read(key: _userTokenKey);
     _email = await _secureStorage.read(key: _userEmailKey);
-    notifyListeners();
+    // Don't notify listeners at startup to avoid triggering any auth UI
   }
 
   Future<bool> login(String email, String password) async {

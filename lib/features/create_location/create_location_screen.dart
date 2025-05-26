@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
+import 'package:osm_navigation/features/auth/screens/login_screen.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
 import 'create_location_viewmodel.dart';
 import 'Services/Photon.dart';
 
@@ -17,6 +20,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String? _category;
+  bool _isLoginDialogShown = false;
 
   @override
   void initState() {
@@ -27,6 +31,89 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
         context,
         listen: false,
       ).fetchCategories();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Use listen: false for initial checks to avoid rebuild cycles
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    // Check initial state
+    bool shouldShowDialog = !authViewModel.isAuthenticated && !_isLoginDialogShown;
+
+    if (shouldShowDialog) {
+      // Use Future.microtask to avoid build-time setState
+      Future.microtask(() {
+        if (mounted && !_isLoginDialogShown) {
+          _showLoginDialog(context);
+          if (mounted) {
+            setState(() {
+              _isLoginDialogShown = true;
+            });
+          }
+        }
+      });
+    }
+
+    // Listen for changes
+    final authChanges = Provider.of<AuthViewModel>(context);
+    if (authChanges.isAuthenticated && _isLoginDialogShown) {
+      if (mounted) {
+        setState(() {
+          _isLoginDialogShown = false;
+        });
+      }
+    }
+  }
+
+  void _showLoginDialog(BuildContext dialogContext) {
+    if (!mounted) return;
+
+    // Create a new context using Builder to ensure we have access to all providers
+    showDialog(
+      context: dialogContext,
+      barrierDismissible: false,
+      builder: (BuildContext alertContext) => Builder(
+        builder: (builderContext) => AlertDialog(
+          title: const Text('Login Required'),
+          content: const Text('You need to log in or register to create a location.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(alertContext).pop();
+                if (mounted) {
+                  setState(() { _isLoginDialogShown = false; });
+                  Navigator.of(context).pop(); // Go back to previous screen
+                }
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Login / Register'),
+              onPressed: () {
+                Navigator.of(alertContext).pop();
+                if (mounted) {
+                  setState(() { _isLoginDialogShown = false; });
+                }
+                Navigator.of(builderContext).push(MaterialPageRoute(
+                  builder: (_) => const LoginScreen(),
+                ));
+              },
+            ),
+          ],
+        ),
+      ),
+    ).then((_) {
+      if (!mounted) return;
+      
+      final auth = Provider.of<AuthViewModel>(context, listen: false);
+      
+      if (auth.isAuthenticated) {
+        setState(() { _isLoginDialogShown = false; });
+      }
     });
   }
 
@@ -87,238 +174,183 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Access the ViewModel
     final viewModel = Provider.of<CreateLocationViewModel>(context);
     final photonService = Provider.of<PhotonService>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Location')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // -- Address field with typeahead that gives suggestions -- //
-              // Created by Cline using Gemini 2.5 PRO
-              TypeAheadField<PhotonResultExtension>(
-                controller: _addressController,
-                builder: (context, controller, focusNode) {
-                  return TextFormField(
-                    controller: _addressController,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
-                      hintText: 'Start typing an address (min 3 characters)',
-                    ),
-                    validator: (value) {
-                      // When a suggestion is selected, _addressController is updated.
-                      // The text field's controller (from builder) will also have the text.
-                      // Validate based on _addressController as it's used for submission.
-                      if (_addressController.text.isEmpty) {
-                        if (value != null && value.isNotEmpty) {
-                          // If user typed something but didn't select, and _addressController is empty
-                          return 'Please select a valid address from suggestions.';
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TypeAheadField<PhotonResultExtension>(
+                    builder: (context, controller, focusNode) => TextFormField(
+                      controller: _addressController,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        labelText: 'Address',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.search),
+                        hintText: 'Start typing an address (min 3 characters)',
+                      ),
+                      validator: (value) {
+                        if (_addressController.text.isEmpty) {
+                          if (value != null && value.isNotEmpty) {
+                            return 'Please select a valid address from suggestions';
+                          }
+                          return 'Please enter an address';
                         }
-                        return 'Please enter an address';
-                      }
-                      return null;
-                    },
-                    onChanged: (text) {
-                      // If user clears the field or types manually after selecting,
-                      // clear our stored _addressController to ensure validation catches it
-                      if (text.isEmpty) {
-                        _addressController.clear();
-                      }
-                    },
-                  );
-                },
-                suggestionsCallback: (pattern) async {
-                  if (pattern.length < 3) return [];
-                  try {
-                    final results = await photonService.searchAddresses(
-                      pattern,
-                    );
-                    // The cast might be redundant if searchAddresses already returns List<PhotonResultExtension>
-                    // but it's safer to keep if Photon.dart's searchAddresses returns List<dynamic> or List<PhotonFeature>
-                    // and relies on the cast here. Given Photon.dart now maps to PhotonResultExtension,
-                    // this cast should be fine.
-                    return results; // No cast needed if searchAddresses is correctly typed
-                  } catch (e) {
-                    print('Error getting address suggestions: $e');
-                    return [];
-                  }
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    leading: const Icon(Icons.location_on),
-                    title: Text(
-                      suggestion.name ??
-                          suggestion
-                              .formattedAddress, // Using .name from PhotonResultExtension
-                      overflow: TextOverflow.ellipsis,
+                        return null;
+                      },
                     ),
-                    subtitle: Text(
-                      suggestion.formattedAddress,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                },
-                onSelected: (suggestion) {
-                  final List<String> parts = [];
-                  if (suggestion.name != null && suggestion.name!.isNotEmpty) {
-                    parts.add(suggestion.name!);
-                  }
-                  if (suggestion.postcode != null &&
-                      suggestion.postcode!.isNotEmpty) {
-                    parts.add(suggestion.postcode!);
-                  }
-                  if (suggestion.city != null && suggestion.city!.isNotEmpty) {
-                    parts.add(suggestion.city!);
-                  }
-                  _addressController.text = parts.join(', ');
-
-                  viewModel.setSelectedCoordinates(
-                    suggestion.latitude,
-                    suggestion.longitude,
-                  );
-                  // Optionally, trigger re-validation of the form field
-                  // _formKey.currentState?.validate();
-                },
-                emptyBuilder: // Renamed from noItemsFoundBuilder
-                    (context) => const Padding(
+                    suggestionsCallback: (pattern) async {
+                      if (pattern.length < 3) return [];
+                      try {
+                        return await photonService.searchAddresses(pattern);
+                      } catch (e) {
+                        print('Error getting address suggestions: $e');
+                        return [];
+                      }
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        leading: const Icon(Icons.location_on),
+                        title: Text(
+                          suggestion.name ?? suggestion.formattedAddress,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          suggestion.formattedAddress,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    },
+                    onSelected: (suggestion) {
+                      final List<String> parts = [];
+                      if (suggestion.name != null && suggestion.name!.isNotEmpty) {
+                        parts.add(suggestion.name!);
+                      }
+                      if (suggestion.postcode != null && suggestion.postcode!.isNotEmpty) {
+                        parts.add(suggestion.postcode!);
+                      }
+                      if (suggestion.city != null && suggestion.city!.isNotEmpty) {
+                        parts.add(suggestion.city!);
+                      }
+                      _addressController.text = parts.join(', ');
+                      viewModel.setSelectedCoordinates(
+                        suggestion.latitude,
+                        suggestion.longitude,
+                      );
+                    },
+                    emptyBuilder: (context) => const Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Text(
                         'No addresses found. Try a different search term.',
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                     ),
-                loadingBuilder:
-                    (context) => const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 12),
-                          Text('Searching addresses...'),
-                        ],
-                      ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
                     ),
-              ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
+                  ),
 
-              // -- Name text field -- //
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
-              ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description (Optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
 
-              //  -- Description text field -- //
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (Optional)',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-
-              // -- Category dropdown -- //
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                value: _category,
-                hint:
-                    viewModel.isLoadingCategories
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    value: _category,
+                    hint: viewModel.isLoadingCategories
                         ? const Text('Loading categories...')
                         : viewModel.categoriesErrorMessage != null
-                        ? const Text(
-                          'Error loading categories',
-                          style: TextStyle(color: Colors.red),
-                        )
-                        : viewModel.categories.isEmpty
-                        ? const Text('No categories available')
-                        : null,
-                disabledHint:
-                    viewModel.isLoadingCategories
-                        ? const Text('Loading...')
-                        : null,
-                items:
-                    viewModel.isLoadingCategories ||
-                            viewModel.categoriesErrorMessage != null
+                            ? const Text('Error loading categories', style: TextStyle(color: Colors.red))
+                            : viewModel.categories.isEmpty
+                                ? const Text('No categories available')
+                                : null,
+                    items: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
                         ? []
-                        : viewModel.categories.map<DropdownMenuItem<String>>((
-                          String value,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                onChanged:
-                    viewModel.isLoadingCategories ||
-                            viewModel.categoriesErrorMessage != null
+                        : viewModel.categories
+                            .map((String value) => DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                ))
+                            .toList(),
+                    onChanged: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
                         ? null
                         : (value) {
-                          setState(() {
-                            _category = value;
-                          });
-                        },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
+                            setState(() {
+                              _category = value;
+                            });
+                          },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a category';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  if (viewModel.categoriesErrorMessage != null && !viewModel.isLoadingCategories)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Error details: ${viewModel.categoriesErrorMessage}',
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+
+                  const SizedBox(height: 32),
+                  if (viewModel.isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      ),
+                      onPressed: () => _submitForm(context),
+                      child: const Text('Create Location'),
+                    ),
+                ],
               ),
-
-              // Error message for categories
-              if (viewModel.categoriesErrorMessage != null &&
-                  !viewModel.isLoadingCategories)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Error details: ${viewModel.categoriesErrorMessage}',
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-
-              // -- Submit button -- //
-              const SizedBox(height: 32),
-              if (viewModel.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  ),
-                  onPressed: () => _submitForm(context),
-                  child: const Text('Create Location'),
-                ),
-            ],
+            ),
           ),
-        ),
+          if (!Provider.of<AuthViewModel>(context).isAuthenticated)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

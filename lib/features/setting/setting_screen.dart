@@ -14,13 +14,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _logout(BuildContext context) async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     await authViewModel.logout();
-    // Navigate to login screen and remove all previous routes
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (Route<dynamic> route) => false,
-      );
-    }
   }
 
   @override
@@ -57,10 +50,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
+                      builder: (context) => const LoginScreen(isDialog: false),
                     ));
                   },
-                  child: const Text('Login / Register'),
+                  child: const Text('Login'),
                 ),
               ],
               const SizedBox(height: 40), // Spacer

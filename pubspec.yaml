@@ -26,6 +26,7 @@ dependencies:
   provider: ^6.1.2
   webview_flutter: ^4.2.0
   uuid: ^4.5.1
+  flutter_secure_storage: ^9.0.0 # Adjust version as needed
 
 flutter:
   uses-material-design: true

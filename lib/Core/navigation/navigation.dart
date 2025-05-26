@@ -20,6 +20,8 @@ import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart
 import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/create_location_screen.dart';
 import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
+import 'package:osm_navigation/features/auth/screens/login_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -71,15 +73,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return SavedRoutesViewModel(routeRepository: routeRepository);
       },
       child: const SavedRoutesScreen(),
-    ), // 2: Create Route Screen (This is one of the SpeedDial targets)
-    ChangeNotifierProvider(
-      create: (context) {
-        final locationApiService = LocationApiService(context.read<Dio>());
-        final locationRepository = LocationRepository(locationApiService);
-        return CreateRouteViewModel(locationRepository);
-      },
-      child: const CreateRouteScreen(),
     ),
+
+    // 2: Empty placeholder for Create tab (create features accessed via SpeedDial only)
+    const SizedBox.shrink(),
 
     // 3: Map Screen (2D Map)
     ChangeNotifierProvider(
@@ -91,18 +88,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ChangeNotifierProvider(
       create: (_) => SettingsViewModel(),
       child: const SettingsScreen(),
-    ), // 5: Create Location Screen (This is another SpeedDial target)
-    // This screen is part of the stack but not directly mapped to a BottomNavBar item.
-    ChangeNotifierProvider(
-      create: (context) {
-        final locationApiService = LocationApiService(context.read<Dio>());
-        final locationRepository = LocationRepository(locationApiService);
-        return CreateLocationViewModel(
-          locationRepository: locationRepository,
-          photonService: context.read<PhotonService>(),
-        );
-      },
-      child: const CreateLocationScreen(),
     ),
   ];
 
@@ -160,26 +145,36 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             foregroundColor: Colors.white,
             label: 'Create Route',
             labelStyle: const TextStyle(fontSize: 18.0),
-            onTap: () {
+            onTap: () async {
+              // Check authentication before pushing create route screen
+              final authViewModel = context.read<AuthViewModel>();
+              if (!authViewModel.isAuthenticated) {
+                // Show login dialog if not authenticated
+                await LoginScreen.showAsDialog(context);
+                // Check if user is authenticated after dialog closes
+                if (!authViewModel.isAuthenticated) {
+                  _isDialOpen.value = false;
+                  return; // Don't proceed if still not authenticated
+                }
+              }
+              
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder:
-                      (context) => ChangeNotifierProvider(
-                        create: (context) {
-                          // Logic to create CreateRouteViewModel, similar to _screens setup
-                          final dio = context.read<Dio>();
-                          final locationApiService = LocationApiService(dio);
-                          final locationRepository = LocationRepository(
-                            locationApiService,
-                          );
-                          return CreateRouteViewModel(locationRepository);
-                        },
-                        child: const CreateRouteScreen(),
-                      ),
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (context) {
+                      final dio = context.read<Dio>();
+                      final locationApiService = LocationApiService(dio);
+                      final locationRepository = LocationRepository(
+                        locationApiService,
+                      );
+                      return CreateRouteViewModel(locationRepository);
+                    },
+                    child: const CreateRouteScreen(),
+                  ),
                 ),
               );
-              _isDialOpen.value = false; // Close dial
+              _isDialOpen.value = false;
               debugPrint('Create Route tapped - Pushed as new route');
             },
           ),
@@ -189,7 +184,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             foregroundColor: Colors.white,
             label: 'Create Location',
             labelStyle: const TextStyle(fontSize: 18.0),
-            onTap: () {
+            onTap: () async {
+              // Check authentication before pushing create location screen
+              final authViewModel = context.read<AuthViewModel>();
+              if (!authViewModel.isAuthenticated) {
+                // Show login dialog if not authenticated
+                await LoginScreen.showAsDialog(context);
+                // Check if user is authenticated after dialog closes
+                if (!authViewModel.isAuthenticated) {
+                  _isDialOpen.value = false;
+                  return; // Don't proceed if still not authenticated
+                }
+              }
+              
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -211,7 +218,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       ),
                 ),
               );
-              _isDialOpen.value = false; // Close dial
+              _isDialOpen.value = false;
             },
           ),
         ],

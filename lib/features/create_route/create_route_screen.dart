@@ -25,41 +25,52 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Listen to both AuthViewModel and AppState for changes
-    final authViewModel = Provider.of<AuthViewModel>(context);
-    final appState = Provider.of<AppState>(context);
+    
+    // Use listen: false for initial checks to avoid rebuild cycles
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final appState = Provider.of<AppState>(context, listen: false);
 
+    // Check initial state
     bool shouldShowDialog = !authViewModel.isAuthenticated &&
-                            appState.selectedTabIndex == MainScreen.createRouteIndex &&
-                            !_isLoginDialogShown;
+                          appState.selectedTabIndex == MainScreen.createRouteIndex &&
+                          !_isLoginDialogShown;
 
     if (shouldShowDialog) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_isLoginDialogShown) { // Check mounted & flag again before showing
+      // Use Future.microtask to avoid build-time setState
+      Future.microtask(() {
+        if (mounted && !_isLoginDialogShown) {
           _showLoginDialog(context);
-          if (mounted) { // Check mounted again before setState
+          if (mounted) {
             setState(() {
               _isLoginDialogShown = true;
             });
           }
         }
       });
-    } else if ((authViewModel.isAuthenticated || appState.selectedTabIndex != MainScreen.createRouteIndex) && _isLoginDialogShown) {
-      // If user is now authenticated OR navigated away from create tab, and dialog was shown, reset flag
+    }
+
+    // Listen for changes with separate Provider.of calls
+    final authChanges = Provider.of<AuthViewModel>(context);
+    final appStateChanges = Provider.of<AppState>(context);
+
+    if ((authChanges.isAuthenticated || appStateChanges.selectedTabIndex != MainScreen.createRouteIndex) && _isLoginDialogShown) {
       if (mounted) {
-         setState(() {
-           _isLoginDialogShown = false;
-         });
+        setState(() {
+          _isLoginDialogShown = false;
+        });
       }
     }
   }
 
   void _showLoginDialog(BuildContext dialogContext) {
+    if (!mounted) return;
+
+    // Create a new context using Builder to ensure we have access to all providers
     showDialog(
       context: dialogContext,
       barrierDismissible: false,
-      builder: (BuildContext alertContext) {
-        return AlertDialog(
+      builder: (BuildContext alertContext) => Builder(
+        builder: (builderContext) => AlertDialog(
           title: const Text('Login Required'),
           content: const Text('You need to log in or register to create a route.'),
           actions: <Widget>[
@@ -69,8 +80,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 Navigator.of(alertContext).pop();
                 if (mounted) {
                   setState(() { _isLoginDialogShown = false; });
-                  // Optionally, navigate to home tab if user cancels
-                  Provider.of<AppState>(context, listen: false).changeTab(MainScreen.homeIndex);
+                  // Use the builderContext to access providers
+                  Provider.of<AppState>(builderContext, listen: false)
+                    .changeTab(MainScreen.homeIndex);
                 }
               },
             ),
@@ -78,27 +90,26 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               child: const Text('Login / Register'),
               onPressed: () {
                 Navigator.of(alertContext).pop();
-                 if (mounted) {
-                    setState(() { _isLoginDialogShown = false; });
-                 }
-                Navigator.of(context).push(MaterialPageRoute(
+                if (mounted) {
+                  setState(() { _isLoginDialogShown = false; });
+                }
+                Navigator.of(builderContext).push(MaterialPageRoute(
                   builder: (_) => const LoginScreen(),
                 ));
               },
             ),
           ],
-        );
-      },
+        ),
+      ),
     ).then((_) {
-      // After dialog is dismissed, ensure flag is reset if still needed
-      if (mounted && _isLoginDialogShown) {
-        final auth = Provider.of<AuthViewModel>(context, listen: false);
-        final appState = Provider.of<AppState>(context, listen: false);
-        // If still not authenticated and on create route tab, dialog might reappear
-        // This logic ensures it's reset if conditions for showing are no longer met.
-        if(auth.isAuthenticated || appState.selectedTabIndex != MainScreen.createRouteIndex) {
-            setState(() { _isLoginDialogShown = false; });
-        }
+      if (!mounted) return;
+      
+      // Use a new Builder to get fresh context
+      final auth = Provider.of<AuthViewModel>(context, listen: false);
+      final appState = Provider.of<AppState>(context, listen: false);
+      
+      if (auth.isAuthenticated || appState.selectedTabIndex != MainScreen.createRouteIndex) {
+        setState(() { _isLoginDialogShown = false; });
       }
     });
   }
@@ -120,9 +131,11 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create New Route')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
+      body: Stack( // Use Stack for layering
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
           // Allow scrolling for long lists/small screens
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,17 +244,19 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 },
               ),
             ],
-          ),
-          if (!authViewModel.isAuthenticated)
-            Positioned.fill(
-              child: AbsorbPointer(
-                child: Container(
-                  color: Colors.black.withOpacity(0.5), // Positioned.fill handles sizing
-                ),
-              ),
+          ), // Closes Column
+        ), // Closes SingleChildScrollView
+      ), // Closes Padding
+      if (!authViewModel.isAuthenticated)
+        Positioned.fill(
+          child: AbsorbPointer(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
             ),
-        ],
-      ),
-    );
+          ),
+        ),
+    ], // Closes Stack children
+  ), // Closes Stack widget
+); // Closes Scaffold
   }
 }
