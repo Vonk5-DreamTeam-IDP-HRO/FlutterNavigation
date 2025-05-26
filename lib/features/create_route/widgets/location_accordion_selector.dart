@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:accordion/accordion.dart';
 import 'package:accordion/controllers.dart';
-import 'package:osm_navigation/core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 
 /// Widget responsible for displaying the location selection accordion.
@@ -10,7 +10,7 @@ class LocationAccordionSelector extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final Map<String, List<SelectableLocation>> groupedLocations;
-  final CreateRouteViewModel viewModel; // Needed for checkbox interaction
+  final CreateRouteViewModel viewModel;
 
   const LocationAccordionSelector({
     super.key,

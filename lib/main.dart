@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart'; // Assuming MainScreen is here
-import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
-// No need to import LoginScreen here for the home widget directly
+import 'package:osm_navigation/Core/providers/app_state.dart';
+import 'package:osm_navigation/Core/navigation/navigation.dart';
+import 'package:osm_navigation/Core/services/dio_factory.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/Core/services/location/location_api_service.dart';
+import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
+import 'package:osm_navigation/Core/config/app_config.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
@@ -16,8 +21,9 @@ Future<void> main() async {
   // For example, if you are using plugins that require native code. Kotlin or Swift.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
+  // Initialize AppConfig with loaded environment variables.
   await dotenv.load(fileName: '.env');
+
   runApp(const MyApp());
 }
 
@@ -26,10 +32,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Create a single Dio instance for the app.
+    // This instance can be shared across the app, ensuring consistent configuration.
+    // It is used for making network requests and catch expections to show to the user.
+    final dio = DioFactory.createDio();
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AppState()),
-        ChangeNotifierProvider(create: (context) => AuthViewModel()),
+        Provider<Dio>(create: (context) => dio),
+        Provider<ILocationApiService>(
+          create: (context) => LocationApiService(context.read<Dio>()),
+        ),
+        Provider<ILocationRepository>(
+          create:
+              (context) =>
+                  LocationRepository(context.read<ILocationApiService>()),
+        ),
       ],
       child: MaterialApp(
         title: 'OSM Navigation',
@@ -37,12 +56,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
-        home: const MainScreen(), // Always start with MainScreen
-        // routes: {
-        //   // Define routes if you use named navigation for login/register
-        //   // '/login': (context) => const LoginScreen(),
-        //   // '/register': (context) => const RegisterScreen(),
-        // },
+        home: const MainScreen(),
       ),
     );
   }

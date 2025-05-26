@@ -1,15 +1,23 @@
 // --- Imports ---
-import 'package:osm_navigation/core/models/selectable_location.dart';
-import 'package:osm_navigation/core/services/location_api_service.dart';
+import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
 import 'package:flutter/material.dart';
 
 // --- Class Definition ---
 class CreateRouteViewModel extends ChangeNotifier {
-  final LocationApiService _locationApiService;
+  final ILocationRepository _locationRepository;
 
   // --- Constructor ---
-  CreateRouteViewModel(this._locationApiService) {
-    loadLocations();
+  CreateRouteViewModel(this._locationRepository) {
+    nameController.addListener(_onNameChanged);
+    loadLocations(); // Load locations in accordion when the ViewModel is initialized
+  }
+
+  // --- Private methods for internal event handling ---
+  void _onNameChanged() {
+    // Notify listeners when the name text changes, allowing UI to update
+    // based on properties like isNameValid or canSave.
+    notifyListeners();
   }
 
   // --- State Variables ---
@@ -23,8 +31,8 @@ class CreateRouteViewModel extends ChangeNotifier {
   Map<String, List<SelectableLocation>> get groupedLocations =>
       _groupedLocations;
 
-  final Set<int> _selectedLocationIds = {};
-  Set<int> get selectedLocationIds => _selectedLocationIds;
+  final Set<String> _selectedLocationIds = {};
+  Set<String> get selectedLocationIds => _selectedLocationIds;
 
   // --- Controllers for Text Fields ---
 
@@ -42,7 +50,6 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // -- Methods --
 
-  // TODO: Call the correct API method to load grouped locations when API is ready
   // This method loads locations from the API and groups them by category
   // It uses the new LocationApiService to fetch the data.
   // The method is asynchronous and updates the loading state and error messages accordingly.
@@ -54,12 +61,12 @@ class CreateRouteViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch grouped locations directly from the new service
+      // Fetch grouped locations from the repository
       _groupedLocations =
-          await _locationApiService.getGroupedSelectableLocations();
+          await _locationRepository.getGroupedSelectableLocations();
       _error = null;
     } catch (e) {
-      _error = "Failed to load locations: $e";
+      _error = 'Failed to load locations: $e';
       _groupedLocations = {};
     } finally {
       _isLoading = false;
@@ -67,39 +74,40 @@ class CreateRouteViewModel extends ChangeNotifier {
     }
   }
 
-  void toggleLocationSelection(int locationId) {
+  void toggleLocationSelection(String locationId) {
+    // Changed parameter from Uuid to String
     if (_selectedLocationIds.contains(locationId)) {
       _selectedLocationIds.remove(locationId);
     } else {
       _selectedLocationIds.add(locationId);
     }
-    // Notify listeners to update UI (e.g., checkbox state and save button state)
+    // Notify listeners to update UI
     notifyListeners();
   }
 
-  // TODO: Implement a method to save the route using the selected locations
-  // This must be implemented in the future when the API is ready
-  // For now, we will just print the selected locations to the console
-
-  // Call this when saving is attempted (currently just for validation feedback)
   void attemptSave() {
     notifyListeners();
 
     if (canSave) {
-      // In the future, this would trigger the API call
-      print('Validation successful. Ready to save (not implemented).');
-      print('Name: ${nameController.text}');
-      print('Description: ${descriptionController.text}');
-      print('Selected IDs: $_selectedLocationIds');
+      debugPrint('Validation successful. Ready to save (not implemented).');
     } else {
-      print('Validation failed.');
+      debugPrint('Validation failed.');
     }
+  }
+
+  // -- Edit Initialization --
+  void initializeForEdit(dynamic route) {
+    // Accepts a Route object (with displayName and description)
+    nameController.text = route.displayName;
+    descriptionController.text = route.description;
+    notifyListeners();
   }
 
   // -- Cleanup --
   // Dispose of the controllers to free up resources when the ViewModel is no longer needed
   @override
   void dispose() {
+    nameController.removeListener(_onNameChanged);
     nameController.dispose();
     descriptionController.dispose();
     super.dispose();

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class NewHomeViewModel extends ChangeNotifier {
   // --- State ---
 
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   String? _errorMessage;
