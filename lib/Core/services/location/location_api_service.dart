@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/models/location.dart';
-import 'package:osm_navigation/Core/models/location_details.dart';
-import 'package:osm_navigation/Core/models/location_request_dtos.dart';
-import 'package:osm_navigation/Core/models/selectable_location.dart';
+import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/UpdateLocation/update_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
 import 'ILocationApiService.dart';
 import 'location_api_exceptions.dart';
 import 'package:osm_navigation/Core/services/api_exceptions.dart'
@@ -140,11 +140,11 @@ class LocationApiService implements ILocationApiService {
   // --- New CRUD Methods ---
 
   @override
-  Future<List<Location>> getAllLocations() async {
+  Future<List<LocationDto>> getAllLocations() async {
     const String operationName = 'fetching all locations';
     const String endpoint = 'api/Location';
 
-    return _makeApiRequest<List<Location>>(
+    return _makeApiRequest<List<LocationDto>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
@@ -157,7 +157,9 @@ class LocationApiService implements ILocationApiService {
           if (response.statusCode == 200 && response.data is List) {
             final List<dynamic> data = response.data;
             return data
-                .map((json) => Location.fromJson(json as Map<String, dynamic>))
+                .map(
+                  (json) => LocationDto.fromJson(json as Map<String, dynamic>),
+                )
                 .toList();
           } else {
             // Throw a DioException to be handled by _makeApiRequest or _handleDioError
@@ -189,20 +191,18 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<LocationDetails> getLocationById(String id) async {
+  Future<LocationDto> getLocationById(String id) async {
     final String operationName = 'fetching location by ID $id';
     final String endpoint = 'api/Location/$id';
 
-    return _makeApiRequest<LocationDetails>(
+    return _makeApiRequest<LocationDto>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
         try {
           final response = await _dio.get(fullUrl);
           if (response.statusCode == 200 && response.data != null) {
-            return LocationDetails.fromJson(
-              response.data as Map<String, dynamic>,
-            );
+            return LocationDto.fromJson(response.data as Map<String, dynamic>);
           } else if (response.statusCode == 404) {
             // For 404, we throw a specific exception that might not warrant a retry.
             // _makeApiRequest will catch this and, if it's the primary attempt,
@@ -246,11 +246,11 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<List<Location>> getLocationsByType(String category) async {
+  Future<List<LocationDto>> getLocationsByType(String category) async {
     final String operationName = 'fetching locations by type $category';
     final String endpoint = 'api/Location/ByType/$category';
 
-    return _makeApiRequest<List<Location>>(
+    return _makeApiRequest<List<LocationDto>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
@@ -259,7 +259,9 @@ class LocationApiService implements ILocationApiService {
           if (response.statusCode == 200 && response.data is List) {
             final List<dynamic> data = response.data;
             return data
-                .map((json) => Location.fromJson(json as Map<String, dynamic>))
+                .map(
+                  (json) => LocationDto.fromJson(json as Map<String, dynamic>),
+                )
                 .toList();
           } else {
             throw DioException(
@@ -286,11 +288,11 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<LocationDetails> createLocation(CreateLocationPayload payload) async {
+  Future<LocationDto> createLocation(CreateLocationDto payload) async {
     const String operationName = 'creating location';
     const String endpoint = 'api/Location';
 
-    return _makeApiRequest<LocationDetails>(
+    return _makeApiRequest<LocationDto>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
@@ -300,9 +302,7 @@ class LocationApiService implements ILocationApiService {
         try {
           final response = await _dio.post(fullUrl, data: payload.toJson());
           if (response.statusCode == 201 && response.data != null) {
-            return LocationDetails.fromJson(
-              response.data as Map<String, dynamic>,
-            );
+            return LocationDto.fromJson(response.data as Map<String, dynamic>);
           } else {
             throw DioException(
               requestOptions: RequestOptions(path: fullUrl),
@@ -335,14 +335,14 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<LocationDetails> updateLocation(
+  Future<LocationDto> updateLocation(
     String id,
-    UpdateLocationPayload payload,
+    UpdateLocationDto payload,
   ) async {
     final String operationName = 'updating location $id';
     final String endpoint = 'api/Location/$id';
 
-    return _makeApiRequest<LocationDetails>(
+    return _makeApiRequest<LocationDto>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
@@ -352,9 +352,7 @@ class LocationApiService implements ILocationApiService {
         try {
           final response = await _dio.put(fullUrl, data: payload.toJson());
           if (response.statusCode == 200 && response.data != null) {
-            return LocationDetails.fromJson(
-              response.data as Map<String, dynamic>,
-            );
+            return LocationDto.fromJson(response.data as Map<String, dynamic>);
           } else if (response.statusCode == 404) {
             throw LocationNotFoundException(
               'Location with ID $id not found for update at $fullUrl.',
@@ -427,12 +425,12 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
-  Future<Map<String, List<SelectableLocation>>>
+  Future<Map<String, List<SelectableLocationDto>>>
   getGroupedSelectableLocations() async {
     const String operationName = 'fetching grouped selectable locations';
     const String endpoint = 'api/Location/GroupedSelectableLocations';
 
-    return _makeApiRequest<Map<String, List<SelectableLocation>>>(
+    return _makeApiRequest<Map<String, List<SelectableLocationDto>>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl/$endpoint';
@@ -444,14 +442,15 @@ class LocationApiService implements ILocationApiService {
 
             // The backend sends Map<string, List<SomeSelectableLocationDto>>
             // We need to parse this into Map<String, List<SelectableLocation>>
-            final Map<String, List<SelectableLocation>> groupedLocations = {};
+            final Map<String, List<SelectableLocationDto>> groupedLocations =
+                {};
             data.forEach((category, locationsJson) {
               if (locationsJson is List) {
                 try {
                   groupedLocations[category] =
                       locationsJson
                           .map(
-                            (json) => SelectableLocation.fromJson(
+                            (json) => SelectableLocationDto.fromJson(
                               json as Map<String, dynamic>,
                             ),
                           )
@@ -520,7 +519,7 @@ class LocationApiService implements ILocationApiService {
           if (response.statusCode == 200 && response.data is List) {
             return (response.data as List)
                 .whereType<String>()
-                .map((item) => item as String)
+                .map((item) => item)
                 .toList();
           } else {
             throw DioException(

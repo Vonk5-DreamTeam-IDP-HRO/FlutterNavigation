@@ -1,137 +1,127 @@
-import 'package:osm_navigation/Core/models/location.dart';
-import 'package:osm_navigation/Core/models/location_details.dart';
-import 'package:osm_navigation/Core/models/location_dto.dart';
-import 'package:osm_navigation/Core/models/location_detail_dto.dart';
-import 'package:osm_navigation/Core/models/selectable_location.dart';
-import 'package:osm_navigation/Core/models/location_request_dtos.dart';
-import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
-import 'package:osm_navigation/Core/mappers/location_mapper.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
+import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/UpdateLocation/update_location_dto.dart';
+import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
 import './i_location_repository.dart';
 
 /// Implementation of the Location Repository
 ///
 /// This repository implements the Repository pattern to provide a clean separation
-/// between data source (API service) and domain logic. It converts DTOs from the
-/// API service to domain models for use in the application.
+/// between data source (API service) and domain logic. It uses Freezed DTOs to
+/// ensure type safety and immutability throughout the application.
 ///
-/// The repository uses the LocationMapper to convert between DTOs and domain models,
-/// ensuring that the application works with consistent domain models regardless of
-/// how the data is represented in external systems.
+/// The repository pattern provides several key benefits:
+/// 1. **Abstraction**: Hides the complexity of data source operations
+/// 2. **Testability**: Enables easy mocking for unit tests
+/// 3. **Consistency**: Provides a unified interface for data operations
+/// 4. **Separation of Concerns**: Keeps business logic separate from data access
+/// 5. **Type Safety**: Uses Freezed DTOs with compile-time validation
+///
+/// With our Freezed models, we get:
+/// - Immutable data structures that prevent accidental modifications
+/// - Automatic JSON serialization/deserialization
+/// - Built-in validation that matches the C# API requirements
+/// - Generated equality and toString methods
+/// - Null safety throughout the application
 class LocationRepository implements ILocationRepository {
   final ILocationApiService _locationApiService;
 
   LocationRepository(this._locationApiService);
+
+  /// Fetches all locations from the API service
+  /// Returns strongly-typed LocationDto objects with validation
   @override
-  Future<List<Location>> getAllLocations() async {
-    // Get locations from API service and convert them to domain models
-    final locationDtos = await _locationApiService.getAllLocations();
-    // Convert to proper domain models using LocationMapper
-    // Since our API service is currently returning Location objects directly,
-    // we first need to convert them to DTOs and then back to domain models
-    // This ensures proper separation of concerns even though it's currently redundant
-    final dtos =
-        locationDtos
-            .map(
-              (loc) => LocationDto(
-                locationId: loc.locationId,
-                userId: loc.userId,
-                name: loc.name,
-                latitude: loc.latitude,
-                longitude: loc.longitude,
-                description: loc.description,
-                createdAt: loc.createdAt,
-                updatedAt: loc.updatedAt,
-                // Category is handled through LocationDetailDto if available
-                locationDetail:
-                    loc.category != null
-                        ? LocationDetailDto(
-                          locationDetailId:
-                              '', // You might need to provide this
-                          category: loc.category,
-                        )
-                        : null,
-              ),
-            )
-            .toList();
-    return LocationMapper.toDomainList(dtos);
+  Future<List<LocationDto>> getAllLocations() async {
+    final locations = await _locationApiService.getAllLocations();
+
+    // Convert API response to our Freezed DTOs
+    // This ensures type safety and validation at the repository boundary
+    return locations
+        .map((location) => LocationDto.fromJson(location.toJson()))
+        .toList();
   }
 
+  /// Fetches a specific location with full details
+  /// Returns LocationDto with nested LocationDetailDto information
   @override
-  Future<LocationDetails> getLocationById(String id) async {
-    // Get location by ID and convert to domain model
-    final locationDetails = await _locationApiService.getLocationById(id);
-    return locationDetails;
+  Future<LocationDto> getLocationById(String id) async {
+    final locationDetail = await _locationApiService.getLocationById(id);
+
+    // Convert to our strongly-typed DTO with validation
+    return LocationDto.fromJson(locationDetail.toJson());
   }
 
+  /// Fetches locations filtered by category
+  /// Maintains type safety through Freezed DTOs
   @override
-  Future<List<Location>> getLocationsByCategory(String category) async {
-    // Get locations by category from API service
+  Future<List<LocationDto>> getLocationsByCategory(String category) async {
     final locations = await _locationApiService.getLocationsByType(category);
-    // Convert to proper domain models using LocationMapper
-    final dtos =
-        locations
-            .map(
-              (loc) => LocationDto(
-                locationId: loc.locationId,
-                userId: loc.userId,
-                name: loc.name,
-                latitude: loc.latitude,
-                longitude: loc.longitude,
-                description: loc.description,
-                createdAt: loc.createdAt,
-                updatedAt: loc.updatedAt,
-                // Category is handled through LocationDetailDto if available
-                locationDetail:
-                    loc.category != null
-                        ? LocationDetailDto(
-                          locationDetailId:
-                              '', // You might need to provide this
-                          category: loc.category,
-                        )
-                        : null,
-              ),
-            )
-            .toList();
-    return LocationMapper.toDomainList(dtos);
+
+    // Convert each location to validated DTO
+    return locations
+        .map((location) => LocationDto.fromJson(location.toJson()))
+        .toList();
   }
 
+  /// Creates a new location using validated input DTO
+  /// The CreateLocationDto ensures all validation rules are met before API call
   @override
-  Future<LocationDetails> createLocation(CreateLocationPayload payload) async {
-    final locationDetails = await _locationApiService.createLocation(payload);
-    return locationDetails;
+  Future<LocationDto> createLocation(CreateLocationDto payload) async {
+    final locationDetail = await _locationApiService.createLocation(payload);
+
+    // Return validated response DTO (API returns LocationDto, not LocationDetailDto)
+    return LocationDto.fromJson(locationDetail.toJson());
   }
 
+  /// Updates an existing location with validated data
+  /// UpdateLocationDto provides same validation as CreateLocationDto
   @override
-  Future<LocationDetails> updateLocation(
+  Future<LocationDto> updateLocation(
     String id,
-    UpdateLocationPayload payload,
+    UpdateLocationDto payload,
   ) async {
-    // Update an existing location
-    final locationDetails = await _locationApiService.updateLocation(
+    final locationDetail = await _locationApiService.updateLocation(
       id,
       payload,
     );
-    return locationDetails;
+
+    // Return validated updated location (API returns LocationDto, not LocationDetailDto)
+    return LocationDto.fromJson(locationDetail.toJson());
   }
 
+  /// Deletes a location by ID
+  /// No DTO conversion needed for void operations
   @override
   Future<void> deleteLocation(String id) async {
-    // Delete a location - no mapping needed for void return type
     await _locationApiService.deleteLocation(id);
   }
 
+  /// Fetches locations grouped by category for selection UI
+  /// Returns type-safe SelectableLocationDto objects
   @override
-  Future<Map<String, List<SelectableLocation>>>
+  Future<Map<String, List<SelectableLocationDto>>>
   getGroupedSelectableLocations() async {
-    // Get grouped selectable locations
     final groupedLocations =
         await _locationApiService.getGroupedSelectableLocations();
-    return groupedLocations;
+
+    // Convert each group to validated DTOs
+    final Map<String, List<SelectableLocationDto>> result = {};
+    for (final entry in groupedLocations.entries) {
+      result[entry.key] =
+          entry.value
+              .map(
+                (location) => SelectableLocationDto.fromJson(location.toJson()),
+              )
+              .toList();
+    }
+    return result;
   }
 
+  /// Fetches available location categories
+  /// Simple string list - no DTO conversion needed
   @override
   Future<List<String>> getUniqueCategories() async {
-    final categories = await _locationApiService.getUniqueCategories();
-    return categories;
+    return await _locationApiService.getUniqueCategories();
   }
 }
