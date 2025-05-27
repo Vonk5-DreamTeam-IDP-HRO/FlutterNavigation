@@ -17,13 +17,6 @@ import './i_location_repository.dart';
 /// 3. **Consistency**: Provides a unified interface for data operations
 /// 4. **Separation of Concerns**: Keeps business logic separate from data access
 /// 5. **Type Safety**: Uses Freezed DTOs with compile-time validation
-///
-/// With our Freezed models, we get:
-/// - Immutable data structures that prevent accidental modifications
-/// - Automatic JSON serialization/deserialization
-/// - Built-in validation that matches the C# API requirements
-/// - Generated equality and toString methods
-/// - Null safety throughout the application
 class LocationRepository implements ILocationRepository {
   final ILocationApiService _locationApiService;
 
@@ -40,6 +33,24 @@ class LocationRepository implements ILocationRepository {
     return locations
         .map((location) => LocationDto.fromJson(location.toJson()))
         .toList();
+  }
+
+  @override
+  Future<List<SelectableLocationDto>> getSelectableLocations() async {
+    /// Fetches locations formatted for selection UI components
+    ///
+    /// **Purpose:** Provides location data optimized for dropdowns, pickers, etc.
+    /// **Performance:** Returns lightweight SelectableLocationDto objects
+    /// **Use Cases:** Location selection in route creation, waypoint picking
+    /// **Data Flow:** API Service → Repository → UI Components
+    ///
+    /// **Type Safety:** Ensures all returned objects are properly validated DTOs
+    try {
+      return await _locationApiService.getSelectableLocations();
+    } catch (e) {
+      // Log error and rethrow for service layer to handle
+      rethrow;
+    }
   }
 
   /// Fetches a specific location with full details

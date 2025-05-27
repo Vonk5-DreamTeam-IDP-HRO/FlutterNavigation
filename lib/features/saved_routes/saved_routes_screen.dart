@@ -71,8 +71,8 @@ class SavedRoutesScreen extends StatelessWidget {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.route_outlined),
-                title: Text(route.displayName),
-                subtitle: Text(route.description),
+                title: Text(route.name),
+                subtitle: Text(route.description ?? 'No description'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),

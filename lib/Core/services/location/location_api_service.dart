@@ -288,6 +288,53 @@ class LocationApiService implements ILocationApiService {
   }
 
   @override
+  Future<List<SelectableLocationDto>> getSelectableLocations() async {
+    const String operationName = 'fetching selectable locations';
+    const String locationsEndpoint = '/api/locations/selectable';
+
+    return _makeApiRequest<List<SelectableLocationDto>>(
+      operationName: operationName,
+      attemptRequest: (baseUrl) async {
+        final String fullUrl = '$baseUrl$locationsEndpoint';
+        debugPrint('[LocationApiService] $operationName from URL: $fullUrl');
+
+        try {
+          final response = await _dio.get(fullUrl);
+
+          if (response.statusCode == 200 && response.data is List) {
+            final List<dynamic> data = response.data;
+            return data
+                .map(
+                  (item) => SelectableLocationDto.fromJson(
+                    item as Map<String, dynamic>,
+                  ),
+                )
+                .toList();
+          } else {
+            throw DioException(
+              requestOptions: RequestOptions(path: fullUrl),
+              response: response,
+              message:
+                  'Failed to load selectable locations: ${response.statusCode}',
+            );
+          }
+        } on DioException {
+          rethrow;
+        } catch (e, s) {
+          debugPrint(
+            '[LocationApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+          );
+          throw LocationApiParseException(
+            'Error parsing $operationName response: ${e.toString()}',
+            originalException: e,
+            stackTrace: s,
+          );
+        }
+      },
+    );
+  }
+
+  @override
   Future<LocationDto> createLocation(CreateLocationDto payload) async {
     const String operationName = 'creating location';
     const String endpoint = 'api/Location';
