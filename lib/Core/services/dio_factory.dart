@@ -12,9 +12,7 @@ class DioFactory {
   static Dio createDio({String? authToken}) {
     final dio = Dio();
 
-    final headers = {
-      'Content-Type': 'application/json; charset=UTF-8',
-    };
+    final headers = {'Content-Type': 'application/json; charset=UTF-8'};
 
     if (authToken != null) {
       headers['Authorization'] = 'Bearer $authToken';

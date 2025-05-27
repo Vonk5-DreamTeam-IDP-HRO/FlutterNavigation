@@ -34,12 +34,12 @@ class AuthViewModel extends ChangeNotifier {
     try {
       _error = null;
       final token = await _authService.login(email, password);
-      
+
       _token = token;
       _email = email;
       await _secureStorage.write(key: _userTokenKey, value: token);
       await _secureStorage.write(key: _userEmailKey, value: email);
-      
+
       notifyListeners();
       return true;
     } on DioException catch (e) {
@@ -61,12 +61,12 @@ class AuthViewModel extends ChangeNotifier {
     try {
       _error = null;
       final token = await _authService.register(email, password);
-      
+
       _token = token;
       _email = email;
       await _secureStorage.write(key: _userTokenKey, value: token);
       await _secureStorage.write(key: _userEmailKey, value: email);
-      
+
       notifyListeners();
       return true;
     } on DioException catch (e) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';
-import 'login_screen.dart'; // Assuming LoginScreen is in the same directory
+// Assuming LoginScreen is in the same directory
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -40,12 +40,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
           Navigator.of(context).pop(); // Go back to login screen
         } else {
-          final error = authViewModel.error ?? 'Registration Failed. Please try again.';
+          final error =
+              authViewModel.error ?? 'Registration Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
@@ -63,9 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -137,22 +133,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _isLoading
                     ? const CircularProgressIndicator()
                     : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          onPressed: _register,
-                          child: const Text('Register'),
                         ),
+                        onPressed: _register,
+                        child: const Text('Register'),
                       ),
+                    ),
                 TextButton(
-                  onPressed: _isLoading ? null : () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed:
+                      _isLoading
+                          ? null
+                          : () {
+                            Navigator.of(context).pop();
+                          },
                   child: const Text('Already have an account? Login'),
                 ),
               ],

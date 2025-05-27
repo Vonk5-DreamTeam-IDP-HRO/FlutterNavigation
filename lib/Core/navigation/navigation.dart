@@ -15,7 +15,7 @@ import 'package:osm_navigation/features/setting/setting_screen.dart';
 import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
 import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/create_location_screen.dart';
@@ -157,28 +157,31 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   return; // Don't proceed if still not authenticated
                 }
               }
-              
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MultiProvider(
-                    providers: [
-                      ChangeNotifierProvider.value(
-                        value: context.read<AppState>(),
+                  builder:
+                      (context) => MultiProvider(
+                        providers: [
+                          ChangeNotifierProvider.value(
+                            value: context.read<AppState>(),
+                          ),
+                          ChangeNotifierProvider(
+                            create: (context) {
+                              final dio = context.read<Dio>();
+                              final locationApiService = LocationApiService(
+                                dio,
+                              );
+                              final locationRepository = LocationRepository(
+                                locationApiService,
+                              );
+                              return CreateRouteViewModel(locationRepository);
+                            },
+                          ),
+                        ],
+                        child: const CreateRouteScreen(),
                       ),
-                      ChangeNotifierProvider(
-                        create: (context) {
-                          final dio = context.read<Dio>();
-                          final locationApiService = LocationApiService(dio);
-                          final locationRepository = LocationRepository(
-                            locationApiService,
-                          );
-                          return CreateRouteViewModel(locationRepository);
-                        },
-                      ),
-                    ],
-                    child: const CreateRouteScreen(),
-                  ),
                 ),
               );
               _isDialOpen.value = false;
@@ -203,32 +206,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   return; // Don't proceed if still not authenticated
                 }
               }
-              
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MultiProvider(
-                    providers: [
-                      ChangeNotifierProvider.value(
-                        value: context.read<AppState>(),
+                  builder:
+                      (context) => MultiProvider(
+                        providers: [
+                          ChangeNotifierProvider.value(
+                            value: context.read<AppState>(),
+                          ),
+                          ChangeNotifierProvider(
+                            create: (context) {
+                              final locationApiService = LocationApiService(
+                                context.read<Dio>(),
+                              );
+                              final locationRepository = LocationRepository(
+                                locationApiService,
+                              );
+                              return CreateLocationViewModel(
+                                locationRepository: locationRepository,
+                                photonService: PhotonService(),
+                              );
+                            },
+                          ),
+                        ],
+                        child: const CreateLocationScreen(),
                       ),
-                      ChangeNotifierProvider(
-                        create: (context) {
-                          final locationApiService = LocationApiService(
-                            context.read<Dio>(),
-                          );
-                          final locationRepository = LocationRepository(
-                            locationApiService,
-                          );
-                          return CreateLocationViewModel(
-                            locationRepository: locationRepository,
-                            photonService: PhotonService(),
-                          );
-                        },
-                      ),
-                    ],
-                    child: const CreateLocationScreen(),
-                  ),
                 ),
               );
               _isDialOpen.value = false;

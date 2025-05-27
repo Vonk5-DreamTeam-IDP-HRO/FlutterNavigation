@@ -36,7 +36,7 @@ class PhotonService {
       final num latitude = firstResult.coordinates.latitude;
       final num longitude = firstResult.coordinates.longitude;
 
-      if (latitude == null || longitude == null) {
+      if (longitude == null) {
         throw PhotonGeocodingException(
           'Coordinates are missing in the result.',
         );

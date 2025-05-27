@@ -5,24 +5,30 @@ import '../dio_factory.dart';
 
 class AuthApiService {
   late final Dio _dio;
-  
-  static final String _primaryBaseApiUrl = '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl = '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
-  
+
+  static final String _primaryBaseApiUrl =
+      '${AppConfig.url}:${AppConfig.backendApiPort}';
+  static final String _fallbackBaseApiUrl =
+      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+
   AuthApiService() {
     _dio = DioFactory.createDio();
   }
-  
+
   Future<String> login(String email, String password) async {
     try {
       // Try primary URL first
       try {
-        final response = await _attemptLogin(_primaryBaseApiUrl, email, password);
+        final response = await _attemptLogin(
+          _primaryBaseApiUrl,
+          email,
+          password,
+        );
         return response;
       } catch (e) {
         debugPrint('Primary login failed, trying fallback: $e');
       }
-      
+
       // Try fallback URL
       return await _attemptLogin(_fallbackBaseApiUrl, email, password);
     } catch (e) {
@@ -35,12 +41,16 @@ class AuthApiService {
     try {
       // Try primary URL first
       try {
-        final response = await _attemptRegister(_primaryBaseApiUrl, email, password);
+        final response = await _attemptRegister(
+          _primaryBaseApiUrl,
+          email,
+          password,
+        );
         return response;
       } catch (e) {
         debugPrint('Primary register failed, trying fallback: $e');
       }
-      
+
       // Try fallback URL
       return await _attemptRegister(_fallbackBaseApiUrl, email, password);
     } catch (e) {
@@ -49,14 +59,15 @@ class AuthApiService {
     }
   }
 
-  Future<String> _attemptLogin(String baseUrl, String email, String password) async {
+  Future<String> _attemptLogin(
+    String baseUrl,
+    String email,
+    String password,
+  ) async {
     try {
       final response = await _dio.post(
         '$baseUrl/Login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 200 && response.data != null) {
@@ -73,14 +84,15 @@ class AuthApiService {
     }
   }
 
-  Future<String> _attemptRegister(String baseUrl, String email, String password) async {
+  Future<String> _attemptRegister(
+    String baseUrl,
+    String email,
+    String password,
+  ) async {
     try {
       final response = await _dio.post(
         '$baseUrl/CreateUser',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 201 && response.data != null) {
