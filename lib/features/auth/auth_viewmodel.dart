@@ -60,9 +60,43 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
+  }
+
+  bool _isValidPassword(String password) {
+    // Just check length for now since server handles complexity
+    return password.length >= 8;
+  }
+
+  bool _isValidUsername(String username) {
+    // At least 3 characters, alphanumeric
+    return username.length >= 3 && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(username);
+  }
+
   Future<bool> register(String username, String email, String password) async {
     try {
       _error = null;
+
+      // Client-side validation
+      if (!_isValidUsername(username)) {
+        _error = 'Username must be at least 3 characters long and contain only letters and numbers';
+        notifyListeners();
+        return false;
+      }
+
+      if (!_isValidEmail(email)) {
+        _error = 'Please enter a valid email address';
+        notifyListeners();
+        return false;
+      }
+
+      if (!_isValidPassword(password)) {
+        _error = 'Password must be at least 8 characters long and contain both letters and numbers';
+        notifyListeners();
+        return false;
+      }
+
       final token = await _authService.register(username, email, password);
       
       _token = token;

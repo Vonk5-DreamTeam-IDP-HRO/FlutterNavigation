@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';
 import 'login_screen.dart';
+import 'package:osm_navigation/features/setting/setting_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -40,7 +41,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(); // Go back to login screen
+          // Pop back to root and replace with settings screen
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/',  // Go back to root/home
+            (route) => false,
+          ).then((_) {
+            // After root is restored, navigate to settings
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            }
+          });
         } else {
           final error = authViewModel.error ?? 'Registration Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(

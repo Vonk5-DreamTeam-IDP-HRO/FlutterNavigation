@@ -47,7 +47,12 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         if (success) {
-          widget.onLoginSuccess?.call();
+          if (widget.isDialog) {
+            widget.onLoginSuccess?.call();
+          } else {
+            // Navigate back to settings screen
+            Navigator.of(context).pop();
+          }
         } else {
           final error = authViewModel.error ?? 'Login Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(

@@ -6,30 +6,23 @@ class DioFactory {
   DioFactory._();
 
   static const int _connectTimeoutMs = 5000; // 5 seconds
-  static const int _receiveTimeoutMs = 1000; // 10 seconds
+  static const int _receiveTimeoutMs = 1000; // 1 second
   static const int _sendTimeoutMs = 15000; // 15 seconds
 
   static Dio createDio({String? authToken}) {
-    final dio = Dio();
-
-    final headers = {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Accept': 'application/json',
-    };
-
-    if (authToken != null) {
-      headers['Authorization'] = 'Bearer $authToken';
-    }
-
-    dio.options = BaseOptions(
+    final dio = Dio(BaseOptions(
       connectTimeout: const Duration(milliseconds: _connectTimeoutMs),
       receiveTimeout: const Duration(milliseconds: _receiveTimeoutMs),
       sendTimeout: const Duration(milliseconds: _sendTimeoutMs),
-      headers: headers,
-      validateStatus: (status) {
-        return status != null && status < 500;
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
+        if (authToken != null) 'Authorization': 'Bearer $authToken',
       },
-    );
+      validateStatus: (status) => status != null && status < 600,
+      followRedirects: false,
+      maxRedirects: 0,
+    ));
 
     if (kDebugMode) {
       dio.interceptors.add(

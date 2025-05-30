@@ -1,15 +1,19 @@
 class LoginRequestDto {
   final String username;
   final String password;
+  late final String email;  // Added to match C# UserDto
 
   LoginRequestDto({
     required this.username,
     required this.password,
-  });
+  }) {
+    email = '$username@placeholder.com'; // Auto-generate placeholder email
+  }
 
   Map<String, dynamic> toJson() => {
-    'Username': username,  // Match C# property casing
+    'Username': username,  // Match C# model casing
     'Password': password,
+    'Email': email,
   };
 }
 
@@ -25,7 +29,7 @@ class RegisterRequestDto {
   });
 
   Map<String, dynamic> toJson() => {
-    'Username': username,  // Match C# property casing
+    'Username': username,  // Match C# model casing
     'Email': email,
     'Password': password,
   };
@@ -40,7 +44,7 @@ class AuthResponseDto {
 
   factory AuthResponseDto.fromJson(Map<String, dynamic> json) {
     return AuthResponseDto(
-      token: json['token'] as String,
+      token: json['Token'] ?? json['token'] as String,  // Support both PascalCase and camelCase
     );
   }
 }
