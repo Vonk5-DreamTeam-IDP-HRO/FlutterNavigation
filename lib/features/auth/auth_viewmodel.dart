@@ -115,17 +115,12 @@ class AuthViewModel extends ChangeNotifier {
         _error = e.response?.data is Map ? 
                 e.response?.data['message'] ?? 'Invalid registration data' :
                 e.response?.data?.toString() ?? 'Invalid registration data';
-      } else if (e.response?.statusCode == 500) {
-        // Extract error message from DioException
-        String baseError = e.message ?? 'An unexpected server error occurred';
-        if (baseError.contains('This might be due to')) {
-          _error = baseError; // Use the detailed error message we created
-        } else {
-          _error = 'Server Error: The account could not be created. This might be due to:\n'
-                  '1. Username or email is already in use\n'
-                  '2. Invalid input format\n'
-                  'Please try again or contact support if the issue persists.';
-        }
+      } else if (e.response?.statusCode == 500 || 
+                (e.type == DioExceptionType.connectionTimeout || 
+                 e.type == DioExceptionType.sendTimeout || 
+                 e.type == DioExceptionType.receiveTimeout)) {
+        // Use the error message directly from the service
+        _error = e.message ?? 'Registration failed. Please try again.';
       } else {
         _error = 'Registration failed: ${e.response?.data ?? e.message}';
       }
