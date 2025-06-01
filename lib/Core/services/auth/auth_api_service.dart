@@ -39,6 +39,15 @@ class AuthApiService {
         final response = await _attemptRegister(_primaryBaseApiUrl, username, email, password);
         return response;
       } catch (e) {
+        // Check if it's a duplicate user error
+        if (e is DioException && e.response?.data != null) {
+          final errorMessage = e.response!.data.toString().toLowerCase();
+          if (errorMessage.contains('duplicate') || 
+              errorMessage.contains('already exists') ||
+              errorMessage.contains('in use')) {
+            rethrow; // Don't try fallback if it's a duplicate error
+          }
+        }
         debugPrint('Primary register failed, trying fallback: $e');
       }
       
@@ -46,7 +55,42 @@ class AuthApiService {
       return await _attemptRegister(_fallbackBaseApiUrl, username, email, password);
     } catch (e) {
       debugPrint('Register failed on both URLs: $e');
-      rethrow;
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout || 
+            e.type == DioExceptionType.sendTimeout || 
+            e.type == DioExceptionType.receiveTimeout) {
+          throw DioException(
+            requestOptions: e.requestOptions,
+            response: e.response,
+            message: 'Registration failed. This could be because:\n' +
+                    '1. The username or email is already registered\n' +
+                    '2. The server is temporarily unavailable\n' +
+                    '3. There are network connectivity issues'
+          );
+        } else if (e.response?.data != null) {
+          final errorMessage = e.response!.data.toString().toLowerCase();
+          if (errorMessage.contains('duplicate') || 
+              errorMessage.contains('already exists') ||
+              errorMessage.contains('in use')) {
+            throw DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              message: 'This username or email is already registered. Please try a different one.'
+            );
+          }
+        }
+      }
+      
+      // If we get here, throw a generic error with the same format
+      throw e is DioException ? DioException(
+        requestOptions: e.requestOptions,
+        response: e.response,
+        message: 'Registration failed. This could be because:\n' +
+                '1. The username or email is already registered\n' +
+                '2. The server is temporarily unavailable\n' +
+                '3. There are network connectivity issues'
+      ) : e;
     }
   }
 
@@ -164,33 +208,42 @@ class AuthApiService {
         debugPrint('Response headers: ${e.response?.headers}');
         debugPrint('Response data: $responseData');
 
-        if (statusCode == 500) {
-          // Try to extract more detailed error message if available
-          final errorMessage = responseData is String ? responseData : responseData?['message'] ?? responseData?.toString();
-          // Try to provide more specific error messages based on the response
-          String detailedError = 'Server error: $errorMessage\n\nPossible causes:\n';
-          if (errorMessage.toLowerCase().contains('duplicate') || 
-              errorMessage.toLowerCase().contains('already exists')) {
-            detailedError += '- Username or email is already registered\n';
-          } else if (errorMessage.toLowerCase().contains('password')) {
-            detailedError += '- Password does not meet requirements (min 8 chars, letters and numbers)\n';
-          } else if (errorMessage.toLowerCase().contains('email')) {
-            detailedError += '- Email format is invalid\n';
-          } else if (errorMessage.toLowerCase().contains('database') || 
-                     errorMessage.toLowerCase().contains('connection')) {
-            detailedError += '- Database connection issues\n- Server might be temporarily unavailable\n';
-          } else {
-            detailedError += '- Username/Email validation failed\n'
-                            '- Database connection issues\n'
-                            '- Server configuration error\n'
-                            '- Network connectivity problems';
+        // Check for various error status codes
+        if (statusCode == 400 || statusCode == 500) {
+          String errorMessage = responseData is String ? responseData : responseData?['message'] ?? responseData?.toString();
+          errorMessage = errorMessage.toLowerCase();
+
+          // Check for specific error patterns
+          if (errorMessage.contains('username') && (errorMessage.contains('duplicate') || errorMessage.contains('exists') || errorMessage.contains('taken'))) {
+            throw DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              message: 'This username is already taken. Please choose a different username.'
+            );
+          } else if (errorMessage.contains('email') && (errorMessage.contains('duplicate') || errorMessage.contains('exists'))) {
+            throw DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              message: 'This email address is already registered. Please use a different email or try logging in.'
+            );
+          } else if (errorMessage.contains('duplicate') || errorMessage.contains('already exists')) {
+            throw DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              message: 'This username or email is already registered. Please try different credentials.'
+            );
+          } else if (errorMessage.contains('unexpected error')) {
+            // This is specifically for the case you showed in the logs
+            throw DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              message: 'Registration failed. Please verify your information and try again.\n\n' +
+                      'This could be because:\n' +
+                      '1. The username or email is already registered\n' +
+                      '2. The server is temporarily unavailable\n' +
+                      '3. There are network connectivity issues'
+            );
           }
-          
-          throw DioException(
-            requestOptions: e.requestOptions,
-            response: e.response,
-            message: detailedError
-          );
         }
       }
       rethrow;
