@@ -16,7 +16,16 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UpdateLocationDto {
 
- String get name; double get latitude; double get longitude; String? get description; UpdateLocationDetailDto? get locationDetail;
+/// Location name (maps to C# string Name)
+/// Must be non-empty and max 100 characters
+ String get name;/// Latitude coordinate (maps to C# double Latitude)
+/// Must be between 51.80 and 52.00 for Rotterdam area
+ double get latitude;/// Longitude coordinate (maps to C# double Longitude)
+/// Must be between 4.40 and 4.60 for Rotterdam area
+ double get longitude;/// Optional description (maps to C# string? Description)
+/// Max 500 characters
+ String? get description;/// Optional location details (maps to C# UpdateLocationDetailDto? LocationDetail)
+ UpdateLocationDetailDto? get locationDetail;
 /// Create a copy of UpdateLocationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -99,10 +108,19 @@ class _UpdateLocationDto implements UpdateLocationDto {
   const _UpdateLocationDto({required this.name, required this.latitude, required this.longitude, this.description, this.locationDetail});
   factory _UpdateLocationDto.fromJson(Map<String, dynamic> json) => _$UpdateLocationDtoFromJson(json);
 
+/// Location name (maps to C# string Name)
+/// Must be non-empty and max 100 characters
 @override final  String name;
+/// Latitude coordinate (maps to C# double Latitude)
+/// Must be between 51.80 and 52.00 for Rotterdam area
 @override final  double latitude;
+/// Longitude coordinate (maps to C# double Longitude)
+/// Must be between 4.40 and 4.60 for Rotterdam area
 @override final  double longitude;
+/// Optional description (maps to C# string? Description)
+/// Max 500 characters
 @override final  String? description;
+/// Optional location details (maps to C# UpdateLocationDetailDto? LocationDetail)
 @override final  UpdateLocationDetailDto? locationDetail;
 
 /// Create a copy of UpdateLocationDto
@@ -185,7 +203,23 @@ $UpdateLocationDetailDtoCopyWith<$Res>? get locationDetail {
 /// @nodoc
 mixin _$UpdateLocationDetailDto {
 
- String? get address; String? get city; String? get country; String? get zipCode; String? get phoneNumber; String? get website; String? get category; String? get accessibility;
+/// Street address (maps to C# string? Address)
+/// Max 200 characters for update operations
+ String? get address;/// City name (maps to C# string? City)
+/// Max 100 characters
+ String? get city;/// Country name (maps to C# string? Country)
+/// Max 100 characters
+ String? get country;/// Postal/ZIP code (maps to C# string? ZipCode)
+/// Max 20 characters
+ String? get zipCode;/// Contact phone number (maps to C# string? PhoneNumber)
+/// Dutch format validation applied
+ String? get phoneNumber;/// Website URL (maps to C# string? Website)
+/// Must be valid HTTP/HTTPS URL
+ String? get website;/// Location category/type (maps to C# string? Category)
+/// Max 50 characters for update operations
+ String? get category;/// Accessibility information (maps to C# string? Accessibility)
+/// Max 200 characters for update operations
+ String? get accessibility;
 /// Create a copy of UpdateLocationDetailDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -259,13 +293,29 @@ class _UpdateLocationDetailDto implements UpdateLocationDetailDto {
   const _UpdateLocationDetailDto({this.address, this.city, this.country, this.zipCode, this.phoneNumber, this.website, this.category, this.accessibility});
   factory _UpdateLocationDetailDto.fromJson(Map<String, dynamic> json) => _$UpdateLocationDetailDtoFromJson(json);
 
+/// Street address (maps to C# string? Address)
+/// Max 200 characters for update operations
 @override final  String? address;
+/// City name (maps to C# string? City)
+/// Max 100 characters
 @override final  String? city;
+/// Country name (maps to C# string? Country)
+/// Max 100 characters
 @override final  String? country;
+/// Postal/ZIP code (maps to C# string? ZipCode)
+/// Max 20 characters
 @override final  String? zipCode;
+/// Contact phone number (maps to C# string? PhoneNumber)
+/// Dutch format validation applied
 @override final  String? phoneNumber;
+/// Website URL (maps to C# string? Website)
+/// Must be valid HTTP/HTTPS URL
 @override final  String? website;
+/// Location category/type (maps to C# string? Category)
+/// Max 50 characters for update operations
 @override final  String? category;
+/// Accessibility information (maps to C# string? Accessibility)
+/// Max 200 characters for update operations
 @override final  String? accessibility;
 
 /// Create a copy of UpdateLocationDetailDto

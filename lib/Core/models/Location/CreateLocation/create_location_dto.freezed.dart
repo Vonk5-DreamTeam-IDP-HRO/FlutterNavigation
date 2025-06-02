@@ -16,7 +16,15 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateLocationDto {
 
- String get name; double get latitude; double get longitude; String? get description; CreateLocationDetailDto? get locationDetail;
+/// Location name (maps to C# string Name)
+/// Must be non-empty and max 255 characters
+ String get name;/// Latitude coordinate (maps to C# double Latitude)
+/// Must be between 51.80 and 52.00 for Rotterdam area
+ double get latitude;/// Longitude coordinate (maps to C# double Longitude)
+/// Must be between 4.40 and 4.60 for Rotterdam area
+ double get longitude;/// Optional description (maps to C# string? Description)
+ String? get description;/// Optional location details (maps to C# CreateLocationDetailDto? LocationDetail)
+ CreateLocationDetailDto? get locationDetail;
 /// Create a copy of CreateLocationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -99,10 +107,18 @@ class _CreateLocationDto implements CreateLocationDto {
   const _CreateLocationDto({required this.name, required this.latitude, required this.longitude, this.description, this.locationDetail});
   factory _CreateLocationDto.fromJson(Map<String, dynamic> json) => _$CreateLocationDtoFromJson(json);
 
+/// Location name (maps to C# string Name)
+/// Must be non-empty and max 255 characters
 @override final  String name;
+/// Latitude coordinate (maps to C# double Latitude)
+/// Must be between 51.80 and 52.00 for Rotterdam area
 @override final  double latitude;
+/// Longitude coordinate (maps to C# double Longitude)
+/// Must be between 4.40 and 4.60 for Rotterdam area
 @override final  double longitude;
+/// Optional description (maps to C# string? Description)
 @override final  String? description;
+/// Optional location details (maps to C# CreateLocationDetailDto? LocationDetail)
 @override final  CreateLocationDetailDto? locationDetail;
 
 /// Create a copy of CreateLocationDto
@@ -185,13 +201,22 @@ $CreateLocationDetailDtoCopyWith<$Res>? get locationDetail {
 /// @nodoc
 mixin _$CreateLocationDetailDto {
 
- String? get address;// max 255 chars in C#
- String? get city;// max 100 chars in C#
- String? get country;// max 100 chars in C#
- String? get zipCode;// max 20 chars in C#
- String? get phoneNumber;// max 20 chars in C#, phone validation
- String? get website;// max 2048 chars in C#, URL validation
- String? get category;// max 100 chars in C#
+/// Street address (maps to C# string? Address)
+/// Max 255 characters as per C# backend constraint
+ String? get address;/// City name (maps to C# string? City)
+/// Max 100 characters as per C# backend constraint
+ String? get city;/// Country name (maps to C# string? Country)
+/// Max 100 characters as per C# backend constraint
+ String? get country;/// Postal/ZIP code (maps to C# string? ZipCode)
+/// Max 20 characters as per C# backend constraint
+ String? get zipCode;/// Contact phone number (maps to C# string? PhoneNumber)
+/// Max 20 characters with format validation as per C# backend
+ String? get phoneNumber;/// Website URL (maps to C# string? Website)
+/// Max 2048 characters with URL format validation as per C# backend
+ String? get website;/// Location category/type (maps to C# string? Category)
+/// Max 100 characters as per C# backend constraint
+ String? get category;/// Accessibility information (maps to C# string? Accessibility)
+/// Max 500 characters as per C# backend constraint
  String? get accessibility;
 /// Create a copy of CreateLocationDetailDto
 /// with the given fields replaced by the non-null parameter values.
@@ -266,20 +291,29 @@ class _CreateLocationDetailDto implements CreateLocationDetailDto {
   const _CreateLocationDetailDto({this.address, this.city, this.country, this.zipCode, this.phoneNumber, this.website, this.category, this.accessibility});
   factory _CreateLocationDetailDto.fromJson(Map<String, dynamic> json) => _$CreateLocationDetailDtoFromJson(json);
 
+/// Street address (maps to C# string? Address)
+/// Max 255 characters as per C# backend constraint
 @override final  String? address;
-// max 255 chars in C#
+/// City name (maps to C# string? City)
+/// Max 100 characters as per C# backend constraint
 @override final  String? city;
-// max 100 chars in C#
+/// Country name (maps to C# string? Country)
+/// Max 100 characters as per C# backend constraint
 @override final  String? country;
-// max 100 chars in C#
+/// Postal/ZIP code (maps to C# string? ZipCode)
+/// Max 20 characters as per C# backend constraint
 @override final  String? zipCode;
-// max 20 chars in C#
+/// Contact phone number (maps to C# string? PhoneNumber)
+/// Max 20 characters with format validation as per C# backend
 @override final  String? phoneNumber;
-// max 20 chars in C#, phone validation
+/// Website URL (maps to C# string? Website)
+/// Max 2048 characters with URL format validation as per C# backend
 @override final  String? website;
-// max 2048 chars in C#, URL validation
+/// Location category/type (maps to C# string? Category)
+/// Max 100 characters as per C# backend constraint
 @override final  String? category;
-// max 100 chars in C#
+/// Accessibility information (maps to C# string? Accessibility)
+/// Max 500 characters as per C# backend constraint
 @override final  String? accessibility;
 
 /// Create a copy of CreateLocationDetailDto

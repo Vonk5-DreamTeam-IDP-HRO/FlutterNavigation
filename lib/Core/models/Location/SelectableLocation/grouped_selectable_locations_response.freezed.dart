@@ -17,8 +17,12 @@ T _$identity<T>(T value) => value;
 mixin _$GroupedSelectableLocationsResponse {
 
 /// Dictionary of categories mapped to their selectable locations
-/// Key: Category name (string)
-/// Value: List of SelectableLocationDto for that category
+///
+/// **Key:** Category name (String) - may be "null" for uncategorized locations
+/// **Value:** List of SelectableLocationDto for that category
+///
+/// Categories are determined by the Category field in LocationDetail.
+/// Locations without categories appear under "null" key.
  Map<String, List<SelectableLocationDto>> get groupedLocations;
 /// Create a copy of GroupedSelectableLocationsResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -87,12 +91,20 @@ class _GroupedSelectableLocationsResponse implements GroupedSelectableLocationsR
   factory _GroupedSelectableLocationsResponse.fromJson(Map<String, dynamic> json) => _$GroupedSelectableLocationsResponseFromJson(json);
 
 /// Dictionary of categories mapped to their selectable locations
-/// Key: Category name (string)
-/// Value: List of SelectableLocationDto for that category
+///
+/// **Key:** Category name (String) - may be "null" for uncategorized locations
+/// **Value:** List of SelectableLocationDto for that category
+///
+/// Categories are determined by the Category field in LocationDetail.
+/// Locations without categories appear under "null" key.
  final  Map<String, List<SelectableLocationDto>> _groupedLocations;
 /// Dictionary of categories mapped to their selectable locations
-/// Key: Category name (string)
-/// Value: List of SelectableLocationDto for that category
+///
+/// **Key:** Category name (String) - may be "null" for uncategorized locations
+/// **Value:** List of SelectableLocationDto for that category
+///
+/// Categories are determined by the Category field in LocationDetail.
+/// Locations without categories appear under "null" key.
 @override Map<String, List<SelectableLocationDto>> get groupedLocations {
   if (_groupedLocations is EqualUnmodifiableMapView) return _groupedLocations;
   // ignore: implicit_dynamic_type

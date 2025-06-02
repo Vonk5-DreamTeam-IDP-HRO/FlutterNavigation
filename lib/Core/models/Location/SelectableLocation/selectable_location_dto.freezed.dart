@@ -17,9 +17,11 @@ T _$identity<T>(T value) => value;
 mixin _$SelectableLocationDto {
 
 /// Unique identifier for the location (maps to C# Guid LocationId)
- String get locationId;/// Name of the location (maps to C# string Name)
- String get name;/// Category of the location (maps to C# string? Category)
-/// Will be auto-handled by Freezed JSON generation
+/// Used for selection and subsequent API calls
+ String get locationId;/// Display name of the location (maps to C# string Name)
+/// User-friendly name shown in selection UI
+ String get name;/// Location category/type (maps to C# string? Category)
+/// Used for grouping in selection interfaces, may be null for uncategorized
  String? get category;
 /// Create a copy of SelectableLocationDto
 /// with the given fields replaced by the non-null parameter values.
@@ -90,11 +92,13 @@ class _SelectableLocationDto implements SelectableLocationDto {
   factory _SelectableLocationDto.fromJson(Map<String, dynamic> json) => _$SelectableLocationDtoFromJson(json);
 
 /// Unique identifier for the location (maps to C# Guid LocationId)
+/// Used for selection and subsequent API calls
 @override final  String locationId;
-/// Name of the location (maps to C# string Name)
+/// Display name of the location (maps to C# string Name)
+/// User-friendly name shown in selection UI
 @override final  String name;
-/// Category of the location (maps to C# string? Category)
-/// Will be auto-handled by Freezed JSON generation
+/// Location category/type (maps to C# string? Category)
+/// Used for grouping in selection interfaces, may be null for uncategorized
 @override final  String? category;
 
 /// Create a copy of SelectableLocationDto
