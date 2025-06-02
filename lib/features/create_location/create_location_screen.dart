@@ -178,7 +178,11 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
     final photonService = Provider.of<PhotonService>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Location')),
+      appBar: AppBar(
+        title: const Text('Create Location'),
+        backgroundColor: const Color(0xFF00811F),
+        foregroundColor: Colors.white,
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -192,11 +196,18 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     builder: (context, controller, focusNode) => TextFormField(
                       controller: _addressController,
                       focusNode: focusNode,
+                      style: const TextStyle(color: Colors.black),
                       decoration: const InputDecoration(
                         labelText: 'Address',
+                        labelStyle: TextStyle(color: Colors.black87),
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.search),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF00811F)),
+                        ),
+                        prefixIcon: Icon(Icons.search, color: Color(0xFF00811F)),
                         hintText: 'Start typing an address (min 3 characters)',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                       ),
                       validator: (value) {
                         if (_addressController.text.isEmpty) {
@@ -259,9 +270,15 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _nameController,
+                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Name',
+                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00811F)),
+                      ),
+                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -274,18 +291,30 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
+                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Description (Optional)',
+                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00811F)),
+                      ),
+                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     maxLines: 3,
                   ),
 
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
+                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Category',
+                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00811F)),
+                      ),
+                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     value: _category,
                     hint: viewModel.isLoadingCategories
@@ -329,11 +358,20 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
 
                   const SizedBox(height: 32),
                   if (viewModel.isLoading)
-                    const Center(child: CircularProgressIndicator())
+                    const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00811F)),
+                      ),
+                    )
                   else
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00811F),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       onPressed: () => _submitForm(context),
                       child: const Text('Create Location'),

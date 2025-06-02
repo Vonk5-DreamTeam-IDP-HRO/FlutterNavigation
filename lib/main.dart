@@ -64,13 +64,23 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => AuthViewModel()), // Added AuthViewModel
         Provider<PhotonService>(create: (context) => PhotonService()),
       ],
-      child: MaterialApp(
-        title: 'OSM Navigation',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+      child: Consumer<AppState>(
+        builder: (context, appState, _) => MaterialApp(
+          title: 'OSM Navigation',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00811F)),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00811F),
+              brightness: Brightness.dark,
+            ),
+          ),
+          themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const MainScreen(),
         ),
-        home: const MainScreen(),
       ),
     );
   }

@@ -134,7 +134,11 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create New Route')),
+      appBar: AppBar(
+        title: const Text('Create New Route'),
+        backgroundColor: const Color(0xFF00811F),
+        foregroundColor: Colors.white,
+      ),
       body: Stack( // Use Stack for layering
         children: [
           Padding(
@@ -150,17 +154,25 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 builder: (context, isNameValid, _) {
                   return TextField(
                     controller: viewModel.nameController,
-                    // The ViewModel now listens to this controller internally
-                    // and calls notifyListeners() when the text changes.
-                    decoration: InputDecoration(
-                      labelText: 'Route Name*',
-                      hintText: 'Enter the name for your route',
-                      errorText:
-                          viewModel.nameController.text.isNotEmpty &&
-                                  !isNameValid
-                              ? 'Route name cannot be empty'
-                              : null,
-                    ),
+                      style: const TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        labelText: 'Route Name*',
+                        hintText: 'Enter the name for your route',
+                        errorText:
+                            viewModel.nameController.text.isNotEmpty &&
+                                    !isNameValid
+                                ? 'Route name cannot be empty'
+                                : null,
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF00811F)),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                        floatingLabelStyle: const TextStyle(color: Color(0xFF00811F)),
+                        hintStyle: const TextStyle(color: Colors.grey),
+                      ),
                   );
                 },
               ),
@@ -169,9 +181,19 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               // --- Route Description Input ---
               TextField(
                 controller: viewModel.descriptionController,
+                style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   hintText: 'Enter an optional description',
+                  labelStyle: TextStyle(color: Colors.black87),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF00811F)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
+                  hintStyle: TextStyle(color: Colors.grey),
                 ),
                 maxLines: 3,
               ),
@@ -180,7 +202,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               // --- Location Selection Title ---
               Text(
                 'Select Locations (at least 2)*',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 5),
 
@@ -214,8 +239,19 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                   selector: (_, vm) => vm.canSave,
                   builder: (context, canSave, _) {
                     return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00811F),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                       onPressed: canSave ? viewModel.attemptSave : null,
-                      child: const Text('Save Route'),
+                      child: const Text(
+                        'Save Route',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     );
                   },
                 ),

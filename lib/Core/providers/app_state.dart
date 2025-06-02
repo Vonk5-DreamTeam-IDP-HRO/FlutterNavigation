@@ -3,10 +3,17 @@ import 'package:osm_navigation/core/navigation/navigation.dart'; // Corrected ca
 
 class AppState extends ChangeNotifier {
   int selectedTabIndex = MainScreen.homeIndex;
+  bool isDarkMode = false;
 
   // Method to change the selected tab
   void changeTab(int index) {
     selectedTabIndex = index;
-    notifyListeners(); // Notify listeners to rebuild UI based on the new index
+    notifyListeners();
+  }
+
+  // Method to toggle dark mode
+  void toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    notifyListeners();
   }
 }

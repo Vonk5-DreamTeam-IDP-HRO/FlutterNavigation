@@ -20,7 +20,9 @@ class SavedRoutesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved Routes'), // Title matches task
+        title: const Text('Saved Routes'),
+        backgroundColor: const Color(0xFF00811F),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -36,7 +38,11 @@ class SavedRoutesScreen extends StatelessWidget {
   Widget _buildBody(BuildContext context, SavedRoutesViewModel viewModel) {
     // Display loading indicator
     if (viewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+        ),
+      );
     }
 
     // Display error message
@@ -55,35 +61,70 @@ class SavedRoutesScreen extends StatelessWidget {
 
     // Display message if no routes are available
     if (viewModel.routes.isEmpty) {
-      return const Center(child: Text('No saved routes found.'));
+      return Center(
+        child: Text(
+          'No saved routes found.',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
     }
 
     // Display the list of routes
-    // TODO: Create & Add resuable widget for route item
     return ListView.builder(
+      padding: const EdgeInsets.all(8.0),
       itemCount: viewModel.routes.length,
       itemBuilder: (context, index) {
         final route = viewModel.routes[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
+          elevation: 2.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.route_outlined),
-                title: Text(route.displayName),
-                subtitle: Text(route.description),
+                contentPadding: const EdgeInsets.all(16.0),
+                leading: Icon(
+                  Icons.route_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 32.0,
+                ),
+                title: Text(
+                  route.displayName,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    route.description,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    TextButton(
+                    TextButton.icon(
+                      icon: Icon(
+                        Icons.edit,
+                        size: 18.0,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       onPressed: () {
-                        // Create the ViewModel, initialize for edit, then navigate
                         final locationRepo = Provider.of<ILocationRepository>(
-                          // Explicit type
                           context,
                           listen: false,
                         );
@@ -92,33 +133,39 @@ class SavedRoutesScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) => ChangeNotifierProvider.value(
-                                  value: viewModel,
-                                  child: const CreateRouteScreen(),
-                                ),
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: viewModel,
+                              child: const CreateRouteScreen(),
+                            ),
                           ),
                         );
                       },
-                      child: const Text('Edit'),
                     ),
-                    const SizedBox(width: 8), // Spacing between buttons
-                    TextButton(
+                    const SizedBox(width: 16.0),
+                    TextButton.icon(
+                      icon: Icon(
+                        Icons.map,
+                        size: 18.0,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        'View Route',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       onPressed: () {
-                        // Navigate to the Cesium 3D Map screen
-                        // TODO: Pass route.id and modify CesiumMapViewModel to load the specific route
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) => ChangeNotifierProvider(
-                                  create: (_) => CesiumMapViewModel(),
-                                  child: const CesiumMapScreen(),
-                                ),
+                            builder: (context) => ChangeNotifierProvider(
+                              create: (_) => CesiumMapViewModel(),
+                              child: const CesiumMapScreen(),
+                            ),
                           ),
                         );
                       },
-                      child: const Text('View Route'),
                     ),
                   ],
                 ),

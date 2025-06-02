@@ -5,7 +5,6 @@ import 'package:accordion/controllers.dart';
 import 'package:osm_navigation/Core/models/selectable_location.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 
-/// Widget responsible for displaying the location selection accordion.
 class LocationAccordionSelector extends StatelessWidget {
   final bool isLoading;
   final String? error;
@@ -39,64 +38,109 @@ class LocationAccordionSelector extends StatelessWidget {
       return const Center(child: Text('No locations available.'));
     }
 
-    // Build the Accordion
     return Accordion(
       maxOpenSections: groupedLocations.length,
       headerBackgroundColorOpened: Colors.black54,
       headerPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
       sectionOpeningHapticFeedback: SectionHapticFeedback.heavy,
       sectionClosingHapticFeedback: SectionHapticFeedback.light,
-      children:
-          groupedLocations.entries.map((entry) {
-            final category = entry.key;
-            final locationsInCategory = entry.value;
+      scaleWhenAnimating: true,
+      children: groupedLocations.entries.map((entry) {
+        final category = entry.key;
+        final locationsInCategory = entry.value;
 
-            return AccordionSection(
-              key: ValueKey(category), // Keep the key
-              // isOpen state is managed internally by Accordion now
-              leftIcon: const Icon(Icons.location_city, color: Colors.white),
-              header: Text(
-                category,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: locationsInCategory.length,
-                itemBuilder: (context, index) {
-                  final location = locationsInCategory[index];
-                  // Use Selector for the Checkbox state only
-                  // Note: Selector needs access to the ViewModel provided higher up the tree
-                  return Selector<CreateRouteViewModel, bool>(
-                    selector:
-                        (_, vm) => vm.selectedLocationIds.contains(
-                          location.locationId,
+        return AccordionSection(
+          key: ValueKey(category),
+          leftIcon: const Icon(Icons.location_city, color: Colors.white),
+          header: Text(
+            category,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SizedBox(
+            height: 200,
+            child: ListView.builder(
+              shrinkWrap: false,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: locationsInCategory.length,
+              itemBuilder: (context, index) {
+                final location = locationsInCategory[index];
+                return Selector<CreateRouteViewModel, bool>(
+                  selector: (_, vm) => vm.selectedLocationIds.contains(location.locationId),
+                  builder: (context, isSelected, _) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: CheckboxListTile(
+                            title: Text(location.name),
+                            value: isSelected,
+                            onChanged: (bool? selected) {
+                              if (selected != null) {
+                                viewModel.toggleLocationSelection(location.locationId);
+                              }
+                            },
+                          ),
                         ),
-                    builder: (context, isSelected, _) {
-                      return CheckboxListTile(
-                        title: Text(location.name),
-                        value: isSelected,
-                        onChanged: (bool? selected) {
-                          if (selected != null) {
-                            // Use the viewModel instance passed to this widget
-                            viewModel.toggleLocationSelection(
-                              location.locationId,
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Edit Location'),
+                                  content: const Text('Edit location functionality will be implemented here.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
-                          }
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              contentHorizontalPadding: 20,
-              contentBorderWidth: 1,
-            );
-          }).toList(),
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Delete Location'),
+                                  content: Text('Are you sure you want to delete ${location.name}?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        // TODO: Implement delete functionality
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
