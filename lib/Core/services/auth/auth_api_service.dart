@@ -6,24 +6,30 @@ import '../dio_factory.dart';
 
 class AuthApiService {
   late final Dio _dio;
-  
-  static final String _primaryBaseApiUrl = '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl = '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
-  
+
+  static final String _primaryBaseApiUrl =
+      '${AppConfig.url}:${AppConfig.backendApiPort}';
+  static final String _fallbackBaseApiUrl =
+      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+
   AuthApiService() {
     _dio = DioFactory.createDio();
   }
-  
+
   Future<String> login(String username, String password) async {
     try {
       // Try primary URL first
       try {
-        final response = await _attemptLogin(_primaryBaseApiUrl, username, password);
+        final response = await _attemptLogin(
+          _primaryBaseApiUrl,
+          username,
+          password,
+        );
         return response;
       } catch (e) {
         debugPrint('Primary login failed, trying fallback: $e');
       }
-      
+
       // Try fallback URL
       return await _attemptLogin(_fallbackBaseApiUrl, username, password);
     } catch (e) {
@@ -32,36 +38,51 @@ class AuthApiService {
     }
   }
 
-  Future<String> register(String username, String email, String password) async {
+  Future<String> register(
+    String username,
+    String email,
+    String password,
+  ) async {
     try {
       // Try primary URL first
       try {
-        final response = await _attemptRegister(_primaryBaseApiUrl, username, email, password);
+        final response = await _attemptRegister(
+          _primaryBaseApiUrl,
+          username,
+          email,
+          password,
+        );
         return response;
       } catch (e) {
         debugPrint('Primary register failed, trying fallback: $e');
       }
-      
+
       // Try fallback URL
-      return await _attemptRegister(_fallbackBaseApiUrl, username, email, password);
+      return await _attemptRegister(
+        _fallbackBaseApiUrl,
+        username,
+        email,
+        password,
+      );
     } catch (e) {
       debugPrint('Register failed on both URLs: $e');
       rethrow;
     }
   }
 
-  Future<String> _attemptLogin(String baseUrl, String username, String password) async {
+  Future<String> _attemptLogin(
+    String baseUrl,
+    String username,
+    String password,
+  ) async {
     try {
       debugPrint('\n=== LOGIN ATTEMPT ===');
       debugPrint('Server: $baseUrl');
       debugPrint('Endpoint: /api/User/login');
       debugPrint('Method: POST');
 
-      final loginDto = LoginRequestDto(
-        username: username,
-        password: password,
-      );
-      
+      final loginDto = LoginRequestDto(username: username, password: password);
+
       debugPrint('Request body: ${loginDto.toJson()}');
       debugPrint('Sending POST request for login...');
       final response = await _dio.post(
@@ -82,15 +103,21 @@ class AuthApiService {
           if (token != null) {
             return token.toString();
           }
-          debugPrint('Warning: Response contained a Map but no token field: ${response.data}');
+          debugPrint(
+            'Warning: Response contained a Map but no token field: ${response.data}',
+          );
         }
         return response.data.toString(); // Fallback for direct token string
       }
       String errorMessage;
       if (response.statusCode == 401) {
         errorMessage = 'Invalid username or password';
-        debugPrint('Login failed: Received 401 Unauthorized - invalid credentials');
-      } else if (response.statusCode == 400 && response.data is Map && response.data['errors'] != null) {
+        debugPrint(
+          'Login failed: Received 401 Unauthorized - invalid credentials',
+        );
+      } else if (response.statusCode == 400 &&
+          response.data is Map &&
+          response.data['errors'] != null) {
         final errors = response.data['errors'] as Map;
         final errorList = errors.values.expand((e) => e as List).toList();
         errorMessage = 'Validation error: ${errorList.join(", ")}';
@@ -109,23 +136,28 @@ class AuthApiService {
     }
   }
 
-  Future<String> _attemptRegister(String baseUrl, String username, String email, String password) async {
+  Future<String> _attemptRegister(
+    String baseUrl,
+    String username,
+    String email,
+    String password,
+  ) async {
     try {
       final registerDto = RegisterRequestDto(
         username: username,
         email: email,
         password: password,
       );
-      
+
       debugPrint('\n=== REGISTRATION ATTEMPT ===');
       debugPrint('Server: $baseUrl');
       debugPrint('Endpoint: /api/User');
       debugPrint('Registration payload: ${registerDto.toJson()}');
-      
+
       // Clean up the data and ensure proper casing
       final data = registerDto.toJson();
       debugPrint('Registration data with proper casing: $data');
-      
+
       final uri = Uri.parse('$baseUrl/api/User').toString();
       debugPrint('Constructed URI: $uri');
 
@@ -133,13 +165,16 @@ class AuthApiService {
       final response = await _dio.post(
         uri,
         data: data,
-          options: Options(validateStatus: (status) => status != null && status < 600),
+        options: Options(
+          validateStatus: (status) => status != null && status < 600,
+        ),
       );
 
       debugPrint('Register response status: ${response.statusCode}');
       debugPrint('Register response headers: ${response.headers}');
       debugPrint('Register response data: ${response.data}');
-      if ((response.statusCode == 201 || response.statusCode == 200) && response.data != null) {
+      if ((response.statusCode == 201 || response.statusCode == 200) &&
+          response.data != null) {
         // Some APIs return 200 instead of 201 for successful creation
         if (response.data is String) {
           // If the response is directly a token string
@@ -153,7 +188,8 @@ class AuthApiService {
       throw DioException(
         requestOptions: RequestOptions(path: '$baseUrl/api/User'),
         response: response,
-        message: 'Registration failed: ${response.statusCode}\nResponse: ${response.data}',
+        message:
+            'Registration failed: ${response.statusCode}\nResponse: ${response.data}',
       );
     } catch (e) {
       debugPrint('Registration attempt failed: $e');
@@ -166,30 +202,37 @@ class AuthApiService {
 
         if (statusCode == 500) {
           // Try to extract more detailed error message if available
-          final errorMessage = responseData is String ? responseData : responseData?['message'] ?? responseData?.toString();
+          final errorMessage =
+              responseData is String
+                  ? responseData
+                  : responseData?['message'] ?? responseData?.toString();
           // Try to provide more specific error messages based on the response
-          String detailedError = 'Server error: $errorMessage\n\nPossible causes:\n';
-          if (errorMessage.toLowerCase().contains('duplicate') || 
+          String detailedError =
+              'Server error: $errorMessage\n\nPossible causes:\n';
+          if (errorMessage.toLowerCase().contains('duplicate') ||
               errorMessage.toLowerCase().contains('already exists')) {
             detailedError += '- Username or email is already registered\n';
           } else if (errorMessage.toLowerCase().contains('password')) {
-            detailedError += '- Password does not meet requirements (min 8 chars, letters and numbers)\n';
+            detailedError +=
+                '- Password does not meet requirements (min 8 chars, letters and numbers)\n';
           } else if (errorMessage.toLowerCase().contains('email')) {
             detailedError += '- Email format is invalid\n';
-          } else if (errorMessage.toLowerCase().contains('database') || 
-                     errorMessage.toLowerCase().contains('connection')) {
-            detailedError += '- Database connection issues\n- Server might be temporarily unavailable\n';
+          } else if (errorMessage.toLowerCase().contains('database') ||
+              errorMessage.toLowerCase().contains('connection')) {
+            detailedError +=
+                '- Database connection issues\n- Server might be temporarily unavailable\n';
           } else {
-            detailedError += '- Username/Email validation failed\n'
-                            '- Database connection issues\n'
-                            '- Server configuration error\n'
-                            '- Network connectivity problems';
+            detailedError +=
+                '- Username/Email validation failed\n'
+                '- Database connection issues\n'
+                '- Server configuration error\n'
+                '- Network connectivity problems';
           }
-          
+
           throw DioException(
             requestOptions: e.requestOptions,
             response: e.response,
-            message: detailedError
+            message: detailedError,
           );
         }
       }

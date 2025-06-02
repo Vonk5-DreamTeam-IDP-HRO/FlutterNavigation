@@ -1,7 +1,7 @@
 // --- Imports ---
-import 'package:osm_navigation/Core/models/selectable_location.dart';
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
 
 // --- Class Definition ---
 class CreateRouteViewModel extends ChangeNotifier {
@@ -27,8 +27,8 @@ class CreateRouteViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  Map<String, List<SelectableLocation>> _groupedLocations = {};
-  Map<String, List<SelectableLocation>> get groupedLocations =>
+  Map<String, List<SelectableLocationDto>> _groupedLocations = {};
+  Map<String, List<SelectableLocationDto>> get groupedLocations =>
       _groupedLocations;
 
   final Set<String> _selectedLocationIds = {};

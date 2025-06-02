@@ -1,38 +1,64 @@
-import 'package:osm_navigation/Core/mappers/route_mapper.dart';
-import 'package:osm_navigation/Core/models/route.dart';
-import 'package:osm_navigation/Core/models/route_dto.dart';
-import 'package:osm_navigation/Core/models/route_dtos.dart';
-import 'package:osm_navigation/Core/services/route/IRouteApiService.dart';
+import 'package:osm_navigation/core/services/route/IRouteApiService.dart';
+import 'package:osm_navigation/core/models/Route/SelectableNavigationRoute.dart';
+import 'package:osm_navigation/core/models/Route/create_route_dto.dart';
+import 'package:osm_navigation/core/models/Route/route_dto.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'IRouteRepository.dart';
 
+/// Repository implementation for route data operations
 class RouteRepository implements IRouteRepository {
   final IRouteApiService _routeApiService;
 
   RouteRepository(this._routeApiService);
 
   @override
-  Future<List<Route>> getAllRoutes() async {
-    final List<RouteDto> routeDtos = await _routeApiService.getAllRoutes();
-    return routeDtos.map((dto) => RouteMapper.toDomain(dto)).toList();
-  }
-
-  @override
-  Future<Route?> getRouteById(String routeId) async {
-    final RouteDto? routeDto = await _routeApiService.getRouteById(routeId);
-    if (routeDto == null) {
-      return null;
+  Future<List<RouteDto>> getAllRoutes() async {
+    try {
+      return await _routeApiService.getAllRoutes();
+    } catch (e) {
+      rethrow;
     }
-    return RouteMapper.toDomain(routeDto);
   }
 
   @override
-  Future<Route> addRoute(CreateRouteDto createRouteDto) async {
-    // CreateRouteDto is already in the correct format for the API service,
-    // as it's a DTO specifically for creation.
-    // The API service will return a RouteDto.
-    final RouteDto newRouteDto = await _routeApiService.addRoute(
-      createRouteDto,
-    );
-    return RouteMapper.toDomain(newRouteDto);
+  Future<RouteDto?> getRouteById(String routeId) async {
+    try {
+      return await _routeApiService.getRouteById(routeId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<RouteDto> addRoute(CreateRouteDto createRouteDto) async {
+    try {
+      return await _routeApiService.addRoute(createRouteDto);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<LocationDto>> getRouteLocations(String routeId) async {
+    try {
+      return await _routeApiService.getRouteLocations(routeId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<SelectableNavigationRoute>> getSelectableRoutes() async {
+    try {
+      /// Fetches routes formatted for selection UI components
+      ///
+      /// **Purpose:** Provides route data optimized for dropdowns, navigation pickers
+      /// **Performance:** Returns lightweight SelectableNavigationRoute objects
+      /// **Use Cases:** Route selection in navigation, route comparison interfaces
+      return await _routeApiService.getSelectableRoutes();
+    } catch (e) {
+      rethrow;
+    }
   }
 }

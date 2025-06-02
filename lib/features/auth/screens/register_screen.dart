@@ -56,12 +56,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             }
           });
         } else {
-          final error = authViewModel.error ?? 'Registration Failed. Please try again.';
+          final error =
+              authViewModel.error ?? 'Registration Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
@@ -80,9 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

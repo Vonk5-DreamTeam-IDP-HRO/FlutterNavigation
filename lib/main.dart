@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:osm_navigation/Core/providers/app_state.dart';
-import 'package:osm_navigation/Core/navigation/navigation.dart';
-import 'package:osm_navigation/Core/services/dio_factory.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart';
+import 'package:osm_navigation/core/services/dio_factory.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
-import 'package:osm_navigation/Core/services/location/location_api_service.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
-import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
-import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/location/location_repository.dart';
+import 'package:osm_navigation/core/config/app_config.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart'; // Added import
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 
@@ -61,7 +61,9 @@ class MyApp extends StatelessWidget {
               (context) =>
                   LocationRepository(context.read<ILocationApiService>()),
         ),
-        ChangeNotifierProvider(create: (context) => AuthViewModel()), // Added AuthViewModel
+        ChangeNotifierProvider(
+          create: (context) => AuthViewModel(),
+        ), // Added AuthViewModel
         Provider<PhotonService>(create: (context) => PhotonService()),
       ],
       child: MaterialApp(

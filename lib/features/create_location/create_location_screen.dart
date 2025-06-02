@@ -37,12 +37,13 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Use listen: false for initial checks to avoid rebuild cycles
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     // Check initial state
-    bool shouldShowDialog = !authViewModel.isAuthenticated && !_isLoginDialogShown;
+    final bool shouldShowDialog =
+        !authViewModel.isAuthenticated && !_isLoginDialogShown;
 
     if (shouldShowDialog) {
       // Use Future.microtask to avoid build-time setState
@@ -76,43 +77,57 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
     showDialog(
       context: dialogContext,
       barrierDismissible: false,
-      builder: (BuildContext alertContext) => Builder(
-        builder: (builderContext) => AlertDialog(
-          title: const Text('Login Required'),
-          content: const Text('You need to log in or register to create a location.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(alertContext).pop();
-                if (mounted) {
-                  setState(() { _isLoginDialogShown = false; });
-                  Navigator.of(context).pop(); // Go back to previous screen
-                }
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Login / Register'),
-              onPressed: () {
-                Navigator.of(alertContext).pop();
-                if (mounted) {
-                  setState(() { _isLoginDialogShown = false; });
-                }
-                Navigator.of(builderContext).push(MaterialPageRoute(
-                  builder: (_) => const LoginScreen(),
-                ));
-              },
-            ),
-          ],
-        ),
-      ),
+      builder:
+          (BuildContext alertContext) => Builder(
+            builder:
+                (builderContext) => AlertDialog(
+                  title: const Text('Login Required'),
+                  content: const Text(
+                    'You need to log in or register to create a location.',
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(alertContext).pop();
+                        if (mounted) {
+                          setState(() {
+                            _isLoginDialogShown = false;
+                          });
+                          Navigator.of(
+                            context,
+                          ).pop(); // Go back to previous screen
+                        }
+                      },
+                    ),
+                    ElevatedButton(
+                      child: const Text('Login / Register'),
+                      onPressed: () {
+                        Navigator.of(alertContext).pop();
+                        if (mounted) {
+                          setState(() {
+                            _isLoginDialogShown = false;
+                          });
+                        }
+                        Navigator.of(builderContext).push(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+          ),
     ).then((_) {
       if (!mounted) return;
-      
+
       final auth = Provider.of<AuthViewModel>(context, listen: false);
-      
+
       if (auth.isAuthenticated) {
-        setState(() { _isLoginDialogShown = false; });
+        setState(() {
+          _isLoginDialogShown = false;
+        });
       }
     });
   }
@@ -189,25 +204,27 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TypeAheadField<PhotonResultExtension>(
-                    builder: (context, controller, focusNode) => TextFormField(
-                      controller: _addressController,
-                      focusNode: focusNode,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.search),
-                        hintText: 'Start typing an address (min 3 characters)',
-                      ),
-                      validator: (value) {
-                        if (_addressController.text.isEmpty) {
-                          if (value != null && value.isNotEmpty) {
-                            return 'Please select a valid address from suggestions';
-                          }
-                          return 'Please enter an address';
-                        }
-                        return null;
-                      },
-                    ),
+                    builder:
+                        (context, controller, focusNode) => TextFormField(
+                          controller: _addressController,
+                          focusNode: focusNode,
+                          decoration: const InputDecoration(
+                            labelText: 'Address',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search),
+                            hintText:
+                                'Start typing an address (min 3 characters)',
+                          ),
+                          validator: (value) {
+                            if (_addressController.text.isEmpty) {
+                              if (value != null && value.isNotEmpty) {
+                                return 'Please select a valid address from suggestions';
+                              }
+                              return 'Please enter an address';
+                            }
+                            return null;
+                          },
+                        ),
                     suggestionsCallback: (pattern) async {
                       if (pattern.length < 3) return [];
                       try {
@@ -232,13 +249,16 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     },
                     onSelected: (suggestion) {
                       final List<String> parts = [];
-                      if (suggestion.name != null && suggestion.name!.isNotEmpty) {
+                      if (suggestion.name != null &&
+                          suggestion.name!.isNotEmpty) {
                         parts.add(suggestion.name!);
                       }
-                      if (suggestion.postcode != null && suggestion.postcode!.isNotEmpty) {
+                      if (suggestion.postcode != null &&
+                          suggestion.postcode!.isNotEmpty) {
                         parts.add(suggestion.postcode!);
                       }
-                      if (suggestion.city != null && suggestion.city!.isNotEmpty) {
+                      if (suggestion.city != null &&
+                          suggestion.city!.isNotEmpty) {
                         parts.add(suggestion.city!);
                       }
                       _addressController.text = parts.join(', ');
@@ -247,13 +267,14 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                         suggestion.longitude,
                       );
                     },
-                    emptyBuilder: (context) => const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No addresses found. Try a different search term.',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                    ),
+                    emptyBuilder:
+                        (context) => const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'No addresses found. Try a different search term.',
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                        ),
                   ),
 
                   const SizedBox(height: 16),
@@ -288,28 +309,38 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                       border: OutlineInputBorder(),
                     ),
                     value: _category,
-                    hint: viewModel.isLoadingCategories
-                        ? const Text('Loading categories...')
-                        : viewModel.categoriesErrorMessage != null
-                            ? const Text('Error loading categories', style: TextStyle(color: Colors.red))
+                    hint:
+                        viewModel.isLoadingCategories
+                            ? const Text('Loading categories...')
+                            : viewModel.categoriesErrorMessage != null
+                            ? const Text(
+                              'Error loading categories',
+                              style: TextStyle(color: Colors.red),
+                            )
                             : viewModel.categories.isEmpty
-                                ? const Text('No categories available')
-                                : null,
-                    items: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                        ? []
-                        : viewModel.categories
-                            .map((String value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                            .toList(),
-                    onChanged: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _category = value;
-                            });
-                          },
+                            ? const Text('No categories available')
+                            : null,
+                    items:
+                        viewModel.isLoadingCategories ||
+                                viewModel.categoriesErrorMessage != null
+                            ? []
+                            : viewModel.categories
+                                .map(
+                                  (String value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                    onChanged:
+                        viewModel.isLoadingCategories ||
+                                viewModel.categoriesErrorMessage != null
+                            ? null
+                            : (value) {
+                              setState(() {
+                                _category = value;
+                              });
+                            },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please select a category';
@@ -318,7 +349,8 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     },
                   ),
 
-                  if (viewModel.categoriesErrorMessage != null && !viewModel.isLoadingCategories)
+                  if (viewModel.categoriesErrorMessage != null &&
+                      !viewModel.isLoadingCategories)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -345,9 +377,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
           if (!Provider.of<AuthViewModel>(context).isAuthenticated)
             Positioned.fill(
               child: AbsorbPointer(
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                ),
+                child: Container(color: Colors.black.withOpacity(0.5)),
               ),
             ),
         ],

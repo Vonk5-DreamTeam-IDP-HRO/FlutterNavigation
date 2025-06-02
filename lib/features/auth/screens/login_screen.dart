@@ -13,12 +13,13 @@ class LoginScreen extends StatefulWidget {
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black54,
-      builder: (context) => LoginScreen(
-        isDialog: true,
-        onLoginSuccess: () {
-          Navigator.of(context).pop();
-        },
-      ),
+      builder:
+          (context) => LoginScreen(
+            isDialog: true,
+            onLoginSuccess: () {
+              Navigator.of(context).pop();
+            },
+          ),
     );
   }
 
@@ -54,12 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.of(context).pop();
           }
         } else {
-          final error = authViewModel.error ?? 'Login Failed. Please try again.';
+          final error =
+              authViewModel.error ?? 'Login Failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
@@ -75,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget loginForm = Form(
+    final Widget loginForm = Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -83,10 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: <Widget>[
           const Text(
             'Login Required',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           TextFormField(
@@ -125,26 +121,29 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading
               ? const CircularProgressIndicator()
               : SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    onPressed: _login,
-                    child: const Text('Login'),
                   ),
+                  onPressed: _login,
+                  child: const Text('Login'),
                 ),
+              ),
           TextButton(
-            onPressed: _isLoading
-                ? null
-                : () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
-                    ));
-                  },
+            onPressed:
+                _isLoading
+                    ? null
+                    : () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      );
+                    },
             child: const Text('Don\'t have an account? Register'),
           ),
         ],
@@ -154,9 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (widget.isDialog) {
       return Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: loginForm,
@@ -165,9 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
