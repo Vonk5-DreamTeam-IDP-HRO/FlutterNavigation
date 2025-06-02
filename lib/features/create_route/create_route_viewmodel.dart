@@ -97,8 +97,8 @@ class CreateRouteViewModel extends ChangeNotifier {
 
   // -- Edit Initialization --
   void initializeForEdit(dynamic route) {
-    // Accepts a Route object (with displayName and description)
-    nameController.text = route.displayName;
+    // Accepts a Route object (with name and description)
+    nameController.text = route.name;
     descriptionController.text = route.description;
     notifyListeners();
   }

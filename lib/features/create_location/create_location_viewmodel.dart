@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
-import 'package:osm_navigation/Core/services/location/location_api_exceptions.dart';
 import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
+import 'package:osm_navigation/core/repositories/repository_exception.dart';
 import 'Services/Photon.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
@@ -49,7 +49,7 @@ class CreateLocationViewModel extends ChangeNotifier {
 
     try {
       _categories = await _locationRepository.getUniqueCategories();
-    } on LocationApiException catch (e) {
+    } on RepositoryException catch (e) {
       _categoriesErrorMessage = 'Failed to load categories: ${e.message}';
       _categories = [];
     } catch (e) {
@@ -108,7 +108,8 @@ class CreateLocationViewModel extends ChangeNotifier {
 
       _successMessage = 'Location created successfully!';
       return true;
-    } on LocationApiException catch (e) {
+    } on RepositoryException catch (e) {
+      // Changed from LocationApiException
       _errorMessage = 'Failed to create location: ${e.message}';
     } catch (e) {
       _errorMessage = 'Unexpected error: ${e.toString()}';

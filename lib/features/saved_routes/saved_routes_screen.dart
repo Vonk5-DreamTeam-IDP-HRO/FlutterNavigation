@@ -5,6 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:dio/dio.dart';
 import './saved_routes_viewmodel.dart';
 
 /// SavedRoutesScreen: The View component for the saved routes list feature.
@@ -32,8 +36,8 @@ class SavedRoutesScreen extends StatelessWidget {
       body: _buildBody(context, viewModel),
     );
   }
-
   Widget _buildBody(BuildContext context, SavedRoutesViewModel viewModel) {
+
     // Display loading indicator
     if (viewModel.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -78,25 +82,34 @@ class SavedRoutesScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
+                  children: <Widget>[                    TextButton(
                       onPressed: () {
-                        // Create the ViewModel, initialize for edit, then navigate
-                        final locationRepo = Provider.of<ILocationRepository>(
-                          // Explicit type
-                          context,
-                          listen: false,
-                        );
-                        final viewModel = CreateRouteViewModel(locationRepo);
-                        viewModel.initializeForEdit(route);
+                        // Create the repository and viewmodel for editing
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) => ChangeNotifierProvider.value(
-                                  value: viewModel,
-                                  child: const CreateRouteScreen(),
+                            builder: (context) => MultiProvider(
+                              providers: [
+                                ChangeNotifierProvider.value(
+                                  value: context.read<AppState>(),
                                 ),
+                                ChangeNotifierProvider(
+                                  create: (context) {
+                                    final dio = context.read<Dio>();
+                                    final locationApiService = LocationApiService(dio);
+                                    final locationRepository = LocationRepository(
+                                      locationApiService,
+                                    );
+                                    final createRouteViewModel = CreateRouteViewModel(
+                                      locationRepository as ILocationRepository,
+                                    );
+                                    createRouteViewModel.initializeForEdit(route);
+                                    return createRouteViewModel;
+                                  },
+                                ),
+                              ],
+                              child: const CreateRouteScreen(),
+                            ),
                           ),
                         );
                       },
