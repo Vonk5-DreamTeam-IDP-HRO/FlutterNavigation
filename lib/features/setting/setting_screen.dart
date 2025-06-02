@@ -30,7 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: <Widget>[
               if (authViewModel.isAuthenticated) ...[
                 Text(
-                  'Logged in as: ${authViewModel.email ?? 'N/A'}',
+                  'Logged in as: ${authViewModel.username ?? 'N/A'}',
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(height: 24),
