@@ -1,20 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/config/app_config.dart';
+import 'package:osm_navigation/core/config/app_config.dart';
 import 'package:osm_navigation/Core/models/auth_dtos.dart';
-import '../dio_factory.dart';
 
 class AuthApiService {
-  late final Dio _dio;
-
-  static final String _primaryBaseApiUrl =
+  final Dio _dio;
+  static String get _primaryBaseApiUrl =>
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+  static String get _fallbackBaseApiUrl =>
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
-  AuthApiService() {
-    _dio = DioFactory.createDio();
-  }
+  const AuthApiService(this._dio);
 
   Future<String> login(String username, String password) async {
     try {
@@ -96,18 +92,22 @@ class AuthApiService {
       debugPrint('Data: ${response.data}');
       debugPrint('=========================\n');
 
-      if (response.statusCode == 200 && response.data != null) {
-        if (response.data is Map) {
-          // Try both cases since C# might send 'Token' or 'token'
-          final token = response.data['Token'] ?? response.data['token'];
-          if (token != null) {
-            return token.toString();
-          }
-          debugPrint(
-            'Warning: Response contained a Map but no token field: ${response.data}',
-          );
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data is Map) {
+        final token = response.data['data'] as String?;
+        if (token != null && token.isNotEmpty) {
+          return token;
         }
-        return response.data.toString(); // Fallback for direct token string
+        debugPrint(
+          "Warning: Login response did not contain a valid token in the 'data' field: ${response.data}",
+        );
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message:
+              "Login response did not contain a valid token in the 'data' field.",
+        );
       }
       String errorMessage;
       if (response.statusCode == 401) {
@@ -174,16 +174,21 @@ class AuthApiService {
       debugPrint('Register response headers: ${response.headers}');
       debugPrint('Register response data: ${response.data}');
       if ((response.statusCode == 201 || response.statusCode == 200) &&
-          response.data != null) {
-        // Some APIs return 200 instead of 201 for successful creation
-        if (response.data is String) {
-          // If the response is directly a token string
-          return response.data;
-        } else {
-          // If the response is a JSON object containing the token
-          final authResponse = AuthResponseDto.fromJson(response.data);
-          return authResponse.token;
+          response.data != null &&
+          response.data is Map) {
+        final token = response.data['data'] as String?;
+        if (token != null && token.isNotEmpty) {
+          return token;
         }
+        debugPrint(
+          "Warning: Registration response did not contain a valid token in the 'data' field: ${response.data}",
+        );
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message:
+              "Registration response did not contain a valid token in the 'data' field.",
+        );
       }
       throw DioException(
         requestOptions: RequestOptions(path: '$baseUrl/api/User'),
