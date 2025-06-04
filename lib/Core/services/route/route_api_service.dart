@@ -11,11 +11,10 @@ import 'IRouteApiService.dart';
 
 class RouteApiService implements IRouteApiService {
   final Dio _dio;
-
-  static final String _primaryBaseApiUrl =
+  static String get _primaryBaseApiUrl =>
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+  static String get _fallbackBaseApiUrl =>
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
   RouteApiService(this._dio);
 
@@ -40,46 +39,37 @@ class RouteApiService implements IRouteApiService {
         return result;
       }
       debugPrint(
-        '$operationName FAILED on primary URL with status: ${result.statusCodeResponse.name}. Message: ${result.message}. Trying fallback.',
+        '$operationName FAILED on primary URL with status: ${result.statusCodeResponse}. Message: ${result.message}. Trying fallback.',
       );
     } catch (e, s) {
       debugPrint(
         'Exception during $operationName on primary URL: $_primaryBaseApiUrl. Error: $e. Stacktrace: $s. Trying fallback.',
       );
-      // Initialize result to a failed state before trying fallback
-      // This ensures 'result' is always assigned if primary fails with an exception
       result = StatusCodeResponseDto(
-        statusCodeResponse:
-            StatusCodeResponse.internalServerError, // Or a more specific error
+        statusCodeResponse: StatusCodeResponse.internalServerError,
         message:
             'Primary attempt for $operationName failed with exception: ${e.toString()}',
         data: null,
       );
     }
 
-    // Try fallback URL only if primary attempt did not succeed with a definitive success status
-    if (!(result.statusCodeResponse == StatusCodeResponse.success ||
-        result.statusCodeResponse == StatusCodeResponse.created ||
-        result.statusCodeResponse == StatusCodeResponse.noContent)) {
+    if (!result.isSuccess) {
       debugPrint(
         'Attempting $operationName with fallback URL: $_fallbackBaseApiUrl',
       );
       try {
         result = await attemptRequest(_fallbackBaseApiUrl);
-        if (result.statusCodeResponse == StatusCodeResponse.success ||
-            result.statusCodeResponse == StatusCodeResponse.created ||
-            result.statusCodeResponse == StatusCodeResponse.noContent) {
+        if (result.isSuccess) {
           debugPrint('$operationName SUCCEEDED on fallback URL.');
         } else {
           debugPrint(
-            '$operationName FAILED on fallback URL with status: ${result.statusCodeResponse.name}. Message: ${result.message}.',
+            '$operationName FAILED on fallback URL with status: ${result.statusCodeResponse}. Message: ${result.message}.',
           );
         }
       } catch (e, s) {
         debugPrint(
           'Exception during $operationName on fallback URL: $_fallbackBaseApiUrl. Error: $e. Stacktrace: $s.',
         );
-        // If fallback also fails with an exception, update the result
         result = StatusCodeResponseDto(
           statusCodeResponse: StatusCodeResponse.internalServerError,
           message:
@@ -107,22 +97,19 @@ class RouteApiService implements IRouteApiService {
           debugPrint('  Response Status (HTTP): ${response.statusCode}');
           debugPrint('  Response Headers: ${response.headers}');
           debugPrint('  Response Data (Raw): ${response.data}');
+
           if (response.statusCode == 200 &&
               response.data is Map<String, dynamic>) {
-            final responseMap =
-                response.data
-                    as Map<
-                      String,
-                      dynamic
-                    >; // Extract the application-level status code
+            final responseMap = response.data as Map<String, dynamic>;
             final int appStatusCode =
                 responseMap['statusCodeResponse'] as int? ??
                 responseMap['statusCode'] as int? ??
-                0; // Handle potential naming variations
+                0;
             final String? appMessage = responseMap['message'] as String?;
 
             if ((appStatusCode == 200 ||
-                    appStatusCode == StatusCodeResponse.success.code) &&
+                    appStatusCode ==
+                        200) && // Using actual status code instead of enum code
                 responseMap['data'] is List) {
               final List<dynamic> routesData =
                   responseMap['data'] as List<dynamic>;
@@ -137,7 +124,7 @@ class RouteApiService implements IRouteApiService {
                 '  Successfully parsed ${routes.length} routes from response data key.',
               );
               return StatusCodeResponseDto(
-                statusCodeResponse: StatusCodeResponse.success, // Use our enum
+                statusCodeResponse: StatusCodeResponse.success,
                 data: routes,
                 message: appMessage ?? '$operationName successful.',
               );
@@ -219,7 +206,7 @@ class RouteApiService implements IRouteApiService {
     String routeId,
   ) async {
     final String operationName = 'Get Locations for Route $routeId';
-    final String endpointPath = '/api/Route/$routeId/locations';
+    final String endpointPath = '/api/Route/$routeId';
 
     return _makeApiRequest<List<LocationDto>>(
       operationName: operationName,
@@ -231,7 +218,6 @@ class RouteApiService implements IRouteApiService {
           debugPrint('  Response Status (HTTP): ${response.statusCode}');
           debugPrint('  Response Data (Raw): ${response.data}');
 
-          // Assuming this endpoint might also return the nested structure or a direct list
           if (response.statusCode == 200) {
             if (response.data is Map<String, dynamic>) {
               final responseMap = response.data as Map<String, dynamic>;
@@ -241,9 +227,7 @@ class RouteApiService implements IRouteApiService {
                   0;
               final String? appMessage = responseMap['message'] as String?;
 
-              if ((appStatusCode == 200 ||
-                      appStatusCode == StatusCodeResponse.success.code) &&
-                  responseMap['data'] is List) {
+              if ((appStatusCode == 200) && responseMap['data'] is List) {
                 final List<dynamic> locationsData =
                     responseMap['data'] as List<dynamic>;
                 final locations =
@@ -270,24 +254,23 @@ class RouteApiService implements IRouteApiService {
                   data: null,
                 );
               }
-            } else if (response.data is List) {
-              // Direct list
-              final List<dynamic> data = response.data;
-              final locations =
-                  data
-                      .map(
-                        (item) =>
-                            LocationDto.fromJson(item as Map<String, dynamic>),
-                      )
-                      .toList();
-              return StatusCodeResponseDto(
-                statusCodeResponse: StatusCodeResponse.success,
-                data: locations,
-                message: '$operationName successful (direct list).',
-              );
             }
+          } else if (response.data is List) {
+            final List<dynamic> data = response.data;
+            final locations =
+                data
+                    .map(
+                      (item) =>
+                          LocationDto.fromJson(item as Map<String, dynamic>),
+                    )
+                    .toList();
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.success,
+              data: locations,
+              message: '$operationName successful (direct list).',
+            );
           }
-          // If not 200 or not a recognized structure
+
           return StatusCodeResponseDto(
             statusCodeResponse: StatusCodeResponse.fromCode(
               response.statusCode ?? 500,
@@ -349,9 +332,7 @@ class RouteApiService implements IRouteApiService {
                   0;
               final String? appMessage = responseMap['message'] as String?;
 
-              if ((appStatusCode == 200 ||
-                      appStatusCode == StatusCodeResponse.success.code) &&
-                  responseMap['data'] is List) {
+              if (appStatusCode == 200 && responseMap['data'] is List) {
                 final List<dynamic> routesData =
                     responseMap['data'] as List<dynamic>;
                 final routes =
@@ -379,7 +360,6 @@ class RouteApiService implements IRouteApiService {
                 );
               }
             } else if (response.data is List) {
-              // Direct list
               final List<dynamic> data = response.data;
               final routes =
                   data
@@ -449,7 +429,6 @@ class RouteApiService implements IRouteApiService {
 
           if (response.statusCode == 200 &&
               response.data is Map<String, dynamic>) {
-            // This endpoint likely returns the StatusCodeResponseDto structure directly for a single item
             final responseMap = response.data as Map<String, dynamic>;
             final int appStatusCode =
                 responseMap['statusCodeResponse'] as int? ??
@@ -457,9 +436,7 @@ class RouteApiService implements IRouteApiService {
                 0;
             final String? appMessage = responseMap['message'] as String?;
 
-            if ((appStatusCode == 200 ||
-                    appStatusCode == StatusCodeResponse.success.code) &&
-                responseMap['data'] != null) {
+            if (appStatusCode == 200 && responseMap['data'] != null) {
               return StatusCodeResponseDto(
                 statusCodeResponse: StatusCodeResponse.success,
                 data: RouteDto.fromJson(
@@ -467,8 +444,7 @@ class RouteApiService implements IRouteApiService {
                 ),
                 message: appMessage ?? '$operationName successful.',
               );
-            } else if (appStatusCode == 404 ||
-                appStatusCode == StatusCodeResponse.notFound.code) {
+            } else if (appStatusCode == 404) {
               return StatusCodeResponseDto(
                 statusCodeResponse: StatusCodeResponse.notFound,
                 message: appMessage ?? 'Route with ID $routeId not found.',
@@ -484,14 +460,12 @@ class RouteApiService implements IRouteApiService {
               );
             }
           } else if (response.statusCode == 404) {
-            // HTTP 404
             return StatusCodeResponseDto(
               statusCodeResponse: StatusCodeResponse.notFound,
               message: 'Route with ID $routeId not found (HTTP 404).',
               data: null,
             );
           } else {
-            // Other HTTP errors or unexpected direct data
             return StatusCodeResponseDto(
               statusCodeResponse: StatusCodeResponse.fromCode(
                 response.statusCode ?? 500,
@@ -557,12 +531,10 @@ class RouteApiService implements IRouteApiService {
           debugPrint('  Response Status (HTTP): ${response.statusCode}');
           debugPrint('  Response Data (Raw): ${response.data}');
 
-          // POST/Create often returns the created object directly or within the standard wrapper
           if ((response.statusCode == 201 || response.statusCode == 200) &&
               response.data is Map<String, dynamic>) {
             final responseMap = response.data as Map<String, dynamic>;
 
-            // Check if it's our standard wrapper
             if (responseMap.containsKey('statusCodeResponse') &&
                 responseMap.containsKey('data')) {
               final int appStatusCode =
@@ -572,15 +544,12 @@ class RouteApiService implements IRouteApiService {
               final String? appMessage = responseMap['message'] as String?;
               final dynamic appData = responseMap['data'];
 
-              if ((appStatusCode == 201 ||
-                      appStatusCode == StatusCodeResponse.created.code ||
-                      appStatusCode == 200 ||
-                      appStatusCode == StatusCodeResponse.success.code) &&
+              if ((appStatusCode == 201 || appStatusCode == 200) &&
                   appData != null) {
                 return StatusCodeResponseDto(
                   statusCodeResponse: StatusCodeResponse.fromCode(
                     appStatusCode == 201 ? 201 : 200,
-                  ), // Prefer 201 if available
+                  ),
                   data: RouteDto.fromJson(appData as Map<String, dynamic>),
                   message: appMessage ?? 'Route created successfully.',
                 );
@@ -596,11 +565,10 @@ class RouteApiService implements IRouteApiService {
                 );
               }
             } else {
-              // Assume direct object if not our wrapper (e.g. older API version)
               return StatusCodeResponseDto(
                 statusCodeResponse: StatusCodeResponse.fromCode(
                   response.statusCode!,
-                ), // Use HTTP status
+                ),
                 data: RouteDto.fromJson(responseMap),
                 message: 'Route created successfully (direct object).',
               );

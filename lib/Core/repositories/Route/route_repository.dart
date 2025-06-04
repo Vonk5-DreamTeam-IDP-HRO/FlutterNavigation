@@ -28,7 +28,7 @@ class RouteRepository implements IRouteRepository {
 
   @override
   Future<List<RouteDto>> getAllRoutes() async {
-    final String operationName = 'getAllRoutes';
+    const String operationName = 'getAllRoutes';
     debugPrint('[RouteRepository] Starting $operationName');
     try {
       final response = await _routeApiService.getAllRoutes();
@@ -94,7 +94,7 @@ class RouteRepository implements IRouteRepository {
 
   @override
   Future<RouteDto> addRoute(CreateRouteDto createRouteDto) async {
-    final String operationName = 'addRoute';
+    const String operationName = 'addRoute';
     debugPrint('[RouteRepository] Starting $operationName');
     try {
       final response = await _routeApiService.addRoute(createRouteDto);
@@ -167,7 +167,7 @@ class RouteRepository implements IRouteRepository {
 
   @override
   Future<List<SelectableNavigationRoute>> getSelectableRoutes() async {
-    final String operationName = 'getSelectableRoutes';
+    const String operationName = 'getSelectableRoutes';
     debugPrint('[RouteRepository] Starting $operationName');
     try {
       final response = await _routeApiService.getSelectableRoutes();

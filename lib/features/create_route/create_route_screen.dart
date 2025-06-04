@@ -9,7 +9,7 @@ import 'package:osm_navigation/features/auth/screens/login_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/create_route/widgets/location_accordion_selector.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart'; // For MainScreen.createRouteIndex
+import 'package:osm_navigation/core/navigation/navigation.dart';
 
 // --- Class Definition ---
 class CreateRouteScreen extends StatefulWidget {
