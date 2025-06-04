@@ -1,14 +1,30 @@
 enum StatusCodeResponse {
-  success(200),
-  created(201),
-  noContent(204),
-  badRequest(400),
-  unauthorized(401),
-  notFound(404),
-  internalServerError(500);
+  success,
+  created,
+  badRequest,
+  unauthorized,
+  notFound,
+  noContent,
+  internalServerError;
 
-  final int code;
-  const StatusCodeResponse(this.code);
+  int get code {
+    switch (this) {
+      case StatusCodeResponse.success:
+        return 200;
+      case StatusCodeResponse.created:
+        return 201;
+      case StatusCodeResponse.noContent:
+        return 204;
+      case StatusCodeResponse.badRequest:
+        return 400;
+      case StatusCodeResponse.unauthorized:
+        return 401;
+      case StatusCodeResponse.notFound:
+        return 404;
+      case StatusCodeResponse.internalServerError:
+        return 500;
+    }
+  }
 
   static StatusCodeResponse fromCode(int code) {
     switch (code) {
@@ -25,7 +41,6 @@ enum StatusCodeResponse {
       case 404:
         return StatusCodeResponse.notFound;
       case 500:
-        return StatusCodeResponse.internalServerError;
       default:
         return StatusCodeResponse.internalServerError;
     }
@@ -42,4 +57,34 @@ class StatusCodeResponseDto<T> {
     this.message,
     this.data,
   });
+
+  factory StatusCodeResponseDto.fromJson(Map<String, dynamic> json) {
+    return StatusCodeResponseDto(
+      statusCodeResponse: _parseStatusCode(json['statusCodeResponse']),
+      message: json['message'] as String?,
+      data: json['data'],
+    );
+  }
+
+  static StatusCodeResponse _parseStatusCode(dynamic value) {
+    if (value is int) {
+      return StatusCodeResponse.fromCode(value);
+    } else if (value is String) {
+      try {
+        final cleanValue =
+            value.replaceAll('StatusCodeResponse.', '').toLowerCase();
+        return StatusCodeResponse.values.firstWhere(
+          (e) => e.toString().split('.').last.toLowerCase() == cleanValue,
+          orElse: () => StatusCodeResponse.internalServerError,
+        );
+      } catch (_) {
+        return StatusCodeResponse.internalServerError;
+      }
+    }
+    return StatusCodeResponse.internalServerError;
+  }
+
+  bool get isSuccess =>
+      statusCodeResponse == StatusCodeResponse.success ||
+      statusCodeResponse == StatusCodeResponse.created;
 }
