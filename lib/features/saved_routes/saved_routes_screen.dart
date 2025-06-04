@@ -6,7 +6,6 @@ import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
-import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
 import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';

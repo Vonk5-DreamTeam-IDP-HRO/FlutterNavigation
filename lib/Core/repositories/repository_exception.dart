@@ -14,12 +14,8 @@ class RepositoryException implements Exception {
 
 class DataNotFoundRepositoryException extends RepositoryException {
   DataNotFoundRepositoryException(
-    String message, {
-    dynamic originalException,
-    StackTrace? stackTrace,
-  }) : super(
-         message,
-         originalException: originalException,
-         stackTrace: stackTrace,
-       );
+    super.message, {
+    super.originalException,
+    super.stackTrace,
+  });
 }

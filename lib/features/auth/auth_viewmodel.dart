@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:osm_navigation/Core/services/auth/auth_api_service.dart';
-import 'package:dio/dio.dart';
+import 'package:osm_navigation/core/services/dio_factory.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -12,6 +12,9 @@ class AuthViewModel extends ChangeNotifier {
   AuthViewModel({Dio? dio}) {
     _authService = AuthApiService(dio ?? Dio());
     debugPrint('🔧 AuthViewModel constructor called');
+
+    // Set up the token provider for DioFactory
+    DioFactory.setTokenProvider(() => _token);
   }
 
   bool get isInitialized => _isInitialized;

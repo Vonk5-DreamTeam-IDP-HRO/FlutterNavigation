@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
@@ -7,7 +6,6 @@ import 'package:osm_navigation/core/navigation/navigation.dart';
 import 'package:osm_navigation/core/services/dio_factory.dart';
 import 'package:dio/dio.dart';
 import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
-import 'package:osm_navigation/core/services/auth/auth_dio_helper.dart';
 import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
@@ -20,6 +18,7 @@ import 'package:osm_navigation/features/create_location/create_location_viewmode
 /// https://docs.flutter.dev/app-architecture/guide
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   try {
     // Load and validate environment configuration
     await AppConfig.load();
@@ -120,16 +119,11 @@ class MyApp extends StatelessWidget {
               'ProxyProvider update called: isAuthenticated=${authViewModel.isAuthenticated}, token=${authViewModel.token != null ? "EXISTS (${authViewModel.token?.substring(0, 10)}...)" : "NULL"}',
             );
 
-            final token = authViewModel.token;
-            if (token != null) {
-              debugPrint('Creating LocationApiService with AUTHENTICATED Dio');
-              return LocationApiService(AuthDioHelper.getDioWithAuth(token));
-            } else {
-              debugPrint(
-                'Creating LocationApiService with UNAUTHENTICATED Dio',
-              );
-              return LocationApiService(context.read<Dio>());
-            }
+            // Always use the same Dio instance with dynamic token resolution
+            debugPrint(
+              'Creating LocationApiService with dynamic Dio (token will be resolved dynamically)',
+            );
+            return LocationApiService(context.read<Dio>());
           },
         ),
         ProxyProvider<ILocationApiService, ILocationRepository>(
@@ -144,14 +138,10 @@ class MyApp extends StatelessWidget {
           lazy: false, // Force immediate creation
           updateShouldNotify: (_, __) => true, // Always notify on auth changes
           update: (context, authViewModel, previous) {
-            final token = authViewModel.token;
-            if (token != null) {
-              debugPrint('Creating RouteApiService with AUTHENTICATED Dio');
-              return RouteApiService(AuthDioHelper.getDioWithAuth(token));
-            } else {
-              debugPrint('Creating RouteApiService with UNAUTHENTICATED Dio');
-              return RouteApiService(context.read<Dio>());
-            }
+            debugPrint(
+              'Creating RouteApiService with dynamic Dio (token will be resolved dynamically)',
+            );
+            return RouteApiService(context.read<Dio>());
           },
         ),
         Provider<PhotonService>(create: (context) => PhotonService()),
