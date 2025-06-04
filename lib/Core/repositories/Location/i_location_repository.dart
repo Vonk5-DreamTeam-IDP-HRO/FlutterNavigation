@@ -20,7 +20,7 @@ abstract class ILocationRepository {
   Future<LocationDto> getLocationById(String id);
 
   /// Retrieves locations filtered by category
-  Future<List<LocationDto>> getLocationsByCategory(String category);
+  Future<List<SelectableLocationDto>> getLocationsByCategory(String category);
 
   /// Creates a new location
   Future<LocationDto> createLocation(CreateLocationDto payload);

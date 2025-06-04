@@ -12,12 +12,25 @@ import 'package:osm_navigation/core/config/app_config.dart';
 class LocationApiService implements ILocationApiService {
   final Dio _dio;
 
-  static final String _primaryBaseApiUrl =
+  static String get _primaryBaseApiUrl =>
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+  static String get _fallbackBaseApiUrl =>
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
   LocationApiService(this._dio);
+
+  // Helper method to safely extract error messages from response data
+  String? _extractErrorMessage(dynamic data) {
+    if (data == null) return null;
+
+    if (data is Map<String, dynamic>) {
+      return data['message']?.toString();
+    } else if (data is String) {
+      return data;
+    } else {
+      return data.toString();
+    }
+  }
 
   // Helper method to manage API requests with primary and fallback logic
   Future<StatusCodeResponseDto<T>> _makeApiRequest<T>({
@@ -314,34 +327,73 @@ class LocationApiService implements ILocationApiService {
           debugPrint('  Response Status: ${response.statusCode}');
           debugPrint('  Response Headers: ${response.headers}');
           debugPrint('  Response Data: ${response.data}');
+          if (response.statusCode == 201 &&
+              response.data is Map<String, dynamic>) {
+            final responseBody = response.data as Map<String, dynamic>;
+            final int statusCodeResponse =
+                responseBody['statusCodeResponse'] as int? ??
+                response.statusCode ??
+                500;
+            final String message =
+                responseBody['message'] as String? ??
+                'Location created successfully';
+            final dynamic data = responseBody['data'];
 
-          if (response.statusCode == 201 && response.data != null) {
-            return StatusCodeResponseDto(
-              statusCodeResponse: StatusCodeResponse.created,
-              data: LocationDto.fromJson(response.data as Map<String, dynamic>),
-              message:
-                  'Location created successfully with ID: ${(response.data as Map<String, dynamic>)['id']}',
-            );
+            if (statusCodeResponse >= 200 &&
+                statusCodeResponse < 300 &&
+                data != null) {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.created,
+                data: LocationDto.fromJson(data as Map<String, dynamic>),
+                message: '$message with ID: ${data['id']}',
+              );
+            } else {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(
+                  statusCodeResponse,
+                ),
+                message: message,
+                data: null,
+              );
+            }
           } else {
             // Handle cases where API might return 200 OK on create
-            if (response.statusCode == 200 && response.data != null) {
-              return StatusCodeResponseDto(
-                statusCodeResponse:
-                    StatusCodeResponse
-                        .success, // Or .created if that's more semantically correct for your API
-                data: LocationDto.fromJson(
-                  response.data as Map<String, dynamic>,
-                ),
-                message:
-                    'Location created (API returned 200 OK). ID: ${(response.data as Map<String, dynamic>)['id']}',
-              );
+            if (response.statusCode == 200 &&
+                response.data is Map<String, dynamic>) {
+              final responseBody = response.data as Map<String, dynamic>;
+              final int statusCodeResponse =
+                  responseBody['statusCodeResponse'] as int? ??
+                  response.statusCode ??
+                  500;
+              final String message =
+                  responseBody['message'] as String? ??
+                  'Location created successfully';
+              final dynamic data = responseBody['data'];
+
+              if (statusCodeResponse >= 200 &&
+                  statusCodeResponse < 300 &&
+                  data != null) {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.success,
+                  data: LocationDto.fromJson(data as Map<String, dynamic>),
+                  message: '$message with ID: ${data['id']}',
+                );
+              } else {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.fromCode(
+                    statusCodeResponse,
+                  ),
+                  message: message,
+                  data: null,
+                );
+              }
             }
             return StatusCodeResponseDto(
               statusCodeResponse: StatusCodeResponse.fromCode(
                 response.statusCode ?? 500,
               ),
               message:
-                  '$operationName failed: ${response.data?['message']?.toString() ?? response.statusMessage ?? "Unknown error"}',
+                  '$operationName failed: ${_extractErrorMessage(response.data) ?? response.statusMessage ?? "Unknown error"}',
               data: null,
             );
           }
@@ -559,29 +611,51 @@ class LocationApiService implements ILocationApiService {
           debugPrint('  Response Status: ${response.statusCode}');
           debugPrint('  Response Headers: ${response.headers}');
           debugPrint('  Response Data: ${response.data}');
-
           if (response.statusCode == 200 && response.data is Map) {
-            final Map<String, dynamic> data =
+            // Parse the nested response structure
+            final Map<String, dynamic> responseBody =
                 response.data as Map<String, dynamic>;
-            final Map<String, List<SelectableLocationDto>> groupedLocations =
-                {};
-            data.forEach((category, locationsJson) {
-              if (locationsJson is List) {
-                groupedLocations[category] =
-                    locationsJson
-                        .map(
-                          (json) => SelectableLocationDto.fromJson(
-                            json as Map<String, dynamic>,
-                          ),
-                        )
-                        .toList();
-              }
-            });
-            return StatusCodeResponseDto(
-              statusCodeResponse: StatusCodeResponse.success,
-              data: groupedLocations,
-              message: '$operationName successful.',
-            );
+
+            // Extract nested fields
+            final int? statusCodeResponse =
+                responseBody['statusCodeResponse'] as int?;
+            final String? message = responseBody['message'] as String?;
+            final dynamic nestedData = responseBody['data'];
+
+            // Validate inner status and process data
+            if (statusCodeResponse == 200 && nestedData is Map) {
+              final Map<String, dynamic> data =
+                  nestedData as Map<String, dynamic>;
+              final Map<String, List<SelectableLocationDto>> groupedLocations =
+                  {};
+              data.forEach((category, locationsJson) {
+                if (locationsJson is List) {
+                  groupedLocations[category] =
+                      locationsJson
+                          .map(
+                            (json) => SelectableLocationDto.fromJson(
+                              json as Map<String, dynamic>,
+                            ),
+                          )
+                          .toList();
+                }
+              });
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.success,
+                data: groupedLocations,
+                message: message ?? '$operationName successful.',
+              );
+            } else {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(
+                  statusCodeResponse ?? 500,
+                ),
+                message:
+                    message ??
+                    '$operationName failed: Invalid response structure',
+                data: null,
+              );
+            }
           } else {
             return StatusCodeResponseDto(
               statusCodeResponse: StatusCodeResponse.fromCode(
@@ -707,15 +781,28 @@ class LocationApiService implements ILocationApiService {
           debugPrint('  Response Status: ${response.statusCode}');
           debugPrint('  Response Headers: ${response.headers}');
           debugPrint('  Response Data: ${response.data}');
+          if (response.statusCode == 200 &&
+              response.data is Map<String, dynamic>) {
+            final Map<String, dynamic> responseBody = response.data;
+            final int statusCode = responseBody['statusCodeResponse'] ?? 500;
+            final String message =
+                responseBody['message'] ?? 'Unknown response';
+            final dynamic data = responseBody['data'];
 
-          if (response.statusCode == 200 && response.data is List) {
-            final List<dynamic> data = response.data;
-            final categories = data.whereType<String>().toList();
-            return StatusCodeResponseDto(
-              statusCodeResponse: StatusCodeResponse.success,
-              data: categories,
-              message: '$operationName successful.',
-            );
+            if (statusCode == 200 && data is List) {
+              final categories = data.whereType<String>().toList();
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.success,
+                data: categories,
+                message: message,
+              );
+            } else {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(statusCode),
+                message: message,
+                data: null,
+              );
+            }
           } else {
             return StatusCodeResponseDto(
               statusCodeResponse: StatusCodeResponse.fromCode(

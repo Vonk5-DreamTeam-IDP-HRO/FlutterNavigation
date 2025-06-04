@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
 import 'package:osm_navigation/core/repositories/repository_exception.dart';
 import 'Services/Photon.dart';
@@ -31,15 +31,38 @@ class CreateLocationViewModel extends ChangeNotifier {
 
   String? _categoriesErrorMessage;
   String? get categoriesErrorMessage => _categoriesErrorMessage;
-
-  // For selected location coordinates
+  // For selected location coordinates and address details
   num? _selectedLatitude;
   num? _selectedLongitude;
+  PhotonResultExtension? _selectedAddressDetails;
 
-  // Set the selected coordinates when an address is selected from suggestions
+  // Set the selected coordinates and address details when an address is selected from suggestions
   void setSelectedCoordinates(num latitude, num longitude) {
     _selectedLatitude = latitude;
     _selectedLongitude = longitude;
+  }
+
+  // Set the selected address details from Photon suggestion
+  void setSelectedAddressDetails(PhotonResultExtension addressDetails) {
+    _selectedAddressDetails = addressDetails;
+    setSelectedCoordinates(addressDetails.latitude, addressDetails.longitude);
+  }
+
+  // Search for addresses using PhotonService
+  Future<List<PhotonResultExtension>> searchAddresses(String query) async {
+    debugPrint(
+      'CreateLocationViewModel: searchAddresses called with query: "$query"',
+    );
+    try {
+      final results = await _photonService.searchAddresses(query);
+      debugPrint(
+        'CreateLocationViewModel: Received ${results.length} results from PhotonService',
+      );
+      return results;
+    } catch (e) {
+      debugPrint('CreateLocationViewModel: Error in searchAddresses: $e');
+      return [];
+    }
   }
 
   Future<void> fetchCategories() async {
@@ -89,7 +112,16 @@ class CreateLocationViewModel extends ChangeNotifier {
       }
       final detailPayload = CreateLocationDetailDto(
         category: category,
-        address: address,
+        address:
+            _selectedAddressDetails?.street != null
+                ? (_selectedAddressDetails!.housenumber != null
+                    ? '${_selectedAddressDetails!.street} ${_selectedAddressDetails!.housenumber}'
+                    : _selectedAddressDetails!.street)
+                : _selectedAddressDetails
+                    ?.name, // Fallback to name if no street
+        city: _selectedAddressDetails?.city,
+        country: _selectedAddressDetails?.country,
+        zipCode: _selectedAddressDetails?.postcode,
       );
 
       final payload = CreateLocationDto(
@@ -100,11 +132,12 @@ class CreateLocationViewModel extends ChangeNotifier {
         locationDetail: detailPayload,
       );
 
-      await _locationRepository.createLocation(payload);
-
-      // Reset selected coordinates
+      await _locationRepository.createLocation(
+        payload,
+      ); // Reset selected coordinates and address details
       _selectedLatitude = null;
       _selectedLongitude = null;
+      _selectedAddressDetails = null;
 
       _successMessage = 'Location created successfully!';
       return true;

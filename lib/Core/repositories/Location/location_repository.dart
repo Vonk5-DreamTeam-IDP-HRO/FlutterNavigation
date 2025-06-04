@@ -35,7 +35,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<List<LocationDto>> getAllLocations() async {
-    final String operationName = 'getAllLocations';
+    const String operationName = 'getAllLocations';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
       final response = await _locationApiService.getAllLocations();
@@ -67,7 +67,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<List<SelectableLocationDto>> getSelectableLocations() async {
-    final String operationName = 'getSelectableLocations';
+    const String operationName = 'getSelectableLocations';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
       final response = await _locationApiService.getSelectableLocations();
@@ -134,17 +134,31 @@ class LocationRepository implements ILocationRepository {
   }
 
   @override
-  Future<List<LocationDto>> getLocationsByCategory(String category) async {
+  Future<List<SelectableLocationDto>> getLocationsByCategory(
+    String category,
+  ) async {
     final String operationName = 'getLocationsByCategory $category';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
+      // Use the new working API endpoint that returns SelectableLocationDto objects
       final response = await _locationApiService.getLocationsByType(category);
       if (response.statusCodeResponse == StatusCodeResponse.success &&
           response.data != null) {
         debugPrint(
           '[LocationRepository] $operationName successful, ${response.data!.length} locations fetched for category $category.',
         );
-        return response.data!;
+        // Map LocationDto to SelectableLocationDto
+        final locations =
+            response.data!
+                .map(
+                  (location) => SelectableLocationDto(
+                    locationId: location.locationId,
+                    name: location.name,
+                    category: category,
+                  ),
+                )
+                .toList();
+        return locations;
       } else {
         debugPrint(
           '[LocationRepository] $operationName failed. Status: ${response.statusCodeResponse.name}, Message: ${response.message}',
@@ -167,7 +181,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<LocationDto> createLocation(CreateLocationDto payload) async {
-    final String operationName = 'createLocation';
+    const String operationName = 'createLocation';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
       final response = await _locationApiService.createLocation(payload);
@@ -280,7 +294,7 @@ class LocationRepository implements ILocationRepository {
   @override
   Future<Map<String, List<SelectableLocationDto>>>
   getGroupedSelectableLocations() async {
-    final String operationName = 'getGroupedSelectableLocations';
+    const String operationName = 'getGroupedSelectableLocations';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
       final response =
@@ -313,7 +327,7 @@ class LocationRepository implements ILocationRepository {
 
   @override
   Future<List<String>> getUniqueCategories() async {
-    final String operationName = 'getUniqueCategories';
+    const String operationName = 'getUniqueCategories';
     debugPrint('[LocationRepository] Starting $operationName');
     try {
       final response = await _locationApiService.getUniqueCategories();

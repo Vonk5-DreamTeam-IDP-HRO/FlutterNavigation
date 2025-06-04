@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/auth/screens/login_screen.dart';
-import 'package:osm_navigation/core/providers/app_state.dart';
 import 'create_location_viewmodel.dart';
 import 'Services/Photon.dart';
 
@@ -190,7 +189,6 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<CreateLocationViewModel>(context);
-    final photonService = Provider.of<PhotonService>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Location')),
@@ -204,33 +202,39 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TypeAheadField<PhotonResultExtension>(
-                    builder:
-                        (context, controller, focusNode) => TextFormField(
-                          controller: _addressController,
-                          focusNode: focusNode,
-                          decoration: const InputDecoration(
-                            labelText: 'Address',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.search),
-                            hintText:
-                                'Start typing an address (min 3 characters)',
-                          ),
-                          validator: (value) {
-                            if (_addressController.text.isEmpty) {
-                              if (value != null && value.isNotEmpty) {
-                                return 'Please select a valid address from suggestions';
-                              }
-                              return 'Please enter an address';
-                            }
-                            return null;
-                          },
+                    builder: (context, controller, focusNode) {
+                      debugPrint(
+                        'TypeAheadField builder called with controller: ${controller.hashCode}',
+                      );
+                      debugPrint('Controller text: "${controller.text}"');
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search),
+                          hintText:
+                              'Start typing an address (min 3 characters)',
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an address';
+                          }
+                          return null;
+                        },
+                      );
+                    },
                     suggestionsCallback: (pattern) async {
-                      if (pattern.length < 3) return [];
                       try {
-                        return await photonService.searchAddresses(pattern);
+                        if (pattern.length < 3) {
+                          debugPrint('Pattern too short: $pattern');
+                          return [];
+                        }
+                        debugPrint('Calling searchAddresses with: $pattern');
+                        return await viewModel.searchAddresses(pattern);
                       } catch (e) {
-                        print('Error getting address suggestions: $e');
+                        debugPrint('Error in suggestionsCallback: $e');
                         return [];
                       }
                     },
@@ -262,10 +266,9 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                         parts.add(suggestion.city!);
                       }
                       _addressController.text = parts.join(', ');
-                      viewModel.setSelectedCoordinates(
-                        suggestion.latitude,
-                        suggestion.longitude,
-                      );
+
+                      // Store the selected address details for proper field mapping
+                      viewModel.setSelectedAddressDetails(suggestion);
                     },
                     emptyBuilder:
                         (context) => const Padding(
