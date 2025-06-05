@@ -75,30 +75,25 @@ class DioFactory {
       // 2. Debug logging interceptor
       if (kDebugMode)
         LogInterceptor(
-          request: true,
-          requestHeader: true,
+          request: false,
+          requestHeader: false,
           requestBody: true,
-          responseHeader: true,
+          responseHeader: false,
           responseBody: true,
           error: true,
-          logPrint: (object) => debugPrint('DIO LOG: $object'),
+          logPrint: (object) {
+            if (object.toString().startsWith('DioException')) {
+              debugPrint('DIO ERROR: $object');
+            } else {
+              debugPrint('DIO: $object');
+            }
+          },
         ),
 
-      // 3. Response/Error handling interceptor
+      // 3. Error handling interceptor
       InterceptorsWrapper(
-        onResponse: (response, handler) {
-          debugPrint(
-            'RESPONSE [${response.statusCode}] => PATH: ${response.requestOptions.path}',
-          );
-          handler.next(response);
-        },
-        onError: (error, handler) {
-          debugPrint(
-            'ERROR [${error.response?.statusCode}] => PATH: ${error.requestOptions.path}',
-          );
-          debugPrint('Error details: ${error.message}');
-          handler.next(error);
-        },
+        onResponse: (response, handler) => handler.next(response),
+        onError: (error, handler) => handler.next(error),
       ),
     ]);
 

@@ -23,28 +23,19 @@ class RouteApiService implements IRouteApiService {
     attemptRequest,
     required String operationName,
   }) async {
-    debugPrint('\n=== STARTING OPERATION: $operationName ===');
+    debugPrint('=== $operationName ===');
     StatusCodeResponseDto<T> result;
-
-    debugPrint(
-      'Attempting $operationName with primary URL: $_primaryBaseApiUrl',
-    );
     try {
       result = await attemptRequest(_primaryBaseApiUrl);
       if (result.statusCodeResponse == StatusCodeResponse.success ||
           result.statusCodeResponse == StatusCodeResponse.created ||
           result.statusCodeResponse == StatusCodeResponse.noContent) {
-        debugPrint('$operationName SUCCEEDED on primary URL.');
-        debugPrint('=== OPERATION ENDED: $operationName ===\n');
+        debugPrint('$operationName: Success');
         return result;
       }
-      debugPrint(
-        '$operationName FAILED on primary URL with status: ${result.statusCodeResponse}. Message: ${result.message}. Trying fallback.',
-      );
+      debugPrint('$operationName: Failed. Trying fallback...');
     } catch (e, s) {
-      debugPrint(
-        'Exception during $operationName on primary URL: $_primaryBaseApiUrl. Error: $e. Stacktrace: $s. Trying fallback.',
-      );
+      debugPrint('$operationName: Exception - $e');
       result = StatusCodeResponseDto(
         statusCodeResponse: StatusCodeResponse.internalServerError,
         message:
@@ -54,9 +45,7 @@ class RouteApiService implements IRouteApiService {
     }
 
     if (!result.isSuccess) {
-      debugPrint(
-        'Attempting $operationName with fallback URL: $_fallbackBaseApiUrl',
-      );
+      debugPrint('$operationName: Attempting fallback...');
       try {
         result = await attemptRequest(_fallbackBaseApiUrl);
         if (result.isSuccess) {
@@ -68,7 +57,7 @@ class RouteApiService implements IRouteApiService {
         }
       } catch (e, s) {
         debugPrint(
-          'Exception during $operationName on fallback URL: $_fallbackBaseApiUrl. Error: $e. Stacktrace: $s.',
+          'Exception during $operationName on fallback URL: $_fallbackBaseApiUrl. Error: $e.',
         );
         result = StatusCodeResponseDto(
           statusCodeResponse: StatusCodeResponse.internalServerError,
@@ -94,9 +83,6 @@ class RouteApiService implements IRouteApiService {
         debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          debugPrint('  Response Status (HTTP): ${response.statusCode}');
-          debugPrint('  Response Headers: ${response.headers}');
-          debugPrint('  Response Data (Raw): ${response.data}');
 
           if (response.statusCode == 200 &&
               response.data is Map<String, dynamic>) {
@@ -107,9 +93,7 @@ class RouteApiService implements IRouteApiService {
                 0;
             final String? appMessage = responseMap['message'] as String?;
 
-            if ((appStatusCode == 200 ||
-                    appStatusCode ==
-                        200) && // Using actual status code instead of enum code
+            if ((appStatusCode == 200 || appStatusCode == 200) &&
                 responseMap['data'] is List) {
               final List<dynamic> routesData =
                   responseMap['data'] as List<dynamic>;
@@ -215,9 +199,6 @@ class RouteApiService implements IRouteApiService {
         debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          debugPrint('  Response Status (HTTP): ${response.statusCode}');
-          debugPrint('  Response Data (Raw): ${response.data}');
-
           if (response.statusCode == 200) {
             if (response.data is Map<String, dynamic>) {
               final responseMap = response.data as Map<String, dynamic>;
@@ -320,8 +301,6 @@ class RouteApiService implements IRouteApiService {
         debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          debugPrint('  Response Status (HTTP): ${response.statusCode}');
-          debugPrint('  Response Data (Raw): ${response.data}');
 
           if (response.statusCode == 200) {
             if (response.data is Map<String, dynamic>) {
@@ -424,8 +403,6 @@ class RouteApiService implements IRouteApiService {
         debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          debugPrint('  Response Status (HTTP): ${response.statusCode}');
-          debugPrint('  Response Data (Raw): ${response.data}');
 
           if (response.statusCode == 200 &&
               response.data is Map<String, dynamic>) {
@@ -519,17 +496,23 @@ class RouteApiService implements IRouteApiService {
     const String operationName = 'Add New Route';
     const String endpointPath = '/api/Route';
 
+    // Validate the CreateRouteDto before making the API call
+    if (!createRouteDto.isValid()) {
+      final errors = createRouteDto.getValidationErrors();
+      debugPrint('Validation failed for $operationName: ${errors.join(', ')}');
+      return StatusCodeResponseDto(
+        statusCodeResponse: StatusCodeResponse.badRequest,
+        message: 'Validation failed: ${errors.join(', ')}',
+        data: null,
+      );
+    }
     return _makeApiRequest<RouteDto?>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
         final jsonData = createRouteDto.toJson();
-        debugPrint('  Attempting $operationName at: $fullUrl (Method: POST)');
-        debugPrint('  Request Body: $jsonData');
         try {
           final response = await _dio.post(fullUrl, data: jsonData);
-          debugPrint('  Response Status (HTTP): ${response.statusCode}');
-          debugPrint('  Response Data (Raw): ${response.data}');
 
           if ((response.statusCode == 201 || response.statusCode == 200) &&
               response.data is Map<String, dynamic>) {
