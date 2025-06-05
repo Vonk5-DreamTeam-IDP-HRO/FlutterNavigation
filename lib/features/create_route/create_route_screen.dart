@@ -1,3 +1,43 @@
+/// **CreateRouteScreen.dart**
+///
+/// **Purpose:** Handles the UI layer for creating a route. This includes displaying a form
+/// with name and description fields, showing a location selection accordion, managing
+/// authentication state, and providing visual feedback for loading and error states.
+///
+/// **Usage:** This screen works with CreateRouteViewModel to provide a complete route
+/// creation interface. It handles user input validation and provides immediate feedback
+/// while delegating business logic to the ViewModel.
+///
+/// **Key Features:**
+/// - Displays form with route name and description inputs
+/// - Shows grouped locations in an accordion selector
+/// - Handles authentication state with login dialog
+/// - Provides loading indicators and error messages
+/// - Implements real-time validation feedback
+///
+/// **Dependencies:**
+/// - `CreateRouteViewModel`: For state management and business logic
+/// - `AuthViewModel`: For authentication state handling
+/// - `AppState`: For tab navigation management
+/// - `Provider`: For state management
+/// - `LocationAccordionSelector`: For location selection UI
+///
+/// **workflow:**
+/// ```
+/// 1. Screen loads and checks authentication state
+/// 2. If not authenticated, shows login dialog
+/// 3. Displays form with text inputs and location selector
+/// 4. Updates UI based on ViewModel state changes
+/// 5. Shows loading overlay during save operation
+/// 6. Displays success/error feedback after save attempt
+/// ```
+///
+/// **Possible improvements:**
+/// - Consider implementing long term storage for route data so users can resume later
+/// - Add confirmation dialog before discarding changes
+/// - Add search functionality in location selector
+///
+
 // --- Import Statements ---
 
 import 'package:flutter/material.dart';

@@ -1,3 +1,43 @@
+/// **AuthViewModel.dart**
+///
+/// **Purpose:** Manages authentication state and operations throughout the app. This includes
+/// handling user login, registration, token management, and persistent authentication state
+/// using secure storage.
+///
+/// **Usage:** This ViewModel serves as the central authentication manager, used by login,
+/// register screens and other components to check auth status and perform auth operations.
+///
+/// **Key Features:**
+/// - Handles user login and registration with server validation
+/// - Manages authentication tokens securely using FlutterSecureStorage
+/// - Provides user authentication state to the app
+/// - Handles login/registration error states
+/// - Validates user input for registration
+/// - Maintains persistent auth state across app restarts to prevent constant logins
+///
+/// **Dependencies:**
+/// - `flutter_secure_storage`: For secure token storage
+/// - `dio`: For HTTP requests
+/// - `AuthApiService`: For auth API communication
+/// - `DioFactory`: For token-based request configuration
+///
+/// **workflow:**
+/// ```
+/// 1. Initialize ViewModel and load saved auth state
+/// 2. Provide auth state to app through isAuthenticated
+/// 3. Handle login/register requests with validation
+/// 4. Securely store auth tokens on success
+/// 5. Manage error states and user feedback
+/// 6. Clear auth state on logout
+/// ```
+///
+/// **Possible improvements:**
+/// - Implement token refresh mechanism without logging out
+/// - Add support for multi-factor authentication
+/// - Add biometric authentication support
+/// - Implement password reset functionality
+/// - Consider addding OAuth providers support (Google, GitHub, etc.)
+///
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';

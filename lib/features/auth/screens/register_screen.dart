@@ -1,3 +1,44 @@
+/// **RegisterScreen.dart**
+///
+/// **Purpose:**
+/// Handles new user registration by providing a form interface for collecting
+/// username, email, and password information. Includes client-side validation
+/// and feedback mechanisms.
+///
+/// **Usage:**
+/// This screen is accessed from the login screen when a user needs to create
+/// a new account. After successful registration, it automatically logs the user
+/// in and navigates to the settings screen.
+///
+/// **Key Features:**
+/// - Form with username, email, and password inputs
+/// - Password confirmation field with matching validation
+/// - Client-side input validation for all fields
+/// - Loading state management during registration
+/// - Success/error feedback via snackbar
+/// - Responsive layout with max width constraint
+///
+/// **Dependencies:**
+/// - `AuthViewModel`: For handling registration logic
+/// - `SettingScreen`: For post-registration navigation
+/// - `Provider`: For accessing AuthViewModel
+///
+/// **workflow:**
+/// ```
+/// 1. User fills out registration form
+/// 2. Form validates all inputs on submission
+/// 4. Possible shows error messages for invalid inputs
+/// 3. AuthViewModel processes registration request
+/// 4. Shows loading indicator during request
+/// 5. On success: Shows confirmation and redirects to settings
+/// 6. On failure: Displays error message
+/// ```
+///
+/// **Possible improvements:**
+/// - Implement email verification process
+/// - Add terms of service acceptance
+/// - Consider adding registration with social accounts
+///
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';

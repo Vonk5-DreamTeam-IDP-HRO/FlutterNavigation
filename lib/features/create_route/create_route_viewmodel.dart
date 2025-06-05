@@ -1,3 +1,40 @@
+/// **CreateRouteViewModel.dart**
+///
+/// **Purpose:** Handles all logic for creating a route. This includes loading all locations
+/// in form of SelectableLocationDto, validating the form, tracking user selection from accordion
+/// and saving the route using the repository pattern.
+///
+/// **Usage:** This ViewModel is used in the CreateRouteView to manage the state of the form,
+/// validate user input, and interact with the repositories to save the route.
+///
+/// **Key Features:**
+/// - Loads locations from the ILocationRepository and groups them by category
+/// - Validates user input for route name and selected locations
+/// - Handles saving the route using the IRouteRepository
+///
+/// **Dependencies:**
+/// - `IRouteRepository`: For saving the route
+/// - `ILocationRepository`: For loading locations
+/// - `package:flutter/material.dart`: For ChangeNotifier and TextEditingController
+/// - `package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart`: For SelectableLocationDto model
+/// - `package:osm_navigation/core/models/Route/create_route_dto.dart`: For CreateRouteDto model
+/// - `package:osm_navigation/core/models/Route/route_dto.dart`: For RouteDto model
+///
+/// **workflow:**
+/// ```
+/// 1. Initialize the ViewModel with repositories
+/// 2. Load locations using `loadLocations()`, which fetches and groups locations
+/// 3. User interacts with the form, entering a name and selecting locations
+/// 4. Validate the form using `isNameValid`, `areLocationsValid`, and `canSave`
+/// 5. Call `attemptSave()` to save the route if validation passes
+/// 6. If save is successful, `newlyCreatedRoute` will contain the saved route data
+/// ```
+///
+/// **Possible improvements:**
+/// - Accordion for locations could be made more dynamic. It is loading all locations
+/// - Consider implementing pagination or lazy loading for each category.
+/// - Consider adding search functionality to filter locations.
+///
 // --- Imports ---
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
