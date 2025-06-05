@@ -44,6 +44,10 @@ class CesiumMapViewModel extends ChangeNotifier {
 
   // --- Initialization ---
   CesiumMapViewModel() {
+    debugPrint(
+      'Checking token before replacement: ${AppConfig.cesiumIonToken.length} characters',
+    );
+
     _initialize();
   }
 
@@ -71,28 +75,65 @@ class CesiumMapViewModel extends ChangeNotifier {
 
     try {
       final htmlContent = await _loadHtmlContent();
-      final finalHtmlContent = htmlContent.replaceAll(
-        '__CESIUM_TOKEN_PLACEHOLDER__',
-        AppConfig.cesiumIonToken,
-      );
-      await _webViewController.loadHtmlString(finalHtmlContent);
+      if (htmlContent != null && htmlContent.isNotEmpty) {
+        debugPrint('HTML asset loaded successfully.');
+        if (AppConfig.cesiumIonToken.isEmpty) {
+          throw Exception('Cesium Ion Token is empty');
+        }
+        debugPrint('Cesium token length: ${AppConfig.cesiumIonToken.length}');
+        if (!htmlContent.contains('__CESIUM_TOKEN_PLACEHOLDER__')) {
+          throw Exception('Token placeholder not found in HTML content');
+        }
+        debugPrint('Token placeholder found in HTML content');
+        final finalHtmlContent = htmlContent.replaceAll(
+          '__CESIUM_TOKEN_PLACEHOLDER__',
+          AppConfig.cesiumIonToken,
+        );
+        debugPrint(
+          'Token replacement complete. Content length: ${finalHtmlContent.length}',
+        );
+        if (finalHtmlContent.contains('__CESIUM_TOKEN_PLACEHOLDER__')) {
+          throw Exception('Token was not properly replaced');
+        }
+        debugPrint('Loading HTML into WebView...');
+        await _webViewController.loadHtmlString(finalHtmlContent);
+      } else {
+        throw Exception('HTML content is null or empty');
+      }
     } catch (e) {
       _errorMessage = 'Error loading HTML content: $e';
       if (kDebugMode) {
         print(_errorMessage);
       }
+      // Load a fallback HTML content in case of error
+      await _webViewController.loadHtmlString('''
+        <!DOCTYPE html>
+        <html>
+          <body>
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+              <p>Failed to load map. Please try refreshing.</p>
+            </div>
+          </body>
+        </html>
+      ''');
       notifyListeners();
     }
   }
 
-  Future<String> _loadHtmlContent() async {
+  Future<String?> _loadHtmlContent() async {
     try {
-      return await rootBundle.loadString('assets/Cesium.html');
+      debugPrint('Loading HTML asset from: assets/Cesium.html');
+      final content = await rootBundle.loadString('assets/Cesium.html');
+      if (content.isEmpty) {
+        throw Exception('The asset exists but has empty data');
+      }
+      return content;
     } catch (e) {
       if (kDebugMode) {
         print('Error loading HTML asset: $e');
+        print('The asset does not exist or has empty data.');
       }
-      rethrow; // Rethrow to be caught in _initialize
+      return null;
     }
   }
 

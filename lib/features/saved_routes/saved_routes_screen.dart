@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
-import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
+import 'package:osm_navigation/features/map/cesium_map_viewmodel.dart';
 import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
