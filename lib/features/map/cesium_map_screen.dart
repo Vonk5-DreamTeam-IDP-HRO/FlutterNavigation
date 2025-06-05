@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/features/map/cesium_map_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import './CesiumMapViewModel.dart'; // Import the ViewModel
 
 /// CesiumMapScreen: The View component for the 3D map feature.
 ///
