@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         context: context,
                         builder: (context) => Theme(
                           data: Theme.of(context).copyWith(
-                            dialogTheme: DialogTheme(
+                            dialogTheme: DialogThemeData(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
