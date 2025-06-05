@@ -76,27 +76,22 @@ class CesiumMapScreen extends StatelessWidget {
                   tooltip: 'Refresh Map',
                   child: const Icon(Icons.refresh),
                 ),
-                const SizedBox(height: 8),
-                FloatingActionButton(
-                  heroTag: 'valhalla_route_3d', // Ensure unique heroTags
-                  onPressed:
-                      () =>
-                          context
-                              .read<CesiumMapViewModel>()
-                              .loadAndDisplayRoute(),
-                  tooltip: 'Load Valhalla Route',
-                  child:
-                      viewModel.isLoadingRoute
-                          ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Icon(Icons.route),
-                ),
+                if (viewModel.isLoadingRoute)
+                  const SizedBox(height: 8),
+                if (viewModel.isLoadingRoute)
+                  const FloatingActionButton(
+                    heroTag: 'loading_route',
+                    onPressed: null,
+                    tooltip: 'Loading Route...',
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

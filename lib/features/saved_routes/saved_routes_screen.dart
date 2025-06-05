@@ -138,13 +138,14 @@ class SavedRoutesScreen extends StatelessWidget {
                     TextButton(
                       onPressed: () {
                         // Navigate to the Cesium 3D Map screen
-                        // TODO: Pass route.id and modify CesiumMapViewModel to load the specific route
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
                                 (context) => ChangeNotifierProvider(
-                                  create: (_) => CesiumMapViewModel(),
+                                  create: (context) => CesiumMapViewModel(
+                                    RouteApiService(context.read<Dio>()),
+                                  )..loadAndDisplayRoute(route.routeId),
                                   child: const CesiumMapScreen(),
                                 ),
                           ),
