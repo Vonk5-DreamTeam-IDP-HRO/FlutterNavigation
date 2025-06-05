@@ -1,3 +1,43 @@
+/// **LoginScreen.dart**
+///
+/// **Purpose:** 
+/// Provides the user interface for authentication. Can be shown either as
+/// a full screen or as a modal dialog, handling user login with username and password
+/// input validation.
+///
+/// **Usage:** 
+/// This screen is used whenever user authentication is required. It can be
+/// displayed in two ways:
+/// - As a full screen using normal navigation
+/// - As a modal dialog
+///
+/// **Key Features:**
+/// - Form with username and password inputs
+/// - Input validation before submission
+/// - Loading state handling during login
+/// - Error feedback via snackbar
+/// - Navigation to registration screen
+/// - Responsive layout with max width constraint
+///
+/// **Dependencies:**
+/// - `AuthViewModel`: For handling login logic
+/// - `RegisterScreen`: For new user registration
+/// - `Provider`: For accessing AuthViewModel
+///
+/// **workflow:**
+/// ```
+/// 1. User enters credentials
+/// 2. Form validates input on submission
+/// 3. AuthViewModel handles login request
+/// 4. Shows loading indicator during request
+/// 5. Displays error message or redirects on completion
+/// ```
+///
+/// **Possible improvements:**
+/// - Add "Remember me" functionality to persist login state
+/// - Implement "Forgot password" feature
+/// - Add social login options
+///
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';

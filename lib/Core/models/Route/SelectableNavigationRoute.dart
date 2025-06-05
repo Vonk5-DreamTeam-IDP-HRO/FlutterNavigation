@@ -251,7 +251,7 @@ extension SelectableNavigationRouteExtensions on SelectableNavigationRoute {
   /// }
   /// ```
   bool isPrivateRoute() {
-    return displayName.startsWith("🔒");
+    return displayName.startsWith('🔒');
   }
 
   /// Gets clean route name without UI formatting prefixes
@@ -274,9 +274,9 @@ extension SelectableNavigationRouteExtensions on SelectableNavigationRoute {
     String clean = displayName;
 
     // Remove common UI prefixes
-    if (clean.startsWith("🔒 ")) clean = clean.substring(2);
-    if (clean.startsWith("🌍 ")) clean = clean.substring(2);
-    if (clean.startsWith("★ ")) clean = clean.substring(2);
+    if (clean.startsWith('🔒 ')) clean = clean.substring(2);
+    if (clean.startsWith('🌍 ')) clean = clean.substring(2);
+    if (clean.startsWith('★ ')) clean = clean.substring(2);
 
     return clean.trim();
   }
@@ -307,7 +307,7 @@ extension SelectableNavigationRouteExtensions on SelectableNavigationRoute {
     int cutPoint = description.lastIndexOf(' ', maxLength);
     if (cutPoint == -1) cutPoint = maxLength; // No space found, hard cut
 
-    return "${description.substring(0, cutPoint)}...";
+    return '${description.substring(0, cutPoint)}...';
   }
 
   /// Extracts metadata hints from the description
@@ -345,8 +345,9 @@ extension SelectableNavigationRouteExtensions on SelectableNavigationRoute {
     // Extract difficulty levels
     if (desc.contains('easy')) metadata['difficulty'] = 'Easy';
     if (desc.contains('moderate')) metadata['difficulty'] = 'Moderate';
-    if (desc.contains('hard') || desc.contains('difficult'))
+    if (desc.contains('hard') || desc.contains('difficult')) {
       metadata['difficulty'] = 'Hard';
+    }
 
     // Extract ratings
     final ratingPattern = RegExp(r'(\d+(?:\.\d+)?)★');
@@ -419,6 +420,6 @@ extension SelectableNavigationRouteExtensions on SelectableNavigationRoute {
     final metadata = getMetadata();
     final metadataText = metadata.values.join(' ');
 
-    return "$cleanName $description $metadataText".toLowerCase();
+    return '$cleanName $description $metadataText'.toLowerCase();
   }
 }

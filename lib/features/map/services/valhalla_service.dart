@@ -8,8 +8,8 @@ import '../../../Core/config/app_config.dart';
 
 class ValhallaService {
   // Use the configured base URL
-  final String _baseUrl = ('${AppConfig.url}:${AppConfig.valhallaPort}');
-  final String _fallBackUrl =
+  String get _baseUrl => ('${AppConfig.url}:${AppConfig.valhallaPort}');
+  String get _fallBackUrl =>
       ('${AppConfig.thijsApiUrl}:${AppConfig.valhallaPort}');
   ValhallaService();
 

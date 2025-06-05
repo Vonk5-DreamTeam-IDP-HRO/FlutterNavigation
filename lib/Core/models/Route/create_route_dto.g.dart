@@ -12,6 +12,11 @@ _CreateRouteDto _$CreateRouteDtoFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       isPrivate: json['isPrivate'] as bool? ?? true,
       createdBy: json['createdBy'] as String?,
+      locationIds:
+          (json['locationIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$CreateRouteDtoToJson(_CreateRouteDto instance) =>
@@ -20,4 +25,5 @@ Map<String, dynamic> _$CreateRouteDtoToJson(_CreateRouteDto instance) =>
       'description': instance.description,
       'isPrivate': instance.isPrivate,
       'createdBy': instance.createdBy,
+      'locationIds': instance.locationIds,
     };

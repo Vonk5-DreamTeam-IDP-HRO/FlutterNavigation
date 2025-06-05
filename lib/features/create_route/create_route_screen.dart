@@ -1,15 +1,57 @@
+/// **CreateRouteScreen.dart**
+///
+/// **Purpose:** Handles the UI layer for creating a route. This includes displaying a form
+/// with name and description fields, showing a location selection accordion, managing
+/// authentication state, and providing visual feedback for loading and error states.
+///
+/// **Usage:** This screen works with CreateRouteViewModel to provide a complete route
+/// creation interface. It handles user input validation and provides immediate feedback
+/// while delegating business logic to the ViewModel.
+///
+/// **Key Features:**
+/// - Displays form with route name and description inputs
+/// - Shows grouped locations in an accordion selector
+/// - Handles authentication state with login dialog
+/// - Provides loading indicators and error messages
+/// - Implements real-time validation feedback
+///
+/// **Dependencies:**
+/// - `CreateRouteViewModel`: For state management and business logic
+/// - `AuthViewModel`: For authentication state handling
+/// - `AppState`: For tab navigation management
+/// - `Provider`: For state management
+/// - `LocationAccordionSelector`: For location selection UI
+///
+/// **workflow:**
+/// ```
+/// 1. Screen loads and checks authentication state
+/// 2. If not authenticated, shows login dialog
+/// 3. Displays form with text inputs and location selector
+/// 4. Updates UI based on ViewModel state changes
+/// 5. Shows loading overlay during save operation
+/// 6. Displays success/error feedback after save attempt
+/// ```
+///
+/// **Possible improvements:**
+/// - Consider implementing long term storage for route data so users can resume later
+/// - Add confirmation dialog before discarding changes
+/// - Add search functionality in location selector
+///
+
 // --- Import Statements ---
 
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
-import 'package:provider/provider.dart';
+import 'package:osm_navigation/core/models/Route/route_dto.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:osm_navigation/core/utils/feedback_util.dart';
 import 'package:osm_navigation/core/utils/tuple.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/auth/screens/login_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/create_route/widgets/location_accordion_selector.dart';
-import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart'; // For MainScreen.createRouteIndex
+import 'package:provider/provider.dart';
 
 // --- Class Definition ---
 class CreateRouteScreen extends StatefulWidget {
@@ -219,16 +261,19 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     >
                   >(
                     selector:
-                        (_, vm) =>
-                            Tuple3(vm.isLoading, vm.error, vm.groupedLocations),
+                        (_, vm) => Tuple3(
+                          vm.isLoading,
+                          vm.locationLoadingError,
+                          vm.groupedLocations,
+                        ),
                     builder: (context, data, _) {
                       final isLoading = data.item1;
-                      final error = data.item2;
+                      final locationLoadingError = data.item2;
                       final groupedLocations = data.item3;
                       // Use the new widget
                       return LocationAccordionSelector(
                         isLoading: isLoading,
-                        error: error,
+                        error: locationLoadingError,
                         groupedLocations: groupedLocations,
                         viewModel: viewModel,
                       );
@@ -251,24 +296,19 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                   ),
 
                   // --- Validation message ---
-                  Selector<CreateRouteViewModel, Tuple2<bool, bool>>(
-                    selector:
-                        (_, vm) => Tuple2(
-                          vm.areLocationsValid,
-                          vm.selectedLocationIds.isNotEmpty,
-                        ),
-                    builder: (context, data, _) {
-                      final areLocationsValid = data.item1;
-                      final hasSelections = data.item2;
-                      if (!areLocationsValid && hasSelections) {
+                  Selector<CreateRouteViewModel, String?>(
+                    selector: (_, vm) => vm.validationSummary,
+                    builder: (context, validationSummary, _) {
+                      if (validationSummary != null) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Center(
                             child: Text(
-                              'Please select at least 2 locations.',
+                              validationSummary,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         );
@@ -276,10 +316,94 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       return const SizedBox.shrink();
                     },
                   ),
+
+                  const SizedBox(height: 16),
                 ],
               ), // Closes Column
             ), // Closes SingleChildScrollView
           ), // Closes Padding
+          // --- Error/Success Feedback Handler ---
+          Selector<CreateRouteViewModel, Tuple3<String?, bool, RouteDto?>>(
+            selector:
+                (_, vm) => Tuple3(
+                  vm.routeSaveError,
+                  vm.saveSuccess,
+                  vm.newlyCreatedRoute,
+                ),
+            builder: (context, data, _) {
+              final routeSaveError = data.item1;
+              final saveSuccess = data.item2;
+              final newlyCreatedRoute = data.item3;
+
+              // Handle error feedback
+              if (routeSaveError != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    FeedbackUtil.showErrorSnackbar(context, routeSaveError);
+                    viewModel.clearRouteSaveError();
+                  }
+                });
+              }
+
+              // Handle success feedback
+              if (saveSuccess) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    FeedbackUtil.showSuccessSnackbar(
+                      context,
+                      'Route created successfully!',
+                      actionLabel:
+                          newlyCreatedRoute != null ? 'View Route' : 'OK',
+                      onActionPressed:
+                          newlyCreatedRoute != null
+                              ? () {
+                                // TODO: Navigate to route details screen
+                                debugPrint(
+                                  'Navigate to route: ${newlyCreatedRoute.routeId}',
+                                );
+                              }
+                              : null,
+                    );
+                    viewModel.clearSuccess();
+                  }
+                });
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
+
+          // --- Loading Overlay ---
+          Selector<CreateRouteViewModel, bool>(
+            selector: (_, vm) => vm.isLoading,
+            builder: (context, isLoading, _) {
+              if (isLoading) {
+                return Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: const Center(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Creating route...'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+
+          // --- Authentication Overlay ---
           if (!authViewModel.isAuthenticated)
             Positioned.fill(
               child: AbsorbPointer(

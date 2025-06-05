@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:osm_navigation/Core/repositories/Route/IRouteRepository.dart';
+import 'package:osm_navigation/core/repositories/Route/IRouteRepository.dart';
 import 'package:osm_navigation/core/models/Route/route_dto.dart';
 
 /// SavedRoutesViewModel: Manages the state and logic for the Saved Routes screen.
