@@ -74,9 +74,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ),
 
     // 4: Settings Screen
-    ChangeNotifierProvider(
-      create: (_) => SettingsViewModel(),
-      child: const SettingsScreen(),
+    Builder(
+      builder: (context) => const SettingsScreen(),
     ),
   ];
 

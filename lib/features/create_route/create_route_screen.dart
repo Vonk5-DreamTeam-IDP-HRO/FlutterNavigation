@@ -164,11 +164,12 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              // Allow scrolling for long lists/small screens
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Column(
+              children: [
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   // --- Route Name Input ---
                   Selector<CreateRouteViewModel, bool>(
                     selector: (_, vm) => vm.isNameValid,
@@ -210,29 +211,31 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                   const SizedBox(height: 5),
 
                   // --- Accordion Section ---
-                  Selector<
-                    CreateRouteViewModel,
-                    Tuple3<
-                      bool,
-                      String?,
-                      Map<String, List<SelectableLocationDto>>
-                    >
-                  >(
-                    selector:
-                        (_, vm) =>
-                            Tuple3(vm.isLoading, vm.error, vm.groupedLocations),
-                    builder: (context, data, _) {
-                      final isLoading = data.item1;
-                      final error = data.item2;
-                      final groupedLocations = data.item3;
-                      // Use the new widget
-                      return LocationAccordionSelector(
-                        isLoading: isLoading,
-                        error: error,
-                        groupedLocations: groupedLocations,
-                        viewModel: viewModel,
-                      );
-                    },
+                  Expanded(
+                    child: Selector<
+                      CreateRouteViewModel,
+                      Tuple3<
+                        bool,
+                        String?,
+                        Map<String, List<SelectableLocationDto>>
+                      >
+                    >(
+                      selector:
+                          (_, vm) =>
+                              Tuple3(vm.isLoading, vm.error, vm.groupedLocations),
+                      builder: (context, data, _) {
+                        final isLoading = data.item1;
+                        final error = data.item2;
+                        final groupedLocations = data.item3;
+                        // Use the new widget
+                        return LocationAccordionSelector(
+                          isLoading: isLoading,
+                          error: error,
+                          groupedLocations: groupedLocations,
+                          viewModel: viewModel,
+                        );
+                      },
+                    ),
                   ),
 
                   const SizedBox(height: 24),
@@ -276,9 +279,11 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       return const SizedBox.shrink();
                     },
                   ),
-                ],
-              ), // Closes Column
-            ), // Closes SingleChildScrollView
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ), // Closes Padding
           if (!authViewModel.isAuthenticated)
             Positioned.fill(

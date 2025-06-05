@@ -13,22 +13,18 @@ import 'package:osm_navigation/core/config/app_config.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
+import 'package:osm_navigation/features/map/map_viewmodel.dart';
 
-/// This application is build according the MVVM architectural pattern
-/// https://docs.flutter.dev/app-architecture/guide
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Load and validate environment configuration
     await AppConfig.load();
     AppConfig.validateConfig();
 
-    // Create dependencies after config is validated
     final dio = DioFactory.createDio();
     final authViewModel = AuthViewModel(dio: dio);
 
-    // Wait for AuthViewModel to fully initialize before creating the app
     debugPrint('Initializing AuthViewModel...');
     await authViewModel.initialize();
     debugPrint('AuthViewModel initialization complete');
@@ -39,14 +35,10 @@ Future<void> main() async {
 
     String errorMessage;
     if (e.toString().contains('Missing required environment variables')) {
-      // For environment validation errors, show the full error with missing vars
       errorMessage = e.toString();
     } else if (e.toString().contains('.env')) {
-      // For .env file related errors
-      errorMessage =
-          'Error loading .env file. Please ensure the file exists and has the correct format.';
+      errorMessage = 'Error loading .env file. Please ensure the file exists and has the correct format.';
     } else {
-      // For other initialization errors
       errorMessage = 'Error initializing app: ${e.toString()}';
     }
 
@@ -91,8 +83,8 @@ class MyApp extends StatelessWidget {
     required Dio dio,
     required AuthViewModel authViewModel,
     super.key,
-  }) : _dio = dio,
-       _authViewModel = authViewModel;
+  })  : _dio = dio,
+        _authViewModel = authViewModel;
 
   @override
   Widget build(BuildContext context) {
