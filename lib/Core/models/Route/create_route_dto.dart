@@ -65,6 +65,11 @@ abstract class CreateRouteDto with _$CreateRouteDto {
     /// Note: This field is included for API compatibility but the backend
     /// service will populate it from the authenticated user context.
     String? createdBy,
+
+    /// List of location IDs that make up the route
+    /// **API Mapping:** Maps to C# `ICollection<Guid> LocationIds`
+    /// **Validation:** Minimum length of 2 locations required
+    @Default([]) List<String> locationIds,
   }) = _CreateRouteDto;
 
   /// Creates CreateRouteDto from JSON
@@ -104,15 +109,25 @@ extension CreateRouteDtoValidation on CreateRouteDto {
   /// Validates the description field
   ///
   /// **Rules:**
-  /// - Optional field, no length restrictions in current API
-  /// - Could be extended with reasonable limits for UI/UX
+  /// - Optional field, max 1000 characters (API [StringLength(1000)] attribute)
   ///
   /// **Returns:** Error message if invalid, null if valid
   String? validateDescription() {
-    // Optional field - currently no backend restrictions
-    // Could add reasonable UI limits like 1000 characters
     if (description != null && description!.length > 1000) {
-      return 'Description should be 1000 characters or less for better readability';
+      return 'Description must be 1000 characters or less';
+    }
+    return null;
+  }
+
+  /// Validates the location IDs
+  ///
+  /// **Rules:**
+  /// - Must have at least 2 locations (API [MinLength(2)] attribute)
+  ///
+  /// **Returns:** Error message if invalid, null if valid
+  String? validateLocationIds() {
+    if (locationIds.length < 2) {
+      return 'At least 2 locations are required for a route';
     }
     return null;
   }
@@ -132,7 +147,9 @@ extension CreateRouteDtoValidation on CreateRouteDto {
   /// }
   /// ```
   bool isValid() {
-    return validateName() == null && validateDescription() == null;
+    return validateName() == null &&
+        validateDescription() == null &&
+        validateLocationIds() == null;
   }
 
   /// Gets all current validation errors
@@ -155,6 +172,9 @@ extension CreateRouteDtoValidation on CreateRouteDto {
 
     final descriptionError = validateDescription();
     if (descriptionError != null) errors.add(descriptionError);
+
+    final locationIdsError = validateLocationIds();
+    if (locationIdsError != null) errors.add(locationIdsError);
 
     return errors;
   }
