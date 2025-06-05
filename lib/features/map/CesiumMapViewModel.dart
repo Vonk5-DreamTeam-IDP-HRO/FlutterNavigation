@@ -71,10 +71,9 @@ class CesiumMapViewModel extends ChangeNotifier {
 
     try {
       final htmlContent = await _loadHtmlContent();
-      final cesiumToken = AppConfig.cesiumIonToken;
       final finalHtmlContent = htmlContent.replaceAll(
         '__CESIUM_TOKEN_PLACEHOLDER__',
-        cesiumToken,
+        AppConfig.cesiumIonToken,
       );
       await _webViewController.loadHtmlString(finalHtmlContent);
     } catch (e) {

@@ -1,68 +1,163 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
-import 'package:osm_navigation/Core/providers/app_state.dart';
-import 'package:osm_navigation/Core/navigation/navigation.dart';
-import 'package:osm_navigation/Core/services/dio_factory.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:osm_navigation/core/navigation/navigation.dart';
+import 'package:osm_navigation/core/services/dio_factory.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/services/location/ILocationApiService.dart';
-import 'package:osm_navigation/Core/services/location/location_api_service.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
-import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
-import 'package:osm_navigation/Core/config/app_config.dart';
-import 'package:osm_navigation/features/auth/auth_viewmodel.dart'; // Added import
+import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
+import 'package:osm_navigation/core/config/app_config.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
+import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
 
 /// This application is build according the MVVM architectural pattern
 /// https://docs.flutter.dev/app-architecture/guide
-///
-
 Future<void> main() async {
-  // Ensure Flutter bindings are initialized before using plugins or async operations.
-  // This is especially important when using plugins that must be loaded before the app starts.
-  // For example, if you are using plugins that require native code. Kotlin or Swift.
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Initialize environment variables first
-    await dotenv.load(fileName: '.env');
-    // Then initialize AppConfig with loaded environment variables.
+    // Load and validate environment configuration
     await AppConfig.load();
+    AppConfig.validateConfig();
 
-    print('Environment loaded successfully');
-    print('URL: ${AppConfig.url}');
-  } catch (e) {
-    print('Error loading environment: $e');
-    // Still run the app, but with potential issues
+    // Create dependencies after config is validated
+    final dio = DioFactory.createDio();
+    final authViewModel = AuthViewModel(dio: dio);
+
+    // Wait for AuthViewModel to fully initialize before creating the app
+    debugPrint('Initializing AuthViewModel...');
+    await authViewModel.initialize();
+    debugPrint('AuthViewModel initialization complete');
+
+    runApp(MyApp(dio: dio, authViewModel: authViewModel));
+  } catch (e, stack) {
+    debugPrint('Error initializing app: $e\n$stack');
+
+    String errorMessage;
+    if (e.toString().contains('Missing required environment variables')) {
+      // For environment validation errors, show the full error with missing vars
+      errorMessage = e.toString();
+    } else if (e.toString().contains('.env')) {
+      // For .env file related errors
+      errorMessage =
+          'Error loading .env file. Please ensure the file exists and has the correct format.';
+    } else {
+      // For other initialization errors
+      errorMessage = 'Error initializing app: ${e.toString()}';
+    }
+
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Configuration Error',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  errorMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Please check your environment configuration and restart the app.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
-
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Dio _dio;
+  final AuthViewModel _authViewModel;
+
+  const MyApp({
+    required Dio dio,
+    required AuthViewModel authViewModel,
+    super.key,
+  }) : _dio = dio,
+       _authViewModel = authViewModel;
 
   @override
   Widget build(BuildContext context) {
-    // Create a single Dio instance for the app.
-    // This instance can be shared across the app, ensuring consistent configuration.
-    // It is used for making network requests and catch expections to show to the user.
-    final dio = DioFactory.createDio();
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AppState()),
-        Provider<Dio>(create: (context) => dio),
-        Provider<ILocationApiService>(
-          create: (context) => LocationApiService(context.read<Dio>()),
+        Provider<Dio>.value(value: _dio),
+        ChangeNotifierProvider.value(value: _authViewModel),
+        Consumer<AuthViewModel>(
+          builder: (context, authViewModel, child) {
+            debugPrint('Consumer<AuthViewModel> rebuild triggered!');
+            debugPrint('isAuthenticated: ${authViewModel.isAuthenticated}');
+            debugPrint('token exists: ${authViewModel.token != null}');
+            return child!;
+          },
+          child: Container(), // Empty widget for testing
         ),
-        Provider<ILocationRepository>(
-          create:
-              (context) =>
-                  LocationRepository(context.read<ILocationApiService>()),
+        ProxyProvider<AuthViewModel, ILocationApiService>(
+          lazy: false, // Force immediate creation
+          updateShouldNotify: (_, __) => true, // Always notify on auth changes
+          update: (context, authViewModel, previous) {
+            debugPrint('PROXYPROVIDER CALLED!');
+            debugPrint(
+              'ProxyProvider update called: isAuthenticated=${authViewModel.isAuthenticated}, token=${authViewModel.token != null ? "EXISTS (${authViewModel.token?.substring(0, 10)}...)" : "NULL"}',
+            );
+
+            // Always use the same Dio instance with dynamic token resolution
+            debugPrint(
+              'Creating LocationApiService with dynamic Dio (token will be resolved dynamically)',
+            );
+            return LocationApiService(context.read<Dio>());
+          },
         ),
-        ChangeNotifierProvider(create: (context) => AuthViewModel()), // Added AuthViewModel
+        ProxyProvider<ILocationApiService, ILocationRepository>(
+          update: (context, locationApiService, previous) {
+            debugPrint(
+              'Creating LocationRepository with updated LocationApiService',
+            );
+            return LocationRepository(locationApiService);
+          },
+        ),
+        ProxyProvider<AuthViewModel, RouteApiService>(
+          lazy: false, // Force immediate creation
+          updateShouldNotify: (_, __) => true, // Always notify on auth changes
+          update: (context, authViewModel, previous) {
+            debugPrint(
+              'Creating RouteApiService with dynamic Dio (token will be resolved dynamically)',
+            );
+            return RouteApiService(context.read<Dio>());
+          },
+        ),
         Provider<PhotonService>(create: (context) => PhotonService()),
+        ProxyProvider2<
+          ILocationRepository,
+          PhotonService,
+          CreateLocationViewModel
+        >(
+          update: (context, repository, photonService, previous) {
+            debugPrint('Creating CreateLocationViewModel with dependencies');
+            return CreateLocationViewModel(
+              locationRepository: repository,
+              photonService: photonService,
+            );
+          },
+        ),
       ],
       child: Consumer<AppState>(
         builder: (context, appState, _) => MaterialApp(

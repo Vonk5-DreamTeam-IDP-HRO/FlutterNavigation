@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/auth/screens/login_screen.dart';
-import 'package:osm_navigation/core/providers/app_state.dart';
 import 'create_location_viewmodel.dart';
 import 'Services/Photon.dart';
 
@@ -37,12 +36,13 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Use listen: false for initial checks to avoid rebuild cycles
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     // Check initial state
-    bool shouldShowDialog = !authViewModel.isAuthenticated && !_isLoginDialogShown;
+    final bool shouldShowDialog =
+        !authViewModel.isAuthenticated && !_isLoginDialogShown;
 
     if (shouldShowDialog) {
       // Use Future.microtask to avoid build-time setState
@@ -76,43 +76,57 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
     showDialog(
       context: dialogContext,
       barrierDismissible: false,
-      builder: (BuildContext alertContext) => Builder(
-        builder: (builderContext) => AlertDialog(
-          title: const Text('Login Required'),
-          content: const Text('You need to log in or register to create a location.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(alertContext).pop();
-                if (mounted) {
-                  setState(() { _isLoginDialogShown = false; });
-                  Navigator.of(context).pop(); // Go back to previous screen
-                }
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Login / Register'),
-              onPressed: () {
-                Navigator.of(alertContext).pop();
-                if (mounted) {
-                  setState(() { _isLoginDialogShown = false; });
-                }
-                Navigator.of(builderContext).push(MaterialPageRoute(
-                  builder: (_) => const LoginScreen(),
-                ));
-              },
-            ),
-          ],
-        ),
-      ),
+      builder:
+          (BuildContext alertContext) => Builder(
+            builder:
+                (builderContext) => AlertDialog(
+                  title: const Text('Login Required'),
+                  content: const Text(
+                    'You need to log in or register to create a location.',
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(alertContext).pop();
+                        if (mounted) {
+                          setState(() {
+                            _isLoginDialogShown = false;
+                          });
+                          Navigator.of(
+                            context,
+                          ).pop(); // Go back to previous screen
+                        }
+                      },
+                    ),
+                    ElevatedButton(
+                      child: const Text('Login / Register'),
+                      onPressed: () {
+                        Navigator.of(alertContext).pop();
+                        if (mounted) {
+                          setState(() {
+                            _isLoginDialogShown = false;
+                          });
+                        }
+                        Navigator.of(builderContext).push(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+          ),
     ).then((_) {
       if (!mounted) return;
-      
+
       final auth = Provider.of<AuthViewModel>(context, listen: false);
-      
+
       if (auth.isAuthenticated) {
-        setState(() { _isLoginDialogShown = false; });
+        setState(() {
+          _isLoginDialogShown = false;
+        });
       }
     });
   }
@@ -175,14 +189,9 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<CreateLocationViewModel>(context);
-    final photonService = Provider.of<PhotonService>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Location'),
-        backgroundColor: const Color(0xFF00811F),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('Create Location')),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -193,38 +202,39 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TypeAheadField<PhotonResultExtension>(
-                    builder: (context, controller, focusNode) => TextFormField(
-                      controller: _addressController,
-                      focusNode: focusNode,
-                      style: const TextStyle(color: Colors.black),
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        labelStyle: TextStyle(color: Colors.black87),
-                        border: OutlineInputBorder(),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFF00811F)),
+                    builder: (context, controller, focusNode) {
+                      debugPrint(
+                        'TypeAheadField builder called with controller: ${controller.hashCode}',
+                      );
+                      debugPrint('Controller text: "${controller.text}"');
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search),
+                          hintText:
+                              'Start typing an address (min 3 characters)',
                         ),
-                        prefixIcon: Icon(Icons.search, color: Color(0xFF00811F)),
-                        hintText: 'Start typing an address (min 3 characters)',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
-                      ),
-                      validator: (value) {
-                        if (_addressController.text.isEmpty) {
-                          if (value != null && value.isNotEmpty) {
-                            return 'Please select a valid address from suggestions';
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an address';
                           }
-                          return 'Please enter an address';
-                        }
-                        return null;
-                      },
-                    ),
+                          return null;
+                        },
+                      );
+                    },
                     suggestionsCallback: (pattern) async {
-                      if (pattern.length < 3) return [];
                       try {
-                        return await photonService.searchAddresses(pattern);
+                        if (pattern.length < 3) {
+                          debugPrint('Pattern too short: $pattern');
+                          return [];
+                        }
+                        debugPrint('Calling searchAddresses with: $pattern');
+                        return await viewModel.searchAddresses(pattern);
                       } catch (e) {
-                        print('Error getting address suggestions: $e');
+                        debugPrint('Error in suggestionsCallback: $e');
                         return [];
                       }
                     },
@@ -243,42 +253,39 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     },
                     onSelected: (suggestion) {
                       final List<String> parts = [];
-                      if (suggestion.name != null && suggestion.name!.isNotEmpty) {
+                      if (suggestion.name != null &&
+                          suggestion.name!.isNotEmpty) {
                         parts.add(suggestion.name!);
                       }
-                      if (suggestion.postcode != null && suggestion.postcode!.isNotEmpty) {
+                      if (suggestion.postcode != null &&
+                          suggestion.postcode!.isNotEmpty) {
                         parts.add(suggestion.postcode!);
                       }
-                      if (suggestion.city != null && suggestion.city!.isNotEmpty) {
+                      if (suggestion.city != null &&
+                          suggestion.city!.isNotEmpty) {
                         parts.add(suggestion.city!);
                       }
                       _addressController.text = parts.join(', ');
-                      viewModel.setSelectedCoordinates(
-                        suggestion.latitude,
-                        suggestion.longitude,
-                      );
+
+                      // Store the selected address details for proper field mapping
+                      viewModel.setSelectedAddressDetails(suggestion);
                     },
-                    emptyBuilder: (context) => const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No addresses found. Try a different search term.',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                    ),
+                    emptyBuilder:
+                        (context) => const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'No addresses found. Try a different search term.',
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                        ),
                   ),
 
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _nameController,
-                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Name',
-                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF00811F)),
-                      ),
-                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -291,54 +298,52 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
-                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Description (Optional)',
-                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF00811F)),
-                      ),
-                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     maxLines: 3,
                   ),
 
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    style: const TextStyle(color: Colors.black),
                     decoration: const InputDecoration(
                       labelText: 'Category',
-                      labelStyle: TextStyle(color: Colors.black87),
                       border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF00811F)),
-                      ),
-                      floatingLabelStyle: TextStyle(color: Color(0xFF00811F)),
                     ),
                     value: _category,
-                    hint: viewModel.isLoadingCategories
-                        ? const Text('Loading categories...')
-                        : viewModel.categoriesErrorMessage != null
-                            ? const Text('Error loading categories', style: TextStyle(color: Colors.red))
+                    hint:
+                        viewModel.isLoadingCategories
+                            ? const Text('Loading categories...')
+                            : viewModel.categoriesErrorMessage != null
+                            ? const Text(
+                              'Error loading categories',
+                              style: TextStyle(color: Colors.red),
+                            )
                             : viewModel.categories.isEmpty
-                                ? const Text('No categories available')
-                                : null,
-                    items: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                        ? []
-                        : viewModel.categories
-                            .map((String value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                            .toList(),
-                    onChanged: viewModel.isLoadingCategories || viewModel.categoriesErrorMessage != null
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _category = value;
-                            });
-                          },
+                            ? const Text('No categories available')
+                            : null,
+                    items:
+                        viewModel.isLoadingCategories ||
+                                viewModel.categoriesErrorMessage != null
+                            ? []
+                            : viewModel.categories
+                                .map(
+                                  (String value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                    onChanged:
+                        viewModel.isLoadingCategories ||
+                                viewModel.categoriesErrorMessage != null
+                            ? null
+                            : (value) {
+                              setState(() {
+                                _category = value;
+                              });
+                            },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please select a category';
@@ -347,7 +352,8 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
                     },
                   ),
 
-                  if (viewModel.categoriesErrorMessage != null && !viewModel.isLoadingCategories)
+                  if (viewModel.categoriesErrorMessage != null &&
+                      !viewModel.isLoadingCategories)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -358,20 +364,11 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
 
                   const SizedBox(height: 32),
                   if (viewModel.isLoading)
-                    const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00811F)),
-                      ),
-                    )
+                    const Center(child: CircularProgressIndicator())
                   else
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00811F),
-                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
                       ),
                       onPressed: () => _submitForm(context),
                       child: const Text('Create Location'),
@@ -383,9 +380,7 @@ class _CreateLocationScreenState extends State<CreateLocationScreen> {
           if (!Provider.of<AuthViewModel>(context).isAuthenticated)
             Positioned.fill(
               child: AbsorbPointer(
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                ),
+                child: Container(color: Colors.black.withOpacity(0.5)),
               ),
             ),
         ],

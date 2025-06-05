@@ -1,185 +1,200 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/config/app_config.dart';
-import 'package:osm_navigation/Core/models/location.dart';
-import 'package:osm_navigation/Core/models/location_details.dart';
-import 'package:osm_navigation/Core/models/route_dto.dart';
-import 'package:osm_navigation/Core/models/selectable_location.dart';
-import 'package:osm_navigation/Core/models/route_dtos.dart';
+import 'package:osm_navigation/core/config/app_config.dart';
+import 'package:osm_navigation/core/models/Route/SelectableNavigationRoute.dart';
+import 'package:osm_navigation/core/models/Route/create_route_dto.dart';
+import 'package:osm_navigation/core/models/Route/route_dto.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
+import 'package:osm_navigation/core/models/status_code_response_dto.dart';
 import 'IRouteApiService.dart';
-import 'route_api_exceptions.dart';
-import 'package:osm_navigation/Core/services/api_exceptions.dart'
-    as generic_api_exceptions;
-import 'package:osm_navigation/Core/utils/api_error_handler.dart'
-    as api_error_handler;
 
 class RouteApiService implements IRouteApiService {
   final Dio _dio;
-
-  // Define primary and fallback base URLs
-  static final String _primaryBaseApiUrl =
+  static String get _primaryBaseApiUrl =>
       '${AppConfig.url}:${AppConfig.backendApiPort}';
-  static final String _fallbackBaseApiUrl =
-      '${AppConfig.thijsApiUrl}:${AppConfig.localhostPort}';
+  static String get _fallbackBaseApiUrl =>
+      '${AppConfig.thijsApiUrl}:${AppConfig.backendApiPort}';
 
   RouteApiService(this._dio);
 
-  RouteApiException _wrapGenericRouteApiException(
-    generic_api_exceptions.ApiException e,
-    String operationName,
-  ) {
-    if (e is generic_api_exceptions.ApiNetworkException) {
-      return RouteApiNetworkException(
-        e.message,
-        statusCode: e.statusCode,
-        statusMessage: e.statusMessage,
-        uri: e.uri,
-        originalException: e.originalException,
-        stackTrace: e.stackTrace,
-      );
-    } else if (e is generic_api_exceptions.ApiNotFoundException) {
-      return RouteNotFoundException(
-        e.message,
-        uri: e.uri,
-        originalException: e.originalException,
-        stackTrace: e.stackTrace,
-      );
-    } else if (e is generic_api_exceptions.ApiParseException) {
-      return RouteApiParseException(
-        e.message, // The generic message already indicates parsing failure
-        originalException: e.originalException,
-        stackTrace: e.stackTrace,
-      );
-    }
-    // Fallback for other ApiException types
-    return RouteApiException(
-      e.message,
-      originalException: e.originalException,
-      stackTrace: e.stackTrace,
-      statusCode:
-          e is generic_api_exceptions.ApiNetworkException ? e.statusCode : null,
-    );
-  }
-
-  Future<T> _makeApiRequest<T>({
-    required Future<T> Function(String baseUrl) attemptRequest,
+  Future<StatusCodeResponseDto<T>> _makeApiRequest<T>({
+    required Future<StatusCodeResponseDto<T>> Function(String baseUrl)
+    attemptRequest,
     required String operationName,
   }) async {
-    DioException? primaryError;
-    String primaryErrorUrl =
-        _primaryBaseApiUrl; // Store URL of primary attempt for error reporting
+    debugPrint('\n=== STARTING OPERATION: $operationName ===');
+    StatusCodeResponseDto<T> result;
 
+    debugPrint(
+      'Attempting $operationName with primary URL: $_primaryBaseApiUrl',
+    );
     try {
-      debugPrint(
-        '[RouteApiService] Attempting $operationName with primary URL: $_primaryBaseApiUrl',
-      );
-      return await attemptRequest(_primaryBaseApiUrl);
-    } on DioException catch (e) {
-      primaryError = e;
-      primaryErrorUrl = e.requestOptions.uri.toString();
-      debugPrint(
-        '[RouteApiService] Primary URL request for $operationName failed (DioException): ${e.message}. Attempting fallback.',
-      );
-    } on RouteApiException catch (e) {
-      primaryError = DioException(
-        requestOptions: RequestOptions(path: 'unknown_primary_path'),
-        error: e,
-        message: e.message,
-      );
-      // Try to get URI from the RouteApiException if possible
-      if (e is RouteApiNetworkException) {
-        primaryErrorUrl = e.uri?.toString() ?? primaryErrorUrl;
-      }
-      if (e is RouteNotFoundException) {
-        primaryErrorUrl = e.uri?.toString() ?? primaryErrorUrl;
+      result = await attemptRequest(_primaryBaseApiUrl);
+      if (result.statusCodeResponse == StatusCodeResponse.success ||
+          result.statusCodeResponse == StatusCodeResponse.created ||
+          result.statusCodeResponse == StatusCodeResponse.noContent) {
+        debugPrint('$operationName SUCCEEDED on primary URL.');
+        debugPrint('=== OPERATION ENDED: $operationName ===\n');
+        return result;
       }
       debugPrint(
-        '[RouteApiService] Primary URL request for $operationName failed (RouteApiException from attempt): ${e.message}. Attempting fallback.',
+        '$operationName FAILED on primary URL with status: ${result.statusCodeResponse}. Message: ${result.message}. Trying fallback.',
       );
-    } catch (e) {
-      // Catch other general errors from the attempt
-      primaryError = DioException(
-        requestOptions: RequestOptions(path: 'unknown_primary_path'),
-        error: e,
+    } catch (e, s) {
+      debugPrint(
+        'Exception during $operationName on primary URL: $_primaryBaseApiUrl. Error: $e. Stacktrace: $s. Trying fallback.',
+      );
+      result = StatusCodeResponseDto(
+        statusCodeResponse: StatusCodeResponse.internalServerError,
         message:
-            'A non-Dio error occurred during primary attempt: ${e.toString()}',
-      );
-      debugPrint(
-        '[RouteApiService] Primary URL request for $operationName failed (General Error): $e. Attempting fallback.',
+            'Primary attempt for $operationName failed with exception: ${e.toString()}',
+        data: null,
       );
     }
 
-    // If primary attempt failed, try fallback
-    // This is pure added because HRO server kept crashing outside our control
-    // and we needed a way to get the app working again.
-    try {
+    if (!result.isSuccess) {
       debugPrint(
-        '[RouteApiService] Attempting $operationName with fallback URL: $_fallbackBaseApiUrl',
+        'Attempting $operationName with fallback URL: $_fallbackBaseApiUrl',
       );
-      return await attemptRequest(_fallbackBaseApiUrl);
-    } on DioException catch (e) {
-      // Changed to DioException
-      debugPrint(
-        '[RouteApiService] Fallback URL request for $operationName also failed (DioException): $e',
-      );
-      final genericException = api_error_handler.handleDioError(
-        primaryError,
-        operationName,
-        primaryErrorUrl,
-      );
-      throw _wrapGenericRouteApiException(genericException, operationName);
-    } catch (fallbackGeneralError) {
-      // Catch other general errors from fallback
-      debugPrint(
-        '[RouteApiService] Fallback URL request for $operationName also failed with non-Dio error: $fallbackGeneralError',
-      );
-      final genericException = api_error_handler.handleDioError(
-        primaryError,
-        operationName,
-        primaryErrorUrl,
-      );
-      throw _wrapGenericRouteApiException(genericException, operationName);
+      try {
+        result = await attemptRequest(_fallbackBaseApiUrl);
+        if (result.isSuccess) {
+          debugPrint('$operationName SUCCEEDED on fallback URL.');
+        } else {
+          debugPrint(
+            '$operationName FAILED on fallback URL with status: ${result.statusCodeResponse}. Message: ${result.message}.',
+          );
+        }
+      } catch (e, s) {
+        debugPrint(
+          'Exception during $operationName on fallback URL: $_fallbackBaseApiUrl. Error: $e. Stacktrace: $s.',
+        );
+        result = StatusCodeResponseDto(
+          statusCodeResponse: StatusCodeResponse.internalServerError,
+          message:
+              'Both primary and fallback attempts for $operationName failed with exceptions. Fallback error: ${e.toString()}',
+          data: null,
+        );
+      }
     }
+    debugPrint('=== OPERATION ENDED: $operationName ===\n');
+    return result;
   }
 
   @override
-  Future<List<RouteDto>> getAllRoutes() async {
-    const String operationName = 'fetching all routes';
+  Future<StatusCodeResponseDto<List<RouteDto>>> getAllRoutes() async {
+    const String operationName = 'Get All Routes';
     const String endpointPath = '/api/Route';
 
     return _makeApiRequest<List<RouteDto>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
-        debugPrint('[RouteApiService] $operationName from URL: $fullUrl');
+        debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          if (response.statusCode == 200 && response.data is List) {
+          debugPrint('  Response Status (HTTP): ${response.statusCode}');
+          debugPrint('  Response Headers: ${response.headers}');
+          debugPrint('  Response Data (Raw): ${response.data}');
+
+          if (response.statusCode == 200 &&
+              response.data is Map<String, dynamic>) {
+            final responseMap = response.data as Map<String, dynamic>;
+            final int appStatusCode =
+                responseMap['statusCodeResponse'] as int? ??
+                responseMap['statusCode'] as int? ??
+                0;
+            final String? appMessage = responseMap['message'] as String?;
+
+            if ((appStatusCode == 200 ||
+                    appStatusCode ==
+                        200) && // Using actual status code instead of enum code
+                responseMap['data'] is List) {
+              final List<dynamic> routesData =
+                  responseMap['data'] as List<dynamic>;
+              final routes =
+                  routesData
+                      .map(
+                        (item) =>
+                            RouteDto.fromJson(item as Map<String, dynamic>),
+                      )
+                      .toList();
+              debugPrint(
+                '  Successfully parsed ${routes.length} routes from response data key.',
+              );
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.success,
+                data: routes,
+                message: appMessage ?? '$operationName successful.',
+              );
+            } else {
+              // Application level error or data is not a list
+              debugPrint(
+                '  Application level error or data key is not a list. AppStatusCode: $appStatusCode, Message: $appMessage',
+              );
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(appStatusCode),
+                message:
+                    appMessage ??
+                    '$operationName failed: Unexpected data structure in response.',
+                data: null,
+              );
+            }
+          } else if (response.statusCode == 200 && response.data is List) {
+            // Fallback: if the API directly returns a list of routes (older or different endpoint version)
             final List<dynamic> data = response.data;
-            return data
-                .map((item) => RouteDto.fromJson(item as Map<String, dynamic>))
-                .toList();
+            final routes =
+                data
+                    .map(
+                      (item) => RouteDto.fromJson(item as Map<String, dynamic>),
+                    )
+                    .toList();
+            debugPrint(
+              '  Successfully parsed ${routes.length} routes directly from response list.',
+            );
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.success,
+              data: routes,
+              message: '$operationName successful (direct list).',
+            );
           } else {
-            // Let _makeApiRequest handle DioException by rethrowing a new one for non-200s not caught by Dio itself
-            throw DioException(
-              requestOptions: RequestOptions(path: fullUrl),
-              response: response,
-              message: 'Failed to load routes: ${response.statusCode}',
+            // HTTP error or unexpected response.data type
+            debugPrint(
+              '  HTTP error or unexpected response data type. HTTP Status: ${response.statusCode}',
+            );
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.fromCode(
+                response.statusCode ?? 500,
+              ),
+              message:
+                  '$operationName failed: ${response.statusMessage ?? "Unknown HTTP error"}',
+              data: null,
             );
           }
-        } on DioException {
-          // Re-throw DioExceptions to be caught by _makeApiRequest
-          rethrow;
-        } catch (e, s) {
-          // Catch other unexpected errors
+        } on DioException catch (e) {
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+            '  DioException in $operationName at $fullUrl: ${e.message}',
           );
-          throw RouteApiParseException(
-            'Error parsing $operationName response: ${e.toString()}',
-            originalException: e,
-            stackTrace: s,
+          debugPrint('  DioException Response: ${e.response?.data}');
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              e.response?.statusCode ?? 500,
+            ),
+            message:
+                e.response?.data?['message']?.toString() ??
+                e.message ??
+                'Network error during $operationName.',
+            data: null,
+          );
+        } catch (e, s) {
+          debugPrint(
+            '  Unexpected error in $operationName at $fullUrl: $e\nStacktrace: $s',
+          );
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.internalServerError,
+            message: 'Unexpected error during $operationName: ${e.toString()}',
+            data: null,
           );
         }
       },
@@ -187,62 +202,105 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<List<Location>> getRouteLocations(String routeId) async {
-    final String operationName = 'fetching locations for route $routeId';
-    final String endpointPath = '/location_route';
-    final Map<String, dynamic> queryParams = {
-      'select': '*,locations:locationid(name,longitude,latitude)',
-      'routeid': 'eq.$routeId',
-    };
+  Future<StatusCodeResponseDto<List<LocationDto>>> getRouteLocations(
+    String routeId,
+  ) async {
+    final String operationName = 'Get Locations for Route $routeId';
+    final String endpointPath = '/api/Route/$routeId';
 
-    return _makeApiRequest<List<Location>>(
-      // Renamed helper
+    return _makeApiRequest<List<LocationDto>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
-        debugPrint(
-          '[RouteApiService] $operationName from URL: $fullUrl with params: $queryParams',
-        );
+        debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
-          final response = await _dio.get(
-            fullUrl,
-            queryParameters: queryParams,
-          );
-          if (response.statusCode == 200 && response.data is List) {
+          final response = await _dio.get(fullUrl);
+          debugPrint('  Response Status (HTTP): ${response.statusCode}');
+          debugPrint('  Response Data (Raw): ${response.data}');
+
+          if (response.statusCode == 200) {
+            if (response.data is Map<String, dynamic>) {
+              final responseMap = response.data as Map<String, dynamic>;
+              final int appStatusCode =
+                  responseMap['statusCodeResponse'] as int? ??
+                  responseMap['statusCode'] as int? ??
+                  0;
+              final String? appMessage = responseMap['message'] as String?;
+
+              if ((appStatusCode == 200) && responseMap['data'] is List) {
+                final List<dynamic> locationsData =
+                    responseMap['data'] as List<dynamic>;
+                final locations =
+                    locationsData
+                        .map(
+                          (item) => LocationDto.fromJson(
+                            item as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList();
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.success,
+                  data: locations,
+                  message: appMessage ?? '$operationName successful.',
+                );
+              } else {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.fromCode(
+                    appStatusCode,
+                  ),
+                  message:
+                      appMessage ??
+                      '$operationName failed: Unexpected data structure.',
+                  data: null,
+                );
+              }
+            }
+          } else if (response.data is List) {
             final List<dynamic> data = response.data;
             final locations =
                 data
                     .map(
-                      (item) => Location.fromJson(
-                        item['locations'] as Map<String, dynamic>,
-                      ),
+                      (item) =>
+                          LocationDto.fromJson(item as Map<String, dynamic>),
                     )
                     .toList();
-            debugPrint(
-              '[RouteApiService] Successfully fetched ${locations.length} locations for route $routeId',
-            );
-            return locations;
-          } else {
-            throw DioException(
-              requestOptions: RequestOptions(
-                path: fullUrl,
-                queryParameters: queryParams,
-              ),
-              response: response,
-              message:
-                  'Failed to load locations for route $routeId: ${response.statusCode}',
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.success,
+              data: locations,
+              message: '$operationName successful (direct list).',
             );
           }
-        } on DioException {
-          rethrow;
+
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              response.statusCode ?? 500,
+            ),
+            message:
+                '$operationName failed: ${response.statusMessage ?? "Unknown error"}',
+            data: null,
+          );
+        } on DioException catch (e) {
+          debugPrint(
+            '  DioException in $operationName at $fullUrl: ${e.message}',
+          );
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              e.response?.statusCode ?? 500,
+            ),
+            message:
+                e.response?.data?['message']?.toString() ??
+                e.message ??
+                'Network error.',
+            data: null,
+          );
         } catch (e, s) {
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+            '  Unexpected error in $operationName at $fullUrl: $e\nStacktrace: $s',
           );
-          throw RouteApiParseException(
-            'Error parsing $operationName response: ${e.toString()}',
-            originalException: e,
-            stackTrace: s,
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.internalServerError,
+            message: 'Unexpected error: ${e.toString()}',
+            data: null,
           );
         }
       },
@@ -250,146 +308,104 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<List<SelectableLocation>> getSelectableLocations() async {
-    const String operationName = 'fetching selectable locations';
-    const String locationsEndpoint = '/locations'; // TODO: Confirm endpoint
-    const String detailsEndpoint =
-        '/location_details'; // TODO: Confirm endpoint
+  Future<StatusCodeResponseDto<List<SelectableNavigationRoute>>>
+  getSelectableRoutes() async {
+    const String operationName = 'Get Selectable Routes';
+    const String endpointPath = '/api/Route/selectable';
 
-    return _makeApiRequest<List<SelectableLocation>>(
-      // Renamed helper
+    return _makeApiRequest<List<SelectableNavigationRoute>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
-        final locationsFullUrl = '$baseUrl$locationsEndpoint';
-        final detailsFullUrl = '$baseUrl$detailsEndpoint';
-
-        debugPrint(
-          '[RouteApiService] $operationName (locations) from URL: $locationsFullUrl',
-        );
-        debugPrint(
-          '[RouteApiService] $operationName (details) from URL: $detailsFullUrl',
-        );
-
+        final String fullUrl = '$baseUrl$endpointPath';
+        debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
-          // Perform requests in parallel
-          final responses = await Future.wait([
-            _dio.get(locationsFullUrl),
-            _dio.get(detailsFullUrl),
-          ]);
+          final response = await _dio.get(fullUrl);
+          debugPrint('  Response Status (HTTP): ${response.statusCode}');
+          debugPrint('  Response Data (Raw): ${response.data}');
 
-          final locationsResponse = responses[0];
-          final detailsResponse = responses[1];
+          if (response.statusCode == 200) {
+            if (response.data is Map<String, dynamic>) {
+              final responseMap = response.data as Map<String, dynamic>;
+              final int appStatusCode =
+                  responseMap['statusCodeResponse'] as int? ??
+                  responseMap['statusCode'] as int? ??
+                  0;
+              final String? appMessage = responseMap['message'] as String?;
 
-          if (locationsResponse.statusCode != 200 ||
-              locationsResponse.data is! List) {
-            throw DioException(
-              requestOptions: RequestOptions(path: locationsFullUrl),
-              response: locationsResponse,
-              message:
-                  'Failed to load locations: ${locationsResponse.statusCode}',
-            );
-          }
-          if (detailsResponse.statusCode != 200 ||
-              detailsResponse.data is! List) {
-            throw DioException(
-              requestOptions: RequestOptions(path: detailsFullUrl),
-              response: detailsResponse,
-              message:
-                  'Failed to load location details: ${detailsResponse.statusCode}',
-            );
-          }
-          final List<dynamic> locationsData = locationsResponse.data;
-          final List<dynamic> detailsData = detailsResponse.data;
-
-          // Create a map of Location Uuid to Category from detailsData
-          final Map<String, String> categoryMap = {};
-          for (var detailItemJson in detailsData) {
-            if (detailItemJson is Map<String, dynamic>) {
-              try {
-                // Assuming LocationDetails.fromJson correctly parses locationId as Uuid
-                final detail = LocationDetails.fromJson(detailItemJson);
-                categoryMap[detail.locationId] =
-                    detail.category ?? 'Uncategorized';
-              } catch (e, s) {
-                debugPrint(
-                  '[RouteApiService] Error parsing LocationDetails item in getSelectableLocations: $e. JSON: $detailItemJson',
+              if (appStatusCode == 200 && responseMap['data'] is List) {
+                final List<dynamic> routesData =
+                    responseMap['data'] as List<dynamic>;
+                final routes =
+                    routesData
+                        .map(
+                          (item) => SelectableNavigationRoute.fromJson(
+                            item as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList();
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.success,
+                  data: routes,
+                  message: appMessage ?? '$operationName successful.',
                 );
-                // Optionally skip this item or rethrow as a RouteApiParseException
-                throw RouteApiParseException(
-                  'Error parsing LocationDetails item in getSelectableLocations: ${e.toString()}',
-                  originalException: e,
-                  stackTrace: s,
-                );
-              }
-            }
-          }
-
-          //Create SelectableLocation list from locationsData, using categoryMap
-          final List<SelectableLocation> selectableLocations = [];
-          for (var locationItemJson in locationsData) {
-            if (locationItemJson is Map<String, dynamic>) {
-              try {
-                // Assume 'locationId' (or 'locationid') from locationsData is a String Guid
-                // The C# SelectableLocationDto has Guid LocationId, so API should send string.
-                // Prioritize 'locationId', fallback to 'locationid'
-                final locationIdString =
-                    locationItemJson['locationId'] as String? ??
-                    locationItemJson['locationid'] as String?;
-                final name = locationItemJson['name'] as String?;
-
-                if (locationIdString == null) {
-                  debugPrint(
-                    '[RouteApiService] Missing locationId in locationItemJson: $locationItemJson',
-                  );
-                  continue; // Skip this item
-                }
-                if (name == null) {
-                  debugPrint(
-                    '[RouteApiService] Missing name in locationItemJson: $locationItemJson',
-                  );
-                  continue; // Skip this item
-                }
-
-                final category =
-                    categoryMap[locationIdString] ?? 'Uncategorized';
-
-                // Using SelectableLocation's constructor directly as per current structure.
-                // SelectableLocation.locationId now expects a String.
-                selectableLocations.add(
-                  SelectableLocation(
-                    locationId: locationIdString,
-                    name: name,
-                    category: category,
+              } else {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.fromCode(
+                    appStatusCode,
                   ),
-                );
-              } catch (e, s) {
-                debugPrint(
-                  '[RouteApiService] Error processing locationItemJson in getSelectableLocations: $e. JSON: $locationItemJson',
-                );
-                // Optionally skip or rethrow
-                throw RouteApiParseException(
-                  'Error processing locationItemJson in getSelectableLocations: ${e.toString()}',
-                  originalException: e,
-                  stackTrace: s,
+                  message:
+                      appMessage ??
+                      '$operationName failed: Unexpected data structure.',
+                  data: null,
                 );
               }
+            } else if (response.data is List) {
+              final List<dynamic> data = response.data;
+              final routes =
+                  data
+                      .map(
+                        (item) => SelectableNavigationRoute.fromJson(
+                          item as Map<String, dynamic>,
+                        ),
+                      )
+                      .toList();
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.success,
+                data: routes,
+                message: '$operationName successful (direct list).',
+              );
             }
           }
-          debugPrint(
-            '[RouteApiService] Successfully fetched and combined ${selectableLocations.length} selectable locations from $baseUrl',
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              response.statusCode ?? 500,
+            ),
+            message:
+                '$operationName failed: ${response.statusMessage ?? "Unknown error"}',
+            data: null,
           );
-          return selectableLocations;
-        } on DioException {
-          rethrow; // Let _makeApiRequest handle it
+        } on DioException catch (e) {
+          debugPrint(
+            '  DioException in $operationName at $fullUrl: ${e.message}',
+          );
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              e.response?.statusCode ?? 500,
+            ),
+            message:
+                e.response?.data?['message']?.toString() ??
+                e.message ??
+                'Network error.',
+            data: null,
+          );
         } catch (e, s) {
-          // Catch other unexpected errors (e.g. model parsing issues)
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt: $e',
+            '  Unexpected error in $operationName at $fullUrl: $e\nStacktrace: $s',
           );
-          throw RouteApiParseException(
-            'Error processing $operationName response: ${e.toString()}',
-            originalException: e,
-            stackTrace: s,
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.internalServerError,
+            message: 'Unexpected error: ${e.toString()}',
+            data: null,
           );
         }
       },
@@ -397,43 +413,99 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<RouteDto?> getRouteById(String routeId) async {
-    final String operationName = 'fetching route by ID $routeId';
+  Future<StatusCodeResponseDto<RouteDto?>> getRouteById(String routeId) async {
+    final String operationName = 'Get Route By ID $routeId';
     final String endpointPath = '/api/Route/$routeId';
 
     return _makeApiRequest<RouteDto?>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
-        debugPrint('[RouteApiService] $operationName from URL: $fullUrl');
+        debugPrint('  Attempting $operationName from: $fullUrl (Method: GET)');
         try {
           final response = await _dio.get(fullUrl);
-          if (response.statusCode == 200 && response.data != null) {
-            return RouteDto.fromJson(response.data as Map<String, dynamic>);
+          debugPrint('  Response Status (HTTP): ${response.statusCode}');
+          debugPrint('  Response Data (Raw): ${response.data}');
+
+          if (response.statusCode == 200 &&
+              response.data is Map<String, dynamic>) {
+            final responseMap = response.data as Map<String, dynamic>;
+            final int appStatusCode =
+                responseMap['statusCodeResponse'] as int? ??
+                responseMap['statusCode'] as int? ??
+                0;
+            final String? appMessage = responseMap['message'] as String?;
+
+            if (appStatusCode == 200 && responseMap['data'] != null) {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.success,
+                data: RouteDto.fromJson(
+                  responseMap['data'] as Map<String, dynamic>,
+                ),
+                message: appMessage ?? '$operationName successful.',
+              );
+            } else if (appStatusCode == 404) {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.notFound,
+                message: appMessage ?? 'Route with ID $routeId not found.',
+                data: null,
+              );
+            } else {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(appStatusCode),
+                message:
+                    appMessage ??
+                    '$operationName failed: Unexpected data structure or error in response.',
+                data: null,
+              );
+            }
           } else if (response.statusCode == 404) {
-            throw RouteNotFoundException(
-              'Route with ID $routeId not found at $fullUrl.',
-              uri: Uri.parse(fullUrl),
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.notFound,
+              message: 'Route with ID $routeId not found (HTTP 404).',
+              data: null,
             );
           } else {
-            throw DioException(
-              requestOptions: RequestOptions(path: fullUrl),
-              response: response,
-              message: 'Failed to load route $routeId: ${response.statusCode}',
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.fromCode(
+                response.statusCode ?? 500,
+              ),
+              message:
+                  '$operationName failed: ${response.statusMessage ?? "Unknown HTTP error"}',
+              data: null,
             );
           }
-        } on DioException {
-          rethrow;
-        } on RouteNotFoundException {
-          rethrow; // Allow specific exceptions to pass through _makeApiRequest
+        } on DioException catch (e) {
+          debugPrint(
+            '  DioException in $operationName at $fullUrl: ${e.message}',
+          );
+          if (e.response?.statusCode == 404) {
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.notFound,
+              message:
+                  e.response?.data?['message']?.toString() ??
+                  'Route with ID $routeId not found.',
+              data: null,
+            );
+          }
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              e.response?.statusCode ?? 500,
+            ),
+            message:
+                e.response?.data?['message']?.toString() ??
+                e.message ??
+                'Network error.',
+            data: null,
+          );
         } catch (e, s) {
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+            '  Unexpected error in $operationName at $fullUrl: $e\nStacktrace: $s',
           );
-          throw RouteApiParseException(
-            'Error parsing $operationName response: ${e.toString()}',
-            originalException: e,
-            stackTrace: s,
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.internalServerError,
+            message: 'Unexpected error: ${e.toString()}',
+            data: null,
           );
         }
       },
@@ -441,44 +513,98 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<RouteDto> addRoute(CreateRouteDto createRouteDto) async {
-    const String operationName = 'adding new route';
+  Future<StatusCodeResponseDto<RouteDto?>> addRoute(
+    CreateRouteDto createRouteDto,
+  ) async {
+    const String operationName = 'Add New Route';
     const String endpointPath = '/api/Route';
 
-    return _makeApiRequest<RouteDto>(
+    return _makeApiRequest<RouteDto?>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
-        debugPrint(
-          '[RouteApiService] $operationName at URL: $fullUrl with payload: ${createRouteDto.toJson()}',
-        );
+        final jsonData = createRouteDto.toJson();
+        debugPrint('  Attempting $operationName at: $fullUrl (Method: POST)');
+        debugPrint('  Request Body: $jsonData');
         try {
-          final response = await _dio.post(
-            fullUrl,
-            data: createRouteDto.toJson(),
-          );
-          // C# controller returns 201 Created with the created route DTO in the body
-          if (response.statusCode == 201 && response.data != null) {
-            return RouteDto.fromJson(response.data as Map<String, dynamic>);
+          final response = await _dio.post(fullUrl, data: jsonData);
+          debugPrint('  Response Status (HTTP): ${response.statusCode}');
+          debugPrint('  Response Data (Raw): ${response.data}');
+
+          if ((response.statusCode == 201 || response.statusCode == 200) &&
+              response.data is Map<String, dynamic>) {
+            final responseMap = response.data as Map<String, dynamic>;
+
+            if (responseMap.containsKey('statusCodeResponse') &&
+                responseMap.containsKey('data')) {
+              final int appStatusCode =
+                  responseMap['statusCodeResponse'] as int? ??
+                  responseMap['statusCode'] as int? ??
+                  0;
+              final String? appMessage = responseMap['message'] as String?;
+              final dynamic appData = responseMap['data'];
+
+              if ((appStatusCode == 201 || appStatusCode == 200) &&
+                  appData != null) {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.fromCode(
+                    appStatusCode == 201 ? 201 : 200,
+                  ),
+                  data: RouteDto.fromJson(appData as Map<String, dynamic>),
+                  message: appMessage ?? 'Route created successfully.',
+                );
+              } else {
+                return StatusCodeResponseDto(
+                  statusCodeResponse: StatusCodeResponse.fromCode(
+                    appStatusCode,
+                  ),
+                  message:
+                      appMessage ??
+                      '$operationName failed: Error in wrapped response.',
+                  data: null,
+                );
+              }
+            } else {
+              return StatusCodeResponseDto(
+                statusCodeResponse: StatusCodeResponse.fromCode(
+                  response.statusCode!,
+                ),
+                data: RouteDto.fromJson(responseMap),
+                message: 'Route created successfully (direct object).',
+              );
+            }
           } else {
-            // Let _makeApiRequest handle DioException by rethrowing a new one
-            throw DioException(
-              requestOptions: RequestOptions(path: fullUrl),
-              response: response,
+            return StatusCodeResponseDto(
+              statusCodeResponse: StatusCodeResponse.fromCode(
+                response.statusCode ?? 500,
+              ),
               message:
-                  'Failed to add route: ${response.statusCode} - ${response.data?.toString() ?? "No data"}',
+                  '$operationName failed: ${response.data?['message']?.toString() ?? response.statusMessage ?? "Unknown error"}',
+              data: null,
             );
           }
-        } on DioException {
-          rethrow;
+        } on DioException catch (e) {
+          debugPrint(
+            '  DioException in $operationName at $fullUrl: ${e.message}',
+          );
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.fromCode(
+              e.response?.statusCode ?? 500,
+            ),
+            message:
+                e.response?.data?['message']?.toString() ??
+                e.message ??
+                'Network error.',
+            data: null,
+          );
         } catch (e, s) {
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
+            '  Unexpected error in $operationName at $fullUrl: $e\nStacktrace: $s',
           );
-          throw RouteApiParseException(
-            'Error parsing $operationName response: ${e.toString()}',
-            originalException: e,
-            stackTrace: s,
+          return StatusCodeResponseDto(
+            statusCodeResponse: StatusCodeResponse.internalServerError,
+            message: 'Unexpected error: ${e.toString()}',
+            data: null,
           );
         }
       },

@@ -13,7 +13,15 @@ class PhotonGeocodingException implements Exception {
 }
 
 class PhotonService {
-  final PhotonApi _api = PhotonApi();
+  final PhotonApi _api;
+  DateTime? _lastRequest;
+  static const _minRequestInterval = Duration(
+    milliseconds: 1000,
+  ); // Rate limiting
+
+  PhotonService() : _api = PhotonApi() {
+    debugPrint('PhotonService: Initialized with new PhotonApi instance');
+  }
 
   /// Preforms forward geocoding using Photon API
   /// Returns a tuple of (latitude, longitude)
@@ -36,12 +44,6 @@ class PhotonService {
       final num latitude = firstResult.coordinates.latitude;
       final num longitude = firstResult.coordinates.longitude;
 
-      if (latitude == null || longitude == null) {
-        throw PhotonGeocodingException(
-          'Coordinates are missing in the result.',
-        );
-      }
-
       return (latitude, longitude);
     } catch (e) {
       // Catching potential errors from _api.forwardSearch or re-throwing our custom one
@@ -59,18 +61,55 @@ class PhotonService {
   /// Returns a list of PhotonResultExtension objects containing address information
   /// Returns an empty list if the query is empty or an error occurs during the search.
   Future<List<PhotonResultExtension>> searchAddresses(String query) async {
-    if (query.isEmpty) return [];
+    debugPrint('PhotonService: Starting search for query: "$query"');
+
+    if (query.isEmpty) {
+      debugPrint('PhotonService: Query is empty, returning empty list');
+      return [];
+    }
+
+    // Implement rate limiting
+    if (_lastRequest != null) {
+      final timeSinceLastRequest = DateTime.now().difference(_lastRequest!);
+      if (timeSinceLastRequest < _minRequestInterval) {
+        final waitTime = _minRequestInterval - timeSinceLastRequest;
+        debugPrint(
+          'PhotonService: Rate limiting - waiting ${waitTime.inMilliseconds}ms',
+        );
+        await Future.delayed(waitTime);
+      }
+    }
+    _lastRequest = DateTime.now();
 
     try {
+      debugPrint(
+        'PhotonService: Making API call to Photon service with query: "$query"',
+      );
       final results = await _api.forwardSearch(
         query,
         params: const PhotonForwardParams(limit: 5, langCode: 'en'),
       );
+      debugPrint('PhotonService: Raw API response received');
+
+      if (results.isEmpty) {
+        debugPrint('PhotonService: No results received from API');
+        return [];
+      }
+
+      debugPrint('PhotonService: Received ${results.length} results from API');
+      debugPrint('PhotonService: First result - ${results.first.name}');
 
       // Process results to ensure they have formatted addresses
-      return results.map((feature) => PhotonResultExtension(feature)).toList();
+      final processedResults =
+          results.map((feature) => PhotonResultExtension(feature)).toList();
+      debugPrint(
+        'PhotonService: Returning ${processedResults.length} processed results',
+      );
+
+      return processedResults;
     } catch (e) {
-      debugPrint('Error searching addresses: $e');
+      debugPrint('PhotonService: Error searching addresses: $e');
+      debugPrint('PhotonService: Error type: ${e.runtimeType}');
       return [];
     }
   }

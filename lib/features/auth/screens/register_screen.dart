@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';
-import 'login_screen.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -24,65 +23,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _isLoading = true;
       });
-      
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       final success = await authViewModel.register(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
       );
-      
+      setState(() {
+        _isLoading = false;
+      });
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Registration Successful'),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
             ),
           );
-          
           // Pop back to root and replace with settings screen
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/',  // Go back to root/home
-            (route) => false,
-          ).then((_) {
-            // After root is restored, navigate to settings
-            if (mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            }
-          });
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(
+                '/', // Go back to root/home
+                (route) => false,
+              )
+              .then((_) {
+                // After root is restored, navigate to settings
+                if (mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                }
+              });
         } else {
-          final error = authViewModel.error ?? 'Registration Failed. Please try again.';
-          
-          // Clear the relevant field if it's a duplicate error
-          if (error.toLowerCase().contains('email')) {
-            _emailController.clear();
-          } else if (error.toLowerCase().contains('username')) {
-            _usernameController.clear();
-          }
-          
-          // Show error in a more prominent way
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Registration Error'),
-              content: Text(error),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
+          final error =
+              authViewModel.error ?? 'Registration Failed. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
@@ -101,9 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -193,22 +169,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _isLoading
                       ? const CircularProgressIndicator()
                       : SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            onPressed: _register,
-                            child: const Text('Register'),
                           ),
+                          onPressed: _register,
+                          child: const Text('Register'),
                         ),
+                      ),
                   TextButton(
-                    onPressed: _isLoading ? null : () {
-                      Navigator.of(context).pop();
-                    },
+                    onPressed:
+                        _isLoading
+                            ? null
+                            : () {
+                              Navigator.of(context).pop();
+                            },
                     child: const Text('Already have an account? Login'),
                   ),
                 ],

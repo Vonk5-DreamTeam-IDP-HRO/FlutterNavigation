@@ -1,14 +1,17 @@
 // --- Imports ---
-import 'package:osm_navigation/Core/models/selectable_location.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Route/IRouteRepository.dart';
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
+import 'package:osm_navigation/core/models/Route/create_route_dto.dart';
 
 // --- Class Definition ---
 class CreateRouteViewModel extends ChangeNotifier {
+  final IRouteRepository _routeRepository;
   final ILocationRepository _locationRepository;
 
   // --- Constructor ---
-  CreateRouteViewModel(this._locationRepository) {
+  CreateRouteViewModel(this._routeRepository, this._locationRepository) {
     nameController.addListener(_onNameChanged);
     loadLocations(); // Load locations in accordion when the ViewModel is initialized
   }
@@ -27,8 +30,8 @@ class CreateRouteViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  Map<String, List<SelectableLocation>> _groupedLocations = {};
-  Map<String, List<SelectableLocation>> get groupedLocations =>
+  Map<String, List<SelectableLocationDto>> _groupedLocations = {};
+  Map<String, List<SelectableLocationDto>> get groupedLocations =>
       _groupedLocations;
 
   final Set<String> _selectedLocationIds = {};
@@ -85,20 +88,40 @@ class CreateRouteViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void attemptSave() {
+  Future<void> attemptSave() async {
     notifyListeners();
 
-    if (canSave) {
-      debugPrint('Validation successful. Ready to save (not implemented).');
-    } else {
+    if (!canSave) {
       debugPrint('Validation failed.');
+      return;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Build CreateRouteDto from ViewModel state
+      final dto = CreateRouteDto(
+        name: nameController.text.trim(),
+        description: descriptionController.text.trim(),
+      );
+      await _routeRepository.addRoute(dto);
+      debugPrint('Route saved successfully.');
+      // Optionally: clear form or notify UI of success
+    } catch (e) {
+      _error = 'Failed to save route: $e';
+      debugPrint(_error!);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   // -- Edit Initialization --
   void initializeForEdit(dynamic route) {
-    // Accepts a Route object (with displayName and description)
-    nameController.text = route.displayName;
+    // Accepts a Route object (with name and description)
+    nameController.text = route.name;
     descriptionController.text = route.description;
     notifyListeners();
   }

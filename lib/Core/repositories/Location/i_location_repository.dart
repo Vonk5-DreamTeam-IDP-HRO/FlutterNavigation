@@ -1,34 +1,43 @@
-import 'package:osm_navigation/Core/models/location.dart';
-import 'package:osm_navigation/Core/models/location_details.dart';
-import 'package:osm_navigation/Core/models/selectable_location.dart';
-import 'package:osm_navigation/Core/models/location_request_dtos.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
+import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
+import 'package:osm_navigation/core/models/Location/UpdateLocation/update_location_dto.dart';
 
-/// Interface for Location Repository
+/// Repository interface for location data operations
+///
+/// **Architecture Pattern:** Repository Pattern with Clean Architecture
+/// **Purpose:** Defines the contract for location domain operations
+/// **Benefits:**
+/// - Abstracts data source details from business logic
+/// - Enables easy testing through interface mocking
+/// - Provides consistent API for location operations
+/// - Supports multiple data source implementations
 abstract class ILocationRepository {
-  /// Fetches all locations
-  Future<List<Location>> getAllLocations();
+  /// Retrieves all available locations
+  Future<List<LocationDto>> getAllLocations();
 
-  /// Fetches a specific location by its ID
-  Future<LocationDetails> getLocationById(String id);
+  /// Retrieves a specific location by its ID
+  Future<LocationDto> getLocationById(String id);
 
-  /// Fetches locations filtered by a specific category
-  Future<List<Location>> getLocationsByCategory(String category);
+  /// Retrieves locations filtered by category
+  Future<List<SelectableLocationDto>> getLocationsByCategory(String category);
 
-  /// Creates a new location with the given payload
-  Future<LocationDetails> createLocation(CreateLocationPayload payload);
+  /// Creates a new location
+  Future<LocationDto> createLocation(CreateLocationDto payload);
 
-  /// Updates an existing location identified by its ID
-  Future<LocationDetails> updateLocation(
-    String id,
-    UpdateLocationPayload payload,
-  );
+  /// Updates an existing location
+  Future<LocationDto> updateLocation(String id, UpdateLocationDto payload);
 
-  /// Deletes a location by its ID
+  /// Deletes a location
   Future<void> deleteLocation(String id);
 
-  /// Fetches selectable locations grouped by their category
-  Future<Map<String, List<SelectableLocation>>> getGroupedSelectableLocations();
+  /// Retrieves locations grouped by category for selection UI
+  Future<Map<String, List<SelectableLocationDto>>>
+  getGroupedSelectableLocations();
 
-  /// Fetches a list of unique category names from the underlying data source.
+  /// Retrieves locations formatted for selection UI components
+  Future<List<SelectableLocationDto>> getSelectableLocations();
+
+  /// Retrieves unique location categories
   Future<List<String>> getUniqueCategories();
 }
