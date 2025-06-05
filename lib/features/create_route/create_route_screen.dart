@@ -207,13 +207,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  // --- Route Name Input ---
-                  Selector<CreateRouteViewModel, bool>(
+                // --- Route Name Input ---
+                Selector<CreateRouteViewModel, bool>(
                     selector: (_, vm) => vm.isNameValid,
                     builder: (context, isNameValid, _) {
                       return TextField(
@@ -232,10 +229,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-                  // --- Route Description Input ---
-                  TextField(
+                // --- Route Description Input ---
+                TextField(
                     controller: viewModel.descriptionController,
                     decoration: const InputDecoration(
                       labelText: 'Description',
@@ -243,17 +240,17 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     ),
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-                  // --- Location Selection Title ---
-                  Text(
+                // --- Location Selection Title ---
+                Text(
                     'Select Locations (at least 2)*',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 5),
+                const SizedBox(height: 5),
 
-                  // --- Accordion Section ---
-                  Expanded(
+                // --- Accordion Section ---
+                Expanded(
                     child: Selector<
                       CreateRouteViewModel,
                       Tuple3<
@@ -264,7 +261,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     >(
                       selector:
                           (_, vm) =>
-                              Tuple3(vm.isLoading, vm.error, vm.groupedLocations),
+                              Tuple3(vm.isLoading, vm.locationLoadingError, vm.groupedLocations),
                       builder: (context, data, _) {
                         final isLoading = data.item1;
                         final error = data.item2;
@@ -280,10 +277,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                  // ---Save Button ---
-                  Center(
+                // ---Save Button ---
+                Center(
                     child: Selector<CreateRouteViewModel, bool>(
                       selector: (_, vm) => vm.canSave,
                       builder: (context, canSave, _) {
@@ -295,8 +292,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     ),
                   ),
 
-                  // --- Validation message ---
-                  Selector<CreateRouteViewModel, String?>(
+                // --- Validation message ---
+                Selector<CreateRouteViewModel, String?>(
                     selector: (_, vm) => vm.validationSummary,
                     builder: (context, validationSummary, _) {
                       if (validationSummary != null) {
@@ -317,11 +314,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 16),
-                ],
-              ), // Closes Column
-            ), // Closes SingleChildScrollView
-          ), // Closes Padding
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
           // --- Error/Success Feedback Handler ---
           Selector<CreateRouteViewModel, Tuple3<String?, bool, RouteDto?>>(
             selector:
@@ -410,8 +406,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 child: Container(color: Colors.black.withOpacity(0.5)),
               ),
             ),
-        ], // Closes Stack children
-      ), // Closes Stack widget
-    ); // Closes Scaffold
+        ],
+      ),
+    );
   }
 }
