@@ -261,9 +261,9 @@ extension RouteDtoExtensions on RouteDto {
   ///   .toList();
   /// ```
   SelectableNavigationRoute toSelectableRoute() {
-    final privacyPrefix = (isPrivate == true) ? "🔒 " : "";
-    final displayName = "$privacyPrefix$name";
-    final fallbackDescription = description ?? "No description available";
+    final privacyPrefix = (isPrivate == true) ? '🔒 ' : '';
+    final displayName = '$privacyPrefix$name';
+    final fallbackDescription = description ?? 'No description available';
 
     return SelectableNavigationRoute(
       id: routeId,
@@ -287,21 +287,21 @@ extension RouteDtoExtensions on RouteDto {
   /// Text("Created ${route.getFormattedCreationDate()}")
   /// ```
   String getFormattedCreationDate() {
-    if (createdAt == null) return "Unknown";
+    if (createdAt == null) return 'Unknown';
 
     final now = DateTime.now();
     final difference = now.difference(createdAt!);
 
     if (difference.inDays < 1) {
       if (difference.inHours < 1) {
-        return "${difference.inMinutes} minutes ago";
+        return '${difference.inMinutes} minutes ago';
       }
-      return "${difference.inHours} hours ago";
+      return '${difference.inHours} hours ago';
     } else if (difference.inDays < 7) {
-      return "${difference.inDays} days ago";
+      return '${difference.inDays} days ago';
     } else {
       // Format as absolute date for older routes
-      return "${createdAt!.day}/${createdAt!.month}/${createdAt!.year}";
+      return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
     }
   }
 
@@ -334,9 +334,9 @@ extension RouteDtoExtensions on RouteDto {
   /// "Morning Jog Route (ID: 123e4567) - Privacy: Private"
   /// ```
   String getSummary() {
-    final privacyText = isPrivate == true ? "Private" : "Public";
+    final privacyText = isPrivate == true ? 'Private' : 'Public';
     final shortId = routeId.length > 8 ? routeId.substring(0, 8) : routeId;
-    return "$name (ID: $shortId) - Privacy: $privacyText";
+    return '$name (ID: $shortId) - Privacy: $privacyText';
   }
 
   /// Creates a deep link URL for this route
@@ -353,6 +353,6 @@ extension RouteDtoExtensions on RouteDto {
   /// Share.share("Check out this route: $shareUrl");
   /// ```
   String getDeepLink() {
-    return "/routes/$routeId";
+    return '/routes/$routeId';
   }
 }

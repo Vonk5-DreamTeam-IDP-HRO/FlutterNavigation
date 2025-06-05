@@ -44,7 +44,10 @@ mixin _$CreateRouteDto {
 ///
 /// Note: This field is included for API compatibility but the backend
 /// service will populate it from the authenticated user context.
- String? get createdBy;
+ String? get createdBy;/// List of location IDs that make up the route
+/// **API Mapping:** Maps to C# `ICollection<Guid> LocationIds`
+/// **Validation:** Minimum length of 2 locations required
+ List<String> get locationIds;
 /// Create a copy of CreateRouteDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -57,16 +60,16 @@ $CreateRouteDtoCopyWith<CreateRouteDto> get copyWith => _$CreateRouteDtoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateRouteDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isPrivate, isPrivate) || other.isPrivate == isPrivate)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateRouteDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isPrivate, isPrivate) || other.isPrivate == isPrivate)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&const DeepCollectionEquality().equals(other.locationIds, locationIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,description,isPrivate,createdBy);
+int get hashCode => Object.hash(runtimeType,name,description,isPrivate,createdBy,const DeepCollectionEquality().hash(locationIds));
 
 @override
 String toString() {
-  return 'CreateRouteDto(name: $name, description: $description, isPrivate: $isPrivate, createdBy: $createdBy)';
+  return 'CreateRouteDto(name: $name, description: $description, isPrivate: $isPrivate, createdBy: $createdBy, locationIds: $locationIds)';
 }
 
 
@@ -77,7 +80,7 @@ abstract mixin class $CreateRouteDtoCopyWith<$Res>  {
   factory $CreateRouteDtoCopyWith(CreateRouteDto value, $Res Function(CreateRouteDto) _then) = _$CreateRouteDtoCopyWithImpl;
 @useResult
 $Res call({
- String name, String? description, bool isPrivate, String? createdBy
+ String name, String? description, bool isPrivate, String? createdBy, List<String> locationIds
 });
 
 
@@ -94,13 +97,14 @@ class _$CreateRouteDtoCopyWithImpl<$Res>
 
 /// Create a copy of CreateRouteDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? description = freezed,Object? isPrivate = null,Object? createdBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? description = freezed,Object? isPrivate = null,Object? createdBy = freezed,Object? locationIds = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,isPrivate: null == isPrivate ? _self.isPrivate : isPrivate // ignore: cast_nullable_to_non_nullable
 as bool,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,locationIds: null == locationIds ? _self.locationIds : locationIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -111,7 +115,7 @@ as String?,
 @JsonSerializable()
 
 class _CreateRouteDto implements CreateRouteDto {
-  const _CreateRouteDto({required this.name, this.description, this.isPrivate = true, this.createdBy});
+  const _CreateRouteDto({required this.name, this.description, this.isPrivate = true, this.createdBy, final  List<String> locationIds = const []}): _locationIds = locationIds;
   factory _CreateRouteDto.fromJson(Map<String, dynamic> json) => _$CreateRouteDtoFromJson(json);
 
 /// Name of the route to create
@@ -146,6 +150,19 @@ class _CreateRouteDto implements CreateRouteDto {
 /// Note: This field is included for API compatibility but the backend
 /// service will populate it from the authenticated user context.
 @override final  String? createdBy;
+/// List of location IDs that make up the route
+/// **API Mapping:** Maps to C# `ICollection<Guid> LocationIds`
+/// **Validation:** Minimum length of 2 locations required
+ final  List<String> _locationIds;
+/// List of location IDs that make up the route
+/// **API Mapping:** Maps to C# `ICollection<Guid> LocationIds`
+/// **Validation:** Minimum length of 2 locations required
+@override@JsonKey() List<String> get locationIds {
+  if (_locationIds is EqualUnmodifiableListView) return _locationIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_locationIds);
+}
+
 
 /// Create a copy of CreateRouteDto
 /// with the given fields replaced by the non-null parameter values.
@@ -160,16 +177,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateRouteDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isPrivate, isPrivate) || other.isPrivate == isPrivate)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateRouteDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isPrivate, isPrivate) || other.isPrivate == isPrivate)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&const DeepCollectionEquality().equals(other._locationIds, _locationIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,description,isPrivate,createdBy);
+int get hashCode => Object.hash(runtimeType,name,description,isPrivate,createdBy,const DeepCollectionEquality().hash(_locationIds));
 
 @override
 String toString() {
-  return 'CreateRouteDto(name: $name, description: $description, isPrivate: $isPrivate, createdBy: $createdBy)';
+  return 'CreateRouteDto(name: $name, description: $description, isPrivate: $isPrivate, createdBy: $createdBy, locationIds: $locationIds)';
 }
 
 
@@ -180,7 +197,7 @@ abstract mixin class _$CreateRouteDtoCopyWith<$Res> implements $CreateRouteDtoCo
   factory _$CreateRouteDtoCopyWith(_CreateRouteDto value, $Res Function(_CreateRouteDto) _then) = __$CreateRouteDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String? description, bool isPrivate, String? createdBy
+ String name, String? description, bool isPrivate, String? createdBy, List<String> locationIds
 });
 
 
@@ -197,13 +214,14 @@ class __$CreateRouteDtoCopyWithImpl<$Res>
 
 /// Create a copy of CreateRouteDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? description = freezed,Object? isPrivate = null,Object? createdBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? description = freezed,Object? isPrivate = null,Object? createdBy = freezed,Object? locationIds = null,}) {
   return _then(_CreateRouteDto(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,isPrivate: null == isPrivate ? _self.isPrivate : isPrivate // ignore: cast_nullable_to_non_nullable
 as bool,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,locationIds: null == locationIds ? _self._locationIds : locationIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

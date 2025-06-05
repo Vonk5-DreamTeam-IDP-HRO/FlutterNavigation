@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:osm_navigation/Core/repositories/Route/route_repository.dart';
-import 'package:osm_navigation/Core/repositories/Route/IRouteRepository.dart';
-import 'package:osm_navigation/Core/repositories/location/location_repository.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 import 'package:provider/provider.dart';
@@ -54,17 +52,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ChangeNotifierProvider(
       create: (_) => NewHomeViewModel(),
       child: const NewHomeScreen(),
-    ),
-
-    // 1: Saved Routes Screen
+    ), // 1: Saved Routes Screen
     ChangeNotifierProvider(
       create: (context) {
         final dio = context.read<Dio>();
         final routeApiService = RouteApiService(dio);
         final routeRepository = RouteRepository(routeApiService);
-        return SavedRoutesViewModel(
-          routeRepository: routeRepository as IRouteRepository,
-        );
+        return SavedRoutesViewModel(routeRepository: routeRepository);
       },
       child: const SavedRoutesScreen(),
     ),
@@ -109,12 +103,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ChangeNotifierProvider(
                   create: (context) {
                     final dio = context.read<Dio>();
+                    final authViewModel = context.read<AuthViewModel>();
                     final locationApiService = LocationApiService(dio);
                     final locationRepository = LocationRepository(
                       locationApiService,
                     );
+                    final routeRepository = RouteRepository(
+                      RouteApiService(dio),
+                    );
                     return CreateRouteViewModel(
-                      locationRepository as ILocationRepository,
+                      routeRepository,
+                      locationRepository,
                     );
                   },
                 ),
@@ -137,14 +136,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ChangeNotifierProvider(
                   create: (context) {
                     final dio = context.read<Dio>();
+                    final authViewModel = context.read<AuthViewModel>();
                     final locationApiService = LocationApiService(dio);
                     final locationRepository = LocationRepository(
                       locationApiService,
                     );
+                    final photonService = context.read<PhotonService>();
                     return CreateLocationViewModel(
-                      locationRepository:
-                          locationRepository as ILocationRepository,
-                      photonService: PhotonService(),
+                      locationRepository: locationRepository,
+                      photonService: photonService,
                     );
                   },
                 ),

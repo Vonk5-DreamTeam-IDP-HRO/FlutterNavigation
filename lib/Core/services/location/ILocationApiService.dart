@@ -2,6 +2,7 @@ import 'package:osm_navigation/core/models/Location/CreateLocation/create_locati
 import 'package:osm_navigation/core/models/Location/UpdateLocation/update_location_dto.dart';
 import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
 import 'package:osm_navigation/core/models/Location/location_dto.dart';
+import 'package:osm_navigation/core/models/status_code_response_dto.dart';
 
 /// Interface for the Location API Service
 ///
@@ -22,34 +23,38 @@ abstract class ILocationApiService {
   /// Fetches all available locations from the backend
   ///
   /// **API Endpoint:** GET /api/locations
-  /// **Returns:** List of LocationDto objects representing all accessible locations
+  /// **Returns:** StatusCodeResponseDto containing a list of LocationDto objects
   /// **Security:** Returns locations visible to authenticated user
   /// **Performance:** May include pagination in future implementations
-  Future<List<LocationDto>> getAllLocations();
+  Future<StatusCodeResponseDto<List<LocationDto>>> getAllLocations();
 
   /// Fetches a specific location by its unique identifier
   ///
   /// **API Endpoint:** GET /api/locations/{id}
   /// **Parameters:** id - UUID string of the location to retrieve
-  /// **Returns:** LocationDto object with full location details
-  /// **Error Handling:** Throws LocationNotFoundException if not found
-  Future<LocationDto> getLocationById(String id);
+  /// **Returns:** StatusCodeResponseDto containing a LocationDto object
+  /// **Error Handling:** Returns appropriate status code (e.g., NotFound)
+  Future<StatusCodeResponseDto<LocationDto?>> getLocationById(String id);
 
   /// Fetches locations filtered by category/type
   ///
   /// **API Endpoint:** GET /api/locations/category/{category}
   /// **Parameters:** category - Category name to filter by
-  /// **Returns:** List of LocationDto objects matching the category
+  /// **Returns:** StatusCodeResponseDto containing a list of LocationDto objects
   /// **Use Cases:** Filter locations by type (restaurants, attractions, etc.)
-  Future<List<LocationDto>> getLocationsByType(String category);
+  Future<StatusCodeResponseDto<List<LocationDto>>> getLocationsByType(
+    String category,
+  );
 
   /// Creates a new location using validated input data
   ///
   /// **API Endpoint:** POST /api/locations
   /// **Parameters:** payload - CreateLocationDto with validated location data
-  /// **Returns:** Complete LocationDto of the newly created location
+  /// **Returns:** StatusCodeResponseDto containing the created LocationDto
   /// **Security:** Validates user permissions for location creation
-  Future<LocationDto> createLocation(CreateLocationDto payload);
+  Future<StatusCodeResponseDto<LocationDto?>> createLocation(
+    CreateLocationDto payload,
+  );
 
   /// Updates an existing location with validated data
   ///
@@ -57,42 +62,46 @@ abstract class ILocationApiService {
   /// **Parameters:**
   /// - id - UUID of location to update
   /// - payload - UpdateLocationDto with validated changes
-  /// **Returns:** Updated LocationDto object
+  /// **Returns:** StatusCodeResponseDto containing the updated LocationDto
   /// **Security:** Validates user has permission to modify location
-  Future<LocationDto> updateLocation(String id, UpdateLocationDto payload);
+  Future<StatusCodeResponseDto<LocationDto?>> updateLocation(
+    String id,
+    UpdateLocationDto payload,
+  );
 
   /// Deletes a location by its unique identifier
   ///
   /// **API Endpoint:** DELETE /api/locations/{id}
   /// **Parameters:** id - UUID of location to delete
-  /// **Returns:** void (no content on success)
+  /// **Returns:** StatusCodeResponseDto containing a boolean indicating success
   /// **Security:** Validates user has permission to delete location
-  Future<void> deleteLocation(String id);
+  Future<StatusCodeResponseDto<bool>> deleteLocation(String id);
 
   /// Fetches locations grouped by category for selection UI
   ///
   /// **API Endpoint:** GET /api/locations/grouped-selectable
   /// **Purpose:** Provides location data organized by category for UI components
-  /// **Returns:** Map where keys are category names, values are lists of SelectableLocationDto
+  /// **Returns:** StatusCodeResponseDto containing a map of category names to lists of SelectableLocationDto
   /// **Performance:** Optimized for dropdown/picker UI components
   /// **Use Cases:** Location selection in route creation, categorized location browsers
-  Future<Map<String, List<SelectableLocationDto>>>
+  Future<StatusCodeResponseDto<Map<String, List<SelectableLocationDto>>>>
   getGroupedSelectableLocations();
 
   /// Fetches locations formatted for selection UI components
   ///
   /// **API Endpoint:** GET /api/locations/selectable
   /// **Purpose:** Provides location data optimized for dropdowns, pickers, etc.
-  /// **Returns:** List of SelectableLocationDto objects with minimal UI-focused data
+  /// **Returns:** StatusCodeResponseDto containing a list of SelectableLocationDto objects
   /// **Performance:** Lightweight objects for fast UI rendering
   /// **Use Cases:** Location selection in route creation, waypoint picking
-  Future<List<SelectableLocationDto>> getSelectableLocations();
+  Future<StatusCodeResponseDto<List<SelectableLocationDto>>>
+  getSelectableLocations();
 
   /// Fetches unique location categories available in the system
   ///
   /// **API Endpoint:** GET /api/locations/categories
   /// **Purpose:** Provides list of all available location categories
-  /// **Returns:** List of category name strings
+  /// **Returns:** StatusCodeResponseDto containing a list of category name strings
   /// **Use Cases:** Category filters, dropdown population, validation
-  Future<List<String>> getUniqueCategories();
+  Future<StatusCodeResponseDto<List<String>>> getUniqueCategories();
 }

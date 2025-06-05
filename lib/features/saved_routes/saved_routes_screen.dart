@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:osm_navigation/features/map/CesiumMapViewModel.dart';
 import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
-import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import './saved_routes_viewmodel.dart';
 
 /// SavedRoutesScreen: The View component for the saved routes list feature.
@@ -81,20 +87,46 @@ class SavedRoutesScreen extends StatelessWidget {
                   children: <Widget>[
                     TextButton(
                       onPressed: () {
-                        // Create the ViewModel, initialize for edit, then navigate
-                        final locationRepo = Provider.of<ILocationRepository>(
-                          // Explicit type
-                          context,
-                          listen: false,
-                        );
-                        final viewModel = CreateRouteViewModel(locationRepo);
-                        viewModel.initializeForEdit(route);
+                        // Create the repository and viewmodel for editing
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => ChangeNotifierProvider.value(
-                                  value: viewModel,
+                                (context) => MultiProvider(
+                                  providers: [
+                                    ChangeNotifierProvider.value(
+                                      value: context.read<AppState>(),
+                                    ),
+                                    ChangeNotifierProvider(
+                                      create: (context) {
+                                        final dio = context.read<Dio>();
+                                        final authViewModel =
+                                            context.read<AuthViewModel>();
+                                        final locationApiService =
+                                            LocationApiService(dio);
+                                        final locationRepository =
+                                            LocationRepository(
+                                              locationApiService,
+                                            );
+                                        final routeApiService = RouteApiService(
+                                          dio,
+                                        );
+                                        final routeRepository = RouteRepository(
+                                          routeApiService,
+                                        );
+
+                                        final createRouteViewModel =
+                                            CreateRouteViewModel(
+                                              routeRepository,
+                                              locationRepository,
+                                            );
+                                        createRouteViewModel.initializeForEdit(
+                                          route,
+                                        );
+                                        return createRouteViewModel;
+                                      },
+                                    ),
+                                  ],
                                   child: const CreateRouteScreen(),
                                 ),
                           ),
