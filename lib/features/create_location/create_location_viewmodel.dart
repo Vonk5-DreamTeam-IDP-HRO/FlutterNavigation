@@ -1,3 +1,43 @@
+/// **CreateLocationViewModel.dart**
+///
+/// **Purpose:**
+/// Manages the state and business logic for location creation, including address search,
+/// geocoding, category management, and location submission. Handles the interaction
+/// between UI and location-related repositories.
+///
+/// **Usage:**
+/// This ViewModel is used by the CreateLocationScreen to handle address searching,
+/// location validation, and creation of new locations with proper coordinates and
+/// address details.
+///
+/// **Key Features:**
+/// - Address search and geocoding using PhotonService
+/// - Location categories management
+/// - Coordinate handling and validation
+/// - Location creation with detailed address information
+/// - Loading and error state management
+///
+/// **Dependencies:**
+/// - `ILocationRepository`: For location creation and category fetching
+/// - `PhotonService`: For address search and geocoding
+/// - `CreateLocationDto`: For location data structure
+/// - `RepositoryException`: For error handling
+///
+/// **workflow:**
+/// ```
+/// 1. Initialize with required repositories
+/// 2. Fetch available location categories
+/// 3. Handle address search and selection
+/// 4. Validate and process location details
+/// 5. Submit location to repository
+/// 6. Manage success/error feedback
+/// ```
+///
+/// **Possible improvements:**
+/// - Add location preview on map
+/// - Add support for custom categories
+/// - Consider caching frequent searches
+///
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';

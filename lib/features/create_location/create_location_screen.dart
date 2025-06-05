@@ -1,3 +1,45 @@
+/// **CreateLocationScreen.dart**
+///
+/// **Purpose:**
+/// Provides a form interface for creating new locations with address search,
+/// category selection, and additional details. Includes autocomplete functionality
+/// for address input and handles authentication state.
+///
+/// **Usage:**
+/// This screen is used when users need to add new locations to the system. It
+/// provides address search with suggestions and validates all required fields
+/// before submission.
+///
+/// **Key Features:**
+/// - Address search with autocomplete using PhotonService
+/// - Category selection from available options
+/// - Form validation for required fields
+/// - Authentication state handling with login prompt
+/// - Loading states and error feedback
+///
+/// **Dependencies:**
+/// - `CreateLocationViewModel`: For location creation logic
+/// - `AuthViewModel`: For authentication state
+/// - `flutter_typeahead`: For address autocomplete
+/// - `Provider`: For state management
+///
+/// **workflow:**
+/// ```
+/// 1. Check authentication state
+/// 2. Load available categories
+/// 3. User searches and selects address
+/// 4. Fill in name and optional description
+/// 5. Select category from dropdown
+/// 6. Submit form with validation
+/// ```
+///
+/// **Possible improvements:**
+/// - Add image upload for locations
+/// - Implement draft saving
+/// - Add map preview of selected location
+/// - textfield for custom categories
+/// - Button to use current GPS location as address
+///
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
