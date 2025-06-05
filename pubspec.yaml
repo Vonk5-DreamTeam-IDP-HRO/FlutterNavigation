@@ -43,6 +43,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/Cesium.html
 
 flutter_launcher_icons:
   android: "launcher_icon"
