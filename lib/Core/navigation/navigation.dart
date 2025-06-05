@@ -74,9 +74,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ),
 
     // 4: Settings Screen
-    ChangeNotifierProvider(
-      create: (_) => SettingsViewModel(),
-      child: const SettingsScreen(),
+    Builder(
+      builder: (context) => const SettingsScreen(),
     ),
   ];
 
@@ -188,7 +187,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         children: [
           SpeedDialChild(
             child: const Icon(Icons.route),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF00811F), // Gemeente Rotterdam green
             foregroundColor: Colors.white,
             label: 'Create Route',
             labelStyle: const TextStyle(fontSize: 18.0),
@@ -197,7 +196,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           SpeedDialChild(
             child: const Icon(Icons.add_location_alt_outlined),
-            backgroundColor: Colors.green,
+            backgroundColor: const Color(0xFF00811F), // Gemeente Rotterdam green
             foregroundColor: Colors.white,
             label: 'Create Location',
             labelStyle: const TextStyle(fontSize: 18.0),
@@ -208,6 +207,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF00811F), // Gemeente Rotterdam green
+        unselectedItemColor: Colors.grey,
         currentIndex: currentIndex,
         onTap: (index) {
           if (index == MainScreen.createRouteIndex) {
