@@ -26,17 +26,27 @@ dependencies:
   provider: ^6.1.2
   webview_flutter: ^4.2.0
   uuid: ^4.5.1
-  flutter_secure_storage: ^9.0.0 # Adjust version as needed
+  flutter_secure_storage: ^9.2.4
+  mockito: ^5.4.6
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.15
+  freezed: ^3.0.6
+  json_serializable: ^6.9.5
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/Cesium.html
     - .env
 
-dev_dependencies:
-  build_runner: ^2.4.15
-  flutter_lints: ^5.0.0
-  flutter_test:
-    sdk: flutter
-  mockito: ^5.4.6
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true

@@ -1,19 +1,33 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:osm_navigation/Core/config/app_config.dart';
-import 'package:osm_navigation/Core/models/location.dart';
-import 'package:osm_navigation/Core/models/location_details.dart';
-import 'package:osm_navigation/Core/models/route_dto.dart';
-import 'package:osm_navigation/Core/models/selectable_location.dart';
-import 'package:osm_navigation/Core/models/route_dtos.dart';
+import 'package:osm_navigation/core/config/app_config.dart';
+import 'package:osm_navigation/core/models/Route/SelectableNavigationRoute.dart';
+import 'package:osm_navigation/core/models/Route/create_route_dto.dart';
+import 'package:osm_navigation/core/models/Route/route_dto.dart';
+import 'package:osm_navigation/core/models/Location/location_dto.dart';
 import 'IRouteApiService.dart';
 import 'route_api_exceptions.dart';
-import 'package:osm_navigation/Core/services/api_exceptions.dart'
+import 'package:osm_navigation/core/services/api_exceptions.dart'
     as generic_api_exceptions;
-import 'package:osm_navigation/Core/utils/api_error_handler.dart'
+import 'package:osm_navigation/core/utils/api_error_handler.dart'
     as api_error_handler;
 
+/// RouteApiService implementation providing HTTP API operations for routes
+///
+/// **Architecture:** Clean Architecture - Infrastructure Layer
+/// **Purpose:** Handles HTTP communication with the route backend API
+/// **Features:**
+/// - Primary/fallback URL resilience for server reliability
+/// - Comprehensive error handling and mapping
+/// - Structured logging for debugging
+/// - Type-safe DTO transformations
+///
+/// **Error Handling Strategy:**
+/// - Primary server attempt with automatic fallback
+/// - Domain-specific exception mapping
+/// - Detailed logging for troubleshooting
+/// - Graceful degradation when servers are unavailable
 class RouteApiService implements IRouteApiService {
   final Dio _dio;
 
@@ -25,6 +39,7 @@ class RouteApiService implements IRouteApiService {
 
   RouteApiService(this._dio);
 
+  /// Maps generic API exceptions to domain-specific route exceptions
   RouteApiException _wrapGenericRouteApiException(
     generic_api_exceptions.ApiException e,
     String operationName,
@@ -47,7 +62,7 @@ class RouteApiService implements IRouteApiService {
       );
     } else if (e is generic_api_exceptions.ApiParseException) {
       return RouteApiParseException(
-        e.message, // The generic message already indicates parsing failure
+        e.message,
         originalException: e.originalException,
         stackTrace: e.stackTrace,
       );
@@ -62,13 +77,13 @@ class RouteApiService implements IRouteApiService {
     );
   }
 
+  /// Helper method to manage API requests with primary and fallback logic
   Future<T> _makeApiRequest<T>({
     required Future<T> Function(String baseUrl) attemptRequest,
     required String operationName,
   }) async {
     DioException? primaryError;
-    String primaryErrorUrl =
-        _primaryBaseApiUrl; // Store URL of primary attempt for error reporting
+    String primaryErrorUrl = _primaryBaseApiUrl;
 
     try {
       debugPrint(
@@ -95,7 +110,7 @@ class RouteApiService implements IRouteApiService {
         primaryErrorUrl = e.uri?.toString() ?? primaryErrorUrl;
       }
       debugPrint(
-        '[RouteApiService] Primary URL request for $operationName failed (RouteApiException from attempt): ${e.message}. Attempting fallback.',
+        '[RouteApiService] Primary URL request for $operationName failed (RouteApiException): ${e.message}. Attempting fallback.',
       );
     } catch (e) {
       // Catch other general errors from the attempt
@@ -111,7 +126,7 @@ class RouteApiService implements IRouteApiService {
     }
 
     // If primary attempt failed, try fallback
-    // This is pure added because HRO server kept crashing outside our control
+    // This is added because HRO server kept crashing outside our control
     // and we needed a way to get the app working again.
     try {
       debugPrint(
@@ -119,7 +134,6 @@ class RouteApiService implements IRouteApiService {
       );
       return await attemptRequest(_fallbackBaseApiUrl);
     } on DioException catch (e) {
-      // Changed to DioException
       debugPrint(
         '[RouteApiService] Fallback URL request for $operationName also failed (DioException): $e',
       );
@@ -128,7 +142,10 @@ class RouteApiService implements IRouteApiService {
         operationName,
         primaryErrorUrl,
       );
-      throw _wrapGenericRouteApiException(genericException, operationName);
+      throw _wrapGenericRouteApiException(
+        genericException as generic_api_exceptions.ApiException,
+        operationName,
+      );
     } catch (fallbackGeneralError) {
       // Catch other general errors from fallback
       debugPrint(
@@ -139,7 +156,10 @@ class RouteApiService implements IRouteApiService {
         operationName,
         primaryErrorUrl,
       );
-      throw _wrapGenericRouteApiException(genericException, operationName);
+      throw _wrapGenericRouteApiException(
+        genericException as generic_api_exceptions.ApiException,
+        operationName,
+      );
     }
   }
 
@@ -161,7 +181,6 @@ class RouteApiService implements IRouteApiService {
                 .map((item) => RouteDto.fromJson(item as Map<String, dynamic>))
                 .toList();
           } else {
-            // Let _makeApiRequest handle DioException by rethrowing a new one for non-200s not caught by Dio itself
             throw DioException(
               requestOptions: RequestOptions(path: fullUrl),
               response: response,
@@ -169,10 +188,8 @@ class RouteApiService implements IRouteApiService {
             );
           }
         } on DioException {
-          // Re-throw DioExceptions to be caught by _makeApiRequest
           rethrow;
         } catch (e, s) {
-          // Catch other unexpected errors
           debugPrint(
             '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
           );
@@ -187,16 +204,15 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<List<Location>> getRouteLocations(String routeId) async {
+  Future<List<LocationDto>> getRouteLocations(String routeId) async {
     final String operationName = 'fetching locations for route $routeId';
-    final String endpointPath = '/location_route';
+    const String endpointPath = '/location_route';
     final Map<String, dynamic> queryParams = {
       'select': '*,locations:locationid(name,longitude,latitude)',
       'routeid': 'eq.$routeId',
     };
 
-    return _makeApiRequest<List<Location>>(
-      // Renamed helper
+    return _makeApiRequest<List<LocationDto>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
         final String fullUrl = '$baseUrl$endpointPath';
@@ -213,7 +229,7 @@ class RouteApiService implements IRouteApiService {
             final locations =
                 data
                     .map(
-                      (item) => Location.fromJson(
+                      (item) => LocationDto.fromJson(
                         item['locations'] as Map<String, dynamic>,
                       ),
                     )
@@ -250,144 +266,42 @@ class RouteApiService implements IRouteApiService {
   }
 
   @override
-  Future<List<SelectableLocation>> getSelectableLocations() async {
-    const String operationName = 'fetching selectable locations';
-    const String locationsEndpoint = '/locations'; // TODO: Confirm endpoint
-    const String detailsEndpoint =
-        '/location_details'; // TODO: Confirm endpoint
+  Future<List<SelectableNavigationRoute>> getSelectableRoutes() async {
+    const String operationName = 'fetching selectable routes';
+    const String endpointPath = '/api/Route/selectable';
 
-    return _makeApiRequest<List<SelectableLocation>>(
-      // Renamed helper
+    return _makeApiRequest<List<SelectableNavigationRoute>>(
       operationName: operationName,
       attemptRequest: (baseUrl) async {
-        final locationsFullUrl = '$baseUrl$locationsEndpoint';
-        final detailsFullUrl = '$baseUrl$detailsEndpoint';
-
-        debugPrint(
-          '[RouteApiService] $operationName (locations) from URL: $locationsFullUrl',
-        );
-        debugPrint(
-          '[RouteApiService] $operationName (details) from URL: $detailsFullUrl',
-        );
-
+        final String fullUrl = '$baseUrl$endpointPath';
+        debugPrint('[RouteApiService] $operationName from URL: $fullUrl');
         try {
-          // Perform requests in parallel
-          final responses = await Future.wait([
-            _dio.get(locationsFullUrl),
-            _dio.get(detailsFullUrl),
-          ]);
-
-          final locationsResponse = responses[0];
-          final detailsResponse = responses[1];
-
-          if (locationsResponse.statusCode != 200 ||
-              locationsResponse.data is! List) {
-            throw DioException(
-              requestOptions: RequestOptions(path: locationsFullUrl),
-              response: locationsResponse,
-              message:
-                  'Failed to load locations: ${locationsResponse.statusCode}',
-            );
-          }
-          if (detailsResponse.statusCode != 200 ||
-              detailsResponse.data is! List) {
-            throw DioException(
-              requestOptions: RequestOptions(path: detailsFullUrl),
-              response: detailsResponse,
-              message:
-                  'Failed to load location details: ${detailsResponse.statusCode}',
-            );
-          }
-          final List<dynamic> locationsData = locationsResponse.data;
-          final List<dynamic> detailsData = detailsResponse.data;
-
-          // Create a map of Location Uuid to Category from detailsData
-          final Map<String, String> categoryMap = {};
-          for (var detailItemJson in detailsData) {
-            if (detailItemJson is Map<String, dynamic>) {
-              try {
-                // Assuming LocationDetails.fromJson correctly parses locationId as Uuid
-                final detail = LocationDetails.fromJson(detailItemJson);
-                categoryMap[detail.locationId] =
-                    detail.category ?? 'Uncategorized';
-              } catch (e, s) {
-                debugPrint(
-                  '[RouteApiService] Error parsing LocationDetails item in getSelectableLocations: $e. JSON: $detailItemJson',
-                );
-                // Optionally skip this item or rethrow as a RouteApiParseException
-                throw RouteApiParseException(
-                  'Error parsing LocationDetails item in getSelectableLocations: ${e.toString()}',
-                  originalException: e,
-                  stackTrace: s,
-                );
-              }
-            }
-          }
-
-          //Create SelectableLocation list from locationsData, using categoryMap
-          final List<SelectableLocation> selectableLocations = [];
-          for (var locationItemJson in locationsData) {
-            if (locationItemJson is Map<String, dynamic>) {
-              try {
-                // Assume 'locationId' (or 'locationid') from locationsData is a String Guid
-                // The C# SelectableLocationDto has Guid LocationId, so API should send string.
-                // Prioritize 'locationId', fallback to 'locationid'
-                final locationIdString =
-                    locationItemJson['locationId'] as String? ??
-                    locationItemJson['locationid'] as String?;
-                final name = locationItemJson['name'] as String?;
-
-                if (locationIdString == null) {
-                  debugPrint(
-                    '[RouteApiService] Missing locationId in locationItemJson: $locationItemJson',
-                  );
-                  continue; // Skip this item
-                }
-                if (name == null) {
-                  debugPrint(
-                    '[RouteApiService] Missing name in locationItemJson: $locationItemJson',
-                  );
-                  continue; // Skip this item
-                }
-
-                final category =
-                    categoryMap[locationIdString] ?? 'Uncategorized';
-
-                // Using SelectableLocation's constructor directly as per current structure.
-                // SelectableLocation.locationId now expects a String.
-                selectableLocations.add(
-                  SelectableLocation(
-                    locationId: locationIdString,
-                    name: name,
-                    category: category,
+          final response = await _dio.get(fullUrl);
+          if (response.statusCode == 200 && response.data is List) {
+            final List<dynamic> data = response.data;
+            return data
+                .map(
+                  (item) => SelectableNavigationRoute.fromJson(
+                    item as Map<String, dynamic>,
                   ),
-                );
-              } catch (e, s) {
-                debugPrint(
-                  '[RouteApiService] Error processing locationItemJson in getSelectableLocations: $e. JSON: $locationItemJson',
-                );
-                // Optionally skip or rethrow
-                throw RouteApiParseException(
-                  'Error processing locationItemJson in getSelectableLocations: ${e.toString()}',
-                  originalException: e,
-                  stackTrace: s,
-                );
-              }
-            }
+                )
+                .toList();
+          } else {
+            throw DioException(
+              requestOptions: RequestOptions(path: fullUrl),
+              response: response,
+              message:
+                  'Failed to load selectable routes: ${response.statusCode}',
+            );
           }
-          debugPrint(
-            '[RouteApiService] Successfully fetched and combined ${selectableLocations.length} selectable locations from $baseUrl',
-          );
-          return selectableLocations;
         } on DioException {
-          rethrow; // Let _makeApiRequest handle it
+          rethrow;
         } catch (e, s) {
-          // Catch other unexpected errors (e.g. model parsing issues)
           debugPrint(
-            '[RouteApiService] Unexpected error in $operationName attempt: $e',
+            '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
           );
           throw RouteApiParseException(
-            'Error processing $operationName response: ${e.toString()}',
+            'Error parsing $operationName response: ${e.toString()}',
             originalException: e,
             stackTrace: s,
           );
@@ -411,10 +325,9 @@ class RouteApiService implements IRouteApiService {
           if (response.statusCode == 200 && response.data != null) {
             return RouteDto.fromJson(response.data as Map<String, dynamic>);
           } else if (response.statusCode == 404) {
-            throw RouteNotFoundException(
-              'Route with ID $routeId not found at $fullUrl.',
-              uri: Uri.parse(fullUrl),
-            );
+            // Return null for 404 instead of throwing exception
+            // This matches the interface contract of returning RouteDto?
+            return null;
           } else {
             throw DioException(
               requestOptions: RequestOptions(path: fullUrl),
@@ -424,8 +337,6 @@ class RouteApiService implements IRouteApiService {
           }
         } on DioException {
           rethrow;
-        } on RouteNotFoundException {
-          rethrow; // Allow specific exceptions to pass through _makeApiRequest
         } catch (e, s) {
           debugPrint(
             '[RouteApiService] Unexpected error in $operationName attempt at $fullUrl: $e',
@@ -461,7 +372,6 @@ class RouteApiService implements IRouteApiService {
           if (response.statusCode == 201 && response.data != null) {
             return RouteDto.fromJson(response.data as Map<String, dynamic>);
           } else {
-            // Let _makeApiRequest handle DioException by rethrowing a new one
             throw DioException(
               requestOptions: RequestOptions(path: fullUrl),
               response: response,

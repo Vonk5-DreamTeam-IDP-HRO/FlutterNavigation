@@ -39,7 +39,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red, // Make it stand out
                   ),
-                  child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ] else ...[
                 const Text(
@@ -49,9 +52,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const LoginScreen(isDialog: false),
-                    ));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => const LoginScreen(isDialog: false),
+                      ),
+                    );
                   },
                   child: const Text('Login'),
                 ),

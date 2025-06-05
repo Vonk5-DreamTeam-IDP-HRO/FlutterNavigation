@@ -24,28 +24,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _isLoading = true;
       });
-      
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       final success = await authViewModel.register(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
       );
-      
+      setState(() {
+        _isLoading = false;
+      });
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Registration Successful'),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
             ),
           );
-          
           // Pop back to root and replace with settings screen
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/',  // Go back to root/home
@@ -61,28 +56,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             }
           });
         } else {
-          final error = authViewModel.error ?? 'Registration Failed. Please try again.';
-          
-          // Clear the relevant field if it's a duplicate error
-          if (error.toLowerCase().contains('email')) {
-            _emailController.clear();
-          } else if (error.toLowerCase().contains('username')) {
-            _usernameController.clear();
-          }
-          
-          // Show error in a more prominent way
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Registration Error'),
-              content: Text(error),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
+          final error =
+              authViewModel.error ?? 'Registration Failed. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
@@ -101,9 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

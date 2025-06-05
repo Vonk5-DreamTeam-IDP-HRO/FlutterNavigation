@@ -105,7 +105,7 @@ class AuthViewModel extends ChangeNotifier {
       await _secureStorage.write(key: _userTokenKey, value: token);
       await _secureStorage.write(key: _userUsernameKey, value: username);
       await _secureStorage.write(key: _userEmailKey, value: email);
-      
+
       notifyListeners();
       return true;
     } on DioException catch (e) {

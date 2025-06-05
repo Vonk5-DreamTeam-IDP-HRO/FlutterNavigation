@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:osm_navigation/Core/models/location_request_dtos.dart';
 import 'package:osm_navigation/Core/repositories/location/i_location_repository.dart';
-import 'package:uuid/uuid.dart';
 import 'package:osm_navigation/Core/services/location/location_api_exceptions.dart';
+import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';
 import 'Services/Photon.dart';
 
 class CreateLocationViewModel extends ChangeNotifier {
@@ -88,21 +87,16 @@ class CreateLocationViewModel extends ChangeNotifier {
         latitude = coordinates.$1; // This is num
         longitude = coordinates.$2; // This is num
       }
-
-      final detailPayload = CreateLocationDetailPayload(
+      final detailPayload = CreateLocationDetailDto(
         category: category,
         address: address,
       );
-      // TODO: Replace with actual user ID from authentication context
-      // Generate a new Uuid object for userId.
-      final String newUserId = const Uuid().v4();
 
-      final payload = CreateLocationPayload(
+      final payload = CreateLocationDto(
         name: name,
-        description: description ?? '',
+        description: description,
         latitude: latitude.toDouble(),
         longitude: longitude.toDouble(),
-        userId: newUserId,
         locationDetail: detailPayload,
       );
 
