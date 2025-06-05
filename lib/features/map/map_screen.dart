@@ -21,7 +21,9 @@ class MapScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rotterdam Map (MVVM)'),
+        title: const Text('Rotterdam Map'),
+        backgroundColor: const Color(0xFF00811F),
+        foregroundColor: Colors.white,
         actions: [
           // Display a loading indicator in the AppBar when the ViewModel is busy.
           if (viewModel.isLoading)
