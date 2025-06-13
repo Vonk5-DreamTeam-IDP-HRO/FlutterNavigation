@@ -1,10 +1,50 @@
+library saved_routes_screen;
+
 import 'package:flutter/material.dart';
+import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
+import 'package:osm_navigation/features/map/cesium_map_viewmodel.dart';
+import 'package:osm_navigation/features/map/cesium_map_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:osm_navigation/features/create_route/create_route_screen.dart';
+import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
+import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
+import 'package:osm_navigation/core/providers/app_state.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import './saved_routes_viewmodel.dart';
 
-/// SavedRoutesScreen: The View component for the saved routes list feature.
-/// Displays a list of saved routes fetched via [SavedRoutesViewModel].
-/// Delegates user actions (view, edit) to the ViewModel.
+/// **SavedRoutesScreen**
+///
+/// A screen that displays and manages saved navigation routes with options
+/// to view routes in 3D and edit route details.
+///
+/// **Purpose:**
+/// Provides a centralized view of all saved routes with actions for viewing
+/// and managing route data.
+///
+/// **Key Features:**
+/// - List view of saved routes
+/// - Route editing capability
+/// - 3D route visualization
+/// - Pull-to-refresh functionality
+/// - Loading and error states
+///
+/// **Dependencies:**
+/// - SavedRoutesViewModel: For state management
+/// - CesiumMapViewModel: For 3D route visualization
+/// - CreateRouteViewModel: For route editing
+///
+/// **Usage:**
+/// ```dart
+/// ChangeNotifierProvider(
+///   create: (context) => SavedRoutesViewModel(repository),
+///   child: SavedRoutesScreen(),
+/// )
+/// ```
+///
+
 class SavedRoutesScreen extends StatelessWidget {
   const SavedRoutesScreen({super.key});
 
@@ -28,6 +68,17 @@ class SavedRoutesScreen extends StatelessWidget {
     );
   }
 
+  /// Builds the main content of the screen based on the current state.
+  ///
+  /// Handles different states:
+  /// - Loading: Shows progress indicator
+  /// - Error: Displays error message
+  /// - Empty: Shows "No routes" message
+  /// - Success: Displays route list
+  ///
+  /// Parameters:
+  /// - [context]: Build context for theming and dependencies
+  /// - [viewModel]: Current state of saved routes
   Widget _buildBody(BuildContext context, SavedRoutesViewModel viewModel) {
     // Display loading indicator
     if (viewModel.isLoading) {
@@ -66,8 +117,8 @@ class SavedRoutesScreen extends StatelessWidget {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.route_outlined),
-                title: Text(route.title),
-                subtitle: Text(route.subtitle),
+                title: Text(route.name),
+                subtitle: Text(route.description ?? 'No description'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -76,9 +127,49 @@ class SavedRoutesScreen extends StatelessWidget {
                   children: <Widget>[
                     TextButton(
                       onPressed: () {
-                        // Use read() in callbacks to trigger ViewModel actions.
-                        context.read<SavedRoutesViewModel>().editRoute(
-                          route.id,
+                        // Create the repository and viewmodel for editing
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => MultiProvider(
+                                  providers: [
+                                    ChangeNotifierProvider.value(
+                                      value: context.read<AppState>(),
+                                    ),
+                                    ChangeNotifierProvider(
+                                      create: (context) {
+                                        final dio = context.read<Dio>();
+                                        final authViewModel =
+                                            context.read<AuthViewModel>();
+                                        final locationApiService =
+                                            LocationApiService(dio);
+                                        final locationRepository =
+                                            LocationRepository(
+                                              locationApiService,
+                                            );
+                                        final routeApiService = RouteApiService(
+                                          dio,
+                                        );
+                                        final routeRepository = RouteRepository(
+                                          routeApiService,
+                                        );
+
+                                        final createRouteViewModel =
+                                            CreateRouteViewModel(
+                                              routeRepository,
+                                              locationRepository,
+                                            );
+                                        createRouteViewModel.initializeForEdit(
+                                          route,
+                                        );
+                                        return createRouteViewModel;
+                                      },
+                                    ),
+                                  ],
+                                  child: const CreateRouteScreen(),
+                                ),
+                          ),
                         );
                       },
                       child: const Text('Edit'),
@@ -86,8 +177,19 @@ class SavedRoutesScreen extends StatelessWidget {
                     const SizedBox(width: 8), // Spacing between buttons
                     TextButton(
                       onPressed: () {
-                        context.read<SavedRoutesViewModel>().viewRoute(
-                          route.id,
+                        // Navigate to the Cesium 3D Map screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ChangeNotifierProvider(
+                                  create:
+                                      (context) => CesiumMapViewModel(
+                                        RouteApiService(context.read<Dio>()),
+                                      )..loadAndDisplayRoute(route.routeId),
+                                  child: const CesiumMapScreen(),
+                                ),
+                          ),
                         );
                       },
                       child: const Text('View Route'),

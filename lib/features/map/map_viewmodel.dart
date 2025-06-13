@@ -1,12 +1,28 @@
+library map_viewmodel;
+
+/// A ViewModel that manages the state and business logic for the interactive map.
+///
+/// Handles map position tracking, route fetching, and route visualization using
+/// the Valhalla routing service. Maintains the map's current state including center
+/// position, zoom level, and route polylines.
+///
+/// Example usage:
+/// ```dart
+/// final viewModel = MapViewModel();
+/// viewModel.fetchRoute([
+///   LatLng(51.9225, 4.47917), // Rotterdam Centraal
+///   LatLng(51.9175, 4.4883),  // Markthal
+/// ]);
+/// ```
+///
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
 import './services/valhalla_service.dart';
-// TODO: Import Model classes when created (e.g., RouteModel)
 
 class MapViewModel extends ChangeNotifier {
-  final ValhallaService _valhallaService =
-      ValhallaService(); // Dependency Injection could be used here for better testing
+  // --- Dependencies ---
+  final ValhallaService _valhallaService = ValhallaService();
   final MapController mapController = MapController();
 
   // --- State ---
@@ -14,6 +30,7 @@ class MapViewModel extends ChangeNotifier {
     51.92,
     4.48,
   ); // Default: Rotterdam center
+  // TODO: Future: Make this center first based on user location or a default location
   LatLng get currentCenter => _currentCenter;
 
   double _currentZoom = 13.0;
@@ -23,8 +40,6 @@ class MapViewModel extends ChangeNotifier {
   List<LatLng> get routePolyline =>
       _routePolyline; // The decoded polyline for drawing
 
-  // TODO: Add state for the full route details (duration, distance, etc.) from a RouteModel
-
   bool _isLoading = false;
   bool get isLoading => _isLoading; // To show loading indicators in the View
 
@@ -32,7 +47,7 @@ class MapViewModel extends ChangeNotifier {
   String? get errorMessage =>
       _errorMessage; // To show error messages in the View
 
-  // --- Actions ---
+  // --- Public Methods ---
 
   /// Fetches an optimized route from Valhalla based on waypoints.
   Future<void> fetchRoute(List<LatLng> waypoints) async {
@@ -49,8 +64,6 @@ class MapViewModel extends ChangeNotifier {
 
     try {
       final routeData = await _valhallaService.getOptimizedRoute(waypoints);
-      // TODO: Convert routeData['route'] into a strongly-typed RouteModel object
-      // For now, just extract the decoded polyline
       _routePolyline = routeData['decodedPolyline'] as List<LatLng>? ?? [];
       if (_routePolyline.isEmpty) {
         _errorMessage = 'Route found, but no shape data available.';
@@ -98,5 +111,5 @@ class MapViewModel extends ChangeNotifier {
     // No need to notifyListeners here if the map widget handles the move internally
   }
 
-  // TODO: Add methods for handling map taps, adding/removing markers, etc.
+  // TODO: Future feature: Add methods for handling map taps, adding/removing markers, etc.
 }

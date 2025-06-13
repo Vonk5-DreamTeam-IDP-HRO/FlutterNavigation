@@ -1,8 +1,8 @@
 # Flutter Navigation & Route Planner
 
-/We still have to add a license to it/
+[//]: # "TODO: Add appropriate license"
 
-A Flutter application focused on creating, saving, and visualizing custom routes, featuring an intuitive navigation system. Using 3DTiles for navigation mapping.
+A Flutter application focused on creating, saving, and visualizing custom routes in Rotterdam, featuring an intuitive navigation system with advanced 3D visualization capabilities using CesiumJS.
 
 ## Motivation
 
@@ -18,13 +18,29 @@ This project is being developed by students from Hogeschool Rotterdam as part of
 
 ## Tech Stack
 
-*   **Framework:** Flutter
-*   **Language:** Dart
-*   **State Management:** Provider
-*   **Mapping (2D):** `flutter_map` (Current)
-*   **Mapping (3D):** CesiumJS (via `webview_flutter`, planned/experimental)
-*   **Routing Service:** Valhalla
-*   **backend:** ASP.NET Core
+*   **Core Framework:**
+    * Flutter (cross-platform development)
+    * Dart programming language
+    * Provider pattern for state management with `ChangeNotifier`
+    * Dio for HTTP client communications
+
+*   **Authentication & Security:**
+    * Token-based authentication
+    * Secure storage for sensitive data
+    * Dynamic token resolution for API services
+
+*   **Mapping & Navigation:**
+    * CesiumJS for 3D visualization
+    * Rotterdam-specific 3D terrain and building data
+    * OpenStreetMap integration
+    * Valhalla routing engine
+    * Two-way Flutter-Cesium communication
+    * Animated route visualization
+
+*   **Backend Integration:**
+    * ASP.NET Core backend
+    * Primary and fallback API support
+    * RESTful API communication
 
 
 ## Getting Started
@@ -53,10 +69,29 @@ This project is being developed by students from Hogeschool Rotterdam as part of
 
 ## Project Structure
 
-*   `lib/core/`: Contains core functionalities like navigation (`navigation.dart`), providers (`app_state.dart`), and configuration.
-*   `lib/features/`: Holds the UI (Screens/Views) and logic (ViewModels) for each major feature area (e.g., `home`, `map`, `create_route`).
-*   `lib/main.dart`: Application entry point.
-*   `assets/`: Static assets like the `Cesium.html` file.
+The project follows MVVM (Model-View-ViewModel) architecture for clean separation of concerns:
+
+*   **`lib/core/`**: Core functionality and shared code
+    * `config/`: Environment and app configuration
+    * `models/`: Data transfer objects (DTOs)
+    * `navigation/`: Route management
+    * `providers/`: Global state management
+    * `repositories/`: Data access abstraction
+    * `services/`: API and external service integrations
+    * `utils/`: Shared utilities
+
+*   **`lib/features/`**: Feature modules following MVVM pattern
+    * `auth/`: Authentication screens and viewmodels
+    * `create_location/`: Location creation and management
+    * `create_route/`: Route creation functionality
+    * `home/`: Main application screens
+    * `map/`: Map visualization (2D and 3D)
+    * `saved_routes/`: Route management and persistence
+    * `setting/`: Application settings
+
+*   **`lib/main.dart`**: Application entry point with dependency injection setup
+*   **`assets/`**: Static assets including Cesium.html for 3D visualization
+*   **`test/`**: Unit and widget tests
 
 ## Branching Strategy (Gitflow)
 
