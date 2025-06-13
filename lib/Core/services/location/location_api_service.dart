@@ -1,3 +1,44 @@
+/// **LocationApiService**
+///
+/// A service that handles all location-related API communications, implementing
+/// fallback mechanisms and detailed error handling for robustness.
+///
+/// **Purpose:**
+/// Provides a reliable interface to interact with the location endpoints of the
+/// backend API, with built-in fallback to secondary endpoints when primary fails.
+///
+/// **Key Features:**
+/// - Primary/fallback URL handling
+/// - Comprehensive error handling and logging
+/// - Type-safe response mapping
+/// - Automatic retry mechanisms
+///
+/// **API Endpoints:**
+/// - `GET /api/Location` - Fetch all locations
+/// - `GET /api/Location/{id}` - Get location by ID
+/// - `POST /api/Location` - Create new location
+/// - `PUT /api/Location/{id}` - Update location
+/// - `DELETE /api/Location/{id}` - Delete location
+/// - `GET /api/Location/categories` - Get unique categories
+/// - `GET /api/Location/selectable` - Get selectable locations
+///
+/// **Dependencies:**
+/// - `Dio`: HTTP client
+/// - `AppConfig`: Configuration settings
+/// - Various DTOs for data transfer
+///
+/// **Usage:**
+/// ```dart
+/// final service = LocationApiService(dio);
+/// final result = await service.getAllLocations();
+/// if (result.isSuccess) {
+///   final locations = result.data;
+///   // Process locations
+/// }
+/// ```
+///
+library location_api_service;
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';

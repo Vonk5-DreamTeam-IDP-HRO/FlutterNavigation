@@ -40,6 +40,8 @@
 /// - textfield for custom categories
 /// - Button to use current GPS location as address
 ///
+library create_location_screen;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';

@@ -1,7 +1,9 @@
+library feedback_util;
+
 import 'package:flutter/material.dart';
 
 /// Utility class for displaying consistent feedback messages across the application.
-/// 
+///
 /// Provides standardized methods for showing error and success messages using SnackBar.
 /// This centralization ensures consistent styling and behavior for all user feedback.
 class FeedbackUtil {

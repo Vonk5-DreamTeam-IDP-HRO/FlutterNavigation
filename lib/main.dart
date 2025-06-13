@@ -1,3 +1,5 @@
+library rotterdam_navigation_main;
+
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +16,32 @@ import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
 
-/// This application is build according the MVVM architectural pattern
-/// https://docs.flutter.dev/app-architecture/guide
+/// **Rotterdam Navigation App**
+///
+/// A Flutter application for navigating through Rotterdam's points of interest,
+/// built using the MVVM (Model-View-ViewModel) architectural pattern.
+///
+/// **Architecture:**
+/// - Models: Data structures and business logic
+/// - Views: UI components and screens
+/// - ViewModels: State management and UI logic
+///
+/// **Key Features:**
+/// - Dependency injection using Provider
+/// - Centralized state management
+/// - Clean architecture principles
+/// - Error handling and recovery
+///
+/// **Core Dependencies:**
+/// - Provider: For dependency injection and state management
+/// - Dio: For HTTP communications
+/// - WebView: For Cesium map integration
+///
+/// **References:**
+/// - [Flutter Architecture Guide](https://docs.flutter.dev/app-architecture/guide)
+/// - [Provider Documentation](https://pub.dev/packages/provider)
+///
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -83,6 +109,14 @@ Future<void> main() async {
   }
 }
 
+/// Main application widget that sets up the dependency injection tree
+/// and configures the application theme.
+///
+/// This widget is responsible for:
+/// - Setting up Provider dependencies
+/// - Configuring theme data
+/// - Managing authentication state
+/// - Initializing services and repositories
 class MyApp extends StatelessWidget {
   final Dio _dio;
   final AuthViewModel _authViewModel;
@@ -94,6 +128,14 @@ class MyApp extends StatelessWidget {
   }) : _dio = dio,
        _authViewModel = authViewModel;
 
+  /// Builds the application widget tree with all required providers.
+  ///
+  /// Sets up the following providers:
+  /// - AppState: Global application state
+  /// - Dio: HTTP client with auth token management
+  /// - AuthViewModel: Authentication state and token management
+  /// - Services: LocationApi, RouteApi, etc.
+  /// - Repositories: Location, Route management
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -160,22 +202,25 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: Consumer<AppState>(
-        builder: (context, appState, _) => MaterialApp(
-          title: 'OSM Navigation',
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00811F)),
-          ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF00811F),
-              brightness: Brightness.dark,
+        builder:
+            (context, appState, _) => MaterialApp(
+              title: 'OSM Navigation',
+              theme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: const Color(0xFF00811F),
+                ),
+              ),
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: const Color(0xFF00811F),
+                  brightness: Brightness.dark,
+                ),
+              ),
+              themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              home: const MainScreen(),
             ),
-          ),
-          themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: const MainScreen(),
-        ),
       ),
     );
   }

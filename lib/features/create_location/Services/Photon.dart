@@ -1,9 +1,44 @@
+/// **PhotonService**
+///
+/// A service wrapper for the Photon geocoding API that provides address search
+/// and geocoding functionality with rate limiting and error handling.
+///
+/// **Purpose:**
+/// Provides a reliable interface to perform geocoding operations while maintaining
+/// rate limits and providing proper error handling.
+///
+/// **Key Features:**
+/// - Forward geocoding (address to coordinates)
+/// - Address search with autocompletion
+/// - Rate limiting protection (1 request/second)
+/// - Detailed error handling
+/// - Formatted address generation
+///
+/// **Usage:**
+/// ```dart
+/// final service = PhotonService();
+///
+/// // Geocode an address
+/// final (lat, lon) = await service.geocodeAddress('123 Main St, City');
+///
+/// // Search for addresses
+/// final results = await service.searchAddresses('Main St');
+/// ```
+///
+/// **Dependencies:**
+/// - `flutter_photon`: For Photon API communication
+/// - `foundation`: For debug logging
+///
+library photon_service;
+
 import 'package:flutter_photon/flutter_photon.dart';
 import 'package:flutter/foundation.dart';
 
 // Created by Gemini 2.5 PRO with Cline.
 
-// Custom exception for geocoding errors
+/// Exception thrown when geocoding operations fail.
+///
+/// Contains details about what went wrong during the geocoding process.
 class PhotonGeocodingException implements Exception {
   final String message;
   PhotonGeocodingException(this.message);
@@ -12,8 +47,15 @@ class PhotonGeocodingException implements Exception {
   String toString() => 'PhotonGeocodingException: $message';
 }
 
+/// Service class for interacting with the Photon geocoding API.
+///
+/// Provides methods for address searching and geocoding while implementing
+/// rate limiting and error handling.
 class PhotonService {
+  // --- Dependencies ---
   final PhotonApi _api;
+
+  // --- State ---
   DateTime? _lastRequest;
   static const _minRequestInterval = Duration(
     milliseconds: 1000,
@@ -116,7 +158,12 @@ class PhotonService {
 }
 
 /// Extension class to add formatted address to PhotonFeature
+/// Extension wrapper for PhotonFeature that adds formatted address functionality.
+///
+/// Provides easy access to address components and generates properly formatted
+/// address strings from the raw Photon data.
 class PhotonResultExtension {
+  // --- Dependencies ---
   final PhotonFeature _feature;
 
   PhotonResultExtension(this._feature);

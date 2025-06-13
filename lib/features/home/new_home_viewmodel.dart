@@ -1,8 +1,32 @@
+/// **NewHomeViewModel.dart**
+///
+/// **Purpose:**
+/// Serves as the state management and business logic handler for the home screen.
+///
+/// **Usage:**
+/// Used by NewHomeScreen to manage any future state or business logic that may
+/// be needed for the home screen functionality.
+///
+/// **Key Features:**
+/// - Basic loading state management
+/// - Error message handling
+/// - Expandable for future home screen features
+///
+/// **Dependencies:**
+/// - `ChangeNotifier`: For state management notifications
+///
+/// **workflow:**
+/// ```
+/// 1. Initialize basic state
+/// 2. Manage loading states
+/// 3. Handle potential errors
+/// ```
+///
+
+library new_home_viewmodel;
+
 import 'package:flutter/material.dart';
 
-/// NewHomeViewModel: Placeholder ViewModel for the NewHomeScreen.
-///
-/// Currently has no specific state or logic, but establishes the MVVM structure.
 class NewHomeViewModel extends ChangeNotifier {
   // --- State ---
 

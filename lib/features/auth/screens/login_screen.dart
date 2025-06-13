@@ -1,11 +1,11 @@
 /// **LoginScreen.dart**
 ///
-/// **Purpose:** 
+/// **Purpose:**
 /// Provides the user interface for authentication. Can be shown either as
 /// a full screen or as a modal dialog, handling user login with username and password
 /// input validation.
 ///
-/// **Usage:** 
+/// **Usage:**
 /// This screen is used whenever user authentication is required. It can be
 /// displayed in two ways:
 /// - As a full screen using normal navigation
@@ -38,6 +38,8 @@
 /// - Implement "Forgot password" feature
 /// - Add social login options
 ///
+library login_screen;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';

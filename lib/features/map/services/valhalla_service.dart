@@ -1,3 +1,35 @@
+/// **ValhallaService**
+///
+/// A service that interacts with the Valhalla routing engine to provide
+/// optimized route planning with fallback support.
+///
+/// **Purpose:**
+/// Provides a reliable interface for route optimization and path finding,
+/// with built-in fallback mechanisms for high availability.
+///
+/// **Key Features:**
+/// - Primary and fallback URL support
+/// - Polyline encoding/decoding
+/// - Route optimization
+/// - Error handling with custom exceptions
+/// - Configurable precision for coordinates
+///
+/// **Usage:**
+/// ```dart
+/// final service = ValhallaService();
+/// final route = await service.getOptimizedRoute([
+///   LatLng(51.9225, 4.47917),  // Rotterdam Centraal
+///   LatLng(51.9175, 4.4883),   // Markthal
+/// ]);
+/// ```
+///
+/// **Dependencies:**
+/// - `http`: For API communication
+/// - `latlong2`: For coordinate handling
+/// - `AppConfig`: For service configuration
+///
+library valhalla_service;
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -6,7 +38,15 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../../Core/config/app_config.dart';
 
+/// Service class that provides routing functionality using the Valhalla API.
+///
+/// This class manages route calculations with:
+/// - Primary and fallback URL handling
+/// - Error recovery and retries
+/// - Polyline encoding/decoding
+/// - Response parsing and validation
 class ValhallaService {
+  // --- Configuration ---
   // Use the configured base URL
   String get _baseUrl => ('${AppConfig.url}:${AppConfig.valhallaPort}');
   String get _fallBackUrl =>
@@ -82,11 +122,20 @@ class ValhallaService {
     }
   }
 
-  /// Main functions of API for requesting optimized routes
-  /// Must contain a list of LatLng points (at least 2) to be optimized
-  /// Returns a Map with the route information from Valhalla
-  /// Attempts primary URL, then fallback URL on failure.
-  /// TODO: Add more get-function for different route options
+  /// Calculates an optimized route between multiple waypoints.
+  ///
+  /// Parameters:
+  /// - [waypoints]: List of points to route through (minimum 2 points required)
+  ///
+  /// Returns:
+  /// A Map containing:
+  /// - 'route': Raw Valhalla response data
+  /// - 'decodedPolyline': List of LatLng points for drawing
+  ///
+  /// Throws:
+  /// - [ArgumentError] if less than 2 waypoints provided
+  /// - [_ValhallaRequestException] for API errors
+  /// - [Exception] for failure of both primary and fallback URLs
   Future<Map<String, dynamic>> getOptimizedRoute(List<LatLng> waypoints) async {
     if (waypoints.length < 2) {
       throw ArgumentError('At least 2 waypoints are required for a route.');
@@ -140,7 +189,16 @@ class ValhallaService {
     }
   }
 
-  // Decode the polyline from Valhalla (similar to the JS function given in the docs on official website)
+  /// Decodes a Valhalla-encoded polyline into a list of coordinates.
+  ///
+  /// Parameters:
+  /// - [encoded]: The encoded polyline string
+  /// - [precision]: Coordinate precision (default: 6 for Valhalla)
+  ///
+  /// Returns:
+  /// List of [LatLng] points representing the decoded polyline.
+  ///
+  /// Implementation follows Valhalla's polyline encoding specification.
   List<LatLng> decodePolyline(String encoded, {int precision = 6}) {
     // precision is typically 6 for Valhalla
     final List<LatLng> points = [];

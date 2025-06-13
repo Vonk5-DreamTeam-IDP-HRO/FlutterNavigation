@@ -35,6 +35,8 @@
 /// - Consider implementing pagination or lazy loading for each category.
 /// - Consider adding search functionality to filter locations.
 ///
+library create_route_viewmodel;
+
 // --- Imports ---
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/models/Location/SelectableLocation/selectable_location_dto.dart';
@@ -44,61 +46,56 @@ import 'package:osm_navigation/core/models/Route/route_dto.dart';
 import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/repositories/Route/IRouteRepository.dart';
 
-// --- Class Definition ---
 class CreateRouteViewModel extends ChangeNotifier {
+  // --- Dependencies ---
   final IRouteRepository _routeRepository;
   final ILocationRepository _locationRepository;
 
-  // --- Constructor ---
+  // --- Controllers ---
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
+  // --- State ---
+  bool _isLoading = false;
+  String? _locationLoadingError;
+  String? _routeSaveError;
+  bool _saveSuccess = false;
+  RouteDto? _newlyCreatedRoute;
+  Map<String, List<SelectableLocationDto>> _groupedLocations = {};
+  final Set<String> _selectedLocationIds = {};
+
+  // --- Getters ---
+  bool get isLoading => _isLoading;
+  String? get locationLoadingError => _locationLoadingError;
+  String? get routeSaveError => _routeSaveError;
+  bool get saveSuccess => _saveSuccess;
+  RouteDto? get newlyCreatedRoute => _newlyCreatedRoute;
+  Map<String, List<SelectableLocationDto>> get groupedLocations =>
+      _groupedLocations;
+  Set<String> get selectedLocationIds => _selectedLocationIds;
+  bool get isNameValid => nameController.text.trim().isNotEmpty;
+  bool get areLocationsValid => _selectedLocationIds.length >= 2;
+  bool get canSave => isNameValid && areLocationsValid && !_isLoading;
+
+  // --- Initialization ---
   CreateRouteViewModel(this._routeRepository, this._locationRepository) {
     nameController.addListener(_onNameChanged);
     loadLocations(); // Load locations in accordion when the ViewModel is initialized
   }
 
-  // --- Private methods for internal event handling ---
+  // --- Private Methods ---
   void _onNameChanged() {
-    // Notify listeners when the name text changes, allowing UI to update
-    // based on properties like isNameValid or canSave.
     notifyListeners();
   }
 
-  // --- State Variables ---
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  void _clearForm() {
+    nameController.clear();
+    descriptionController.clear();
+    _selectedLocationIds.clear();
+    notifyListeners();
+  }
 
-  String? _locationLoadingError;
-  String? _routeSaveError;
-  String? get locationLoadingError => _locationLoadingError;
-  String? get routeSaveError => _routeSaveError;
-
-  bool _saveSuccess = false;
-  bool get saveSuccess => _saveSuccess;
-
-  RouteDto? _newlyCreatedRoute;
-  RouteDto? get newlyCreatedRoute => _newlyCreatedRoute;
-
-  Map<String, List<SelectableLocationDto>> _groupedLocations = {};
-  Map<String, List<SelectableLocationDto>> get groupedLocations =>
-      _groupedLocations;
-
-  final Set<String> _selectedLocationIds = {};
-  Set<String> get selectedLocationIds => _selectedLocationIds;
-
-  // --- Controllers for Text Fields ---
-
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
-  // --- public Validation Getters for UI ---
-
-  // These getters can be used to determine if the form is valid
-  // and can be used to enable/disable the save button or show validation messages as example.
-  // So these getters are pure for frontend validation.
-  bool get isNameValid => nameController.text.trim().isNotEmpty;
-  bool get areLocationsValid => _selectedLocationIds.length >= 2;
-  bool get canSave => isNameValid && areLocationsValid && !_isLoading;
-
-  // -- Methods --
+  // --- Public Methods ---
 
   // This method loads locations from the API and groups them by category
   // It uses the new LocationApiService to fetch the data.
@@ -180,7 +177,7 @@ class CreateRouteViewModel extends ChangeNotifier {
     }
   }
 
-  // -- Edit Initialization --
+  // --- Route Edit Methods ---
   void initializeForEdit(dynamic route) {
     // Accepts a Route object (with name and description)
     nameController.text = route.name;
@@ -188,7 +185,7 @@ class CreateRouteViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // -- Cleanup --
+  // --- Cleanup Methods ---
 
   // Dispose of the controllers to free up resources when the ViewModel is no longer needed
   /// Clear any route save error
@@ -214,13 +211,6 @@ class CreateRouteViewModel extends ChangeNotifier {
     nameController.dispose();
     descriptionController.dispose();
     super.dispose();
-  }
-
-  void _clearForm() {
-    nameController.clear();
-    descriptionController.clear();
-    _selectedLocationIds.clear();
-    notifyListeners();
   }
 
   // -- validation summery --

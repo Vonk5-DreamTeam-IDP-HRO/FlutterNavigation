@@ -1,13 +1,27 @@
+/// A home screen widget that displays Rotterdam city information and provides navigation
+/// to key application features.
+///
+/// Contains a welcoming header section, quick action cards for main features like
+/// route creation and location management, and displays various statistics about
+/// Rotterdam city. The screen automatically handles dark/light theme variations.
+///
+/// Example usage:
+/// ```dart
+/// MaterialApp(
+///   home: NewHomeScreen(),
+/// )
+/// ```
+
+library new_home_screen;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
-import 'package:osm_navigation/core/navigation/navigation.dart';
 import 'package:osm_navigation/features/create_route/create_route_screen.dart';
 import 'package:osm_navigation/features/create_location/create_location_screen.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
-import 'package:osm_navigation/core/services/location/ILocationApiService.dart';
 import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
@@ -34,9 +48,9 @@ class NewHomeScreen extends StatelessWidget {
             Text(
               'Welcome to Rotterdam Navigation',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8.0),
             Text(
@@ -48,9 +62,9 @@ class NewHomeScreen extends StatelessWidget {
             // Quick Actions
             Text(
               'Quick Actions',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
             Row(
@@ -64,34 +78,41 @@ class NewHomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MultiProvider(
-                            providers: [
-                              ChangeNotifierProvider.value(
-                                value: context.read<AppState>(),
+                          builder:
+                              (context) => MultiProvider(
+                                providers: [
+                                  ChangeNotifierProvider.value(
+                                    value: context.read<AppState>(),
+                                  ),
+                                  Provider<ILocationRepository>(
+                                    create: (context) {
+                                      final dio = context.read<Dio>();
+                                      final locationApiService =
+                                          LocationApiService(dio);
+                                      return LocationRepository(
+                                        locationApiService,
+                                      );
+                                    },
+                                  ),
+                                  Provider<IRouteRepository>(
+                                    create: (context) {
+                                      final dio = context.read<Dio>();
+                                      final routeApiService = RouteApiService(
+                                        dio,
+                                      );
+                                      return RouteRepository(routeApiService);
+                                    },
+                                  ),
+                                  ChangeNotifierProvider(
+                                    create:
+                                        (context) => CreateRouteViewModel(
+                                          context.read<IRouteRepository>(),
+                                          context.read<ILocationRepository>(),
+                                        ),
+                                  ),
+                                ],
+                                child: const CreateRouteScreen(),
                               ),
-                              Provider<ILocationRepository>(
-                                create: (context) {
-                                  final dio = context.read<Dio>();
-                                  final locationApiService = LocationApiService(dio);
-                                  return LocationRepository(locationApiService);
-                                },
-                              ),
-                              Provider<IRouteRepository>(
-                                create: (context) {
-                                  final dio = context.read<Dio>();
-                                  final routeApiService = RouteApiService(dio);
-                                  return RouteRepository(routeApiService);
-                                },
-                              ),
-                              ChangeNotifierProvider(
-                                create: (context) => CreateRouteViewModel(
-                                  context.read<IRouteRepository>(),
-                                  context.read<ILocationRepository>(),
-                                ),
-                              ),
-                            ],
-                            child: const CreateRouteScreen(),
-                          ),
                         ),
                       );
                     },
@@ -107,28 +128,35 @@ class NewHomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MultiProvider(
-                            providers: [
-                              ChangeNotifierProvider.value(
-                                value: context.read<AppState>(),
+                          builder:
+                              (context) => MultiProvider(
+                                providers: [
+                                  ChangeNotifierProvider.value(
+                                    value: context.read<AppState>(),
+                                  ),
+                                  Provider<ILocationRepository>(
+                                    create: (context) {
+                                      final locationApiService =
+                                          LocationApiService(
+                                            context.read<Dio>(),
+                                          );
+                                      return LocationRepository(
+                                        locationApiService,
+                                      );
+                                    },
+                                  ),
+                                  ChangeNotifierProvider(
+                                    create:
+                                        (context) => CreateLocationViewModel(
+                                          locationRepository:
+                                              context
+                                                  .read<ILocationRepository>(),
+                                          photonService: PhotonService(),
+                                        ),
+                                  ),
+                                ],
+                                child: const CreateLocationScreen(),
                               ),
-                              Provider<ILocationRepository>(
-                                create: (context) {
-                                  final locationApiService = LocationApiService(
-                                    context.read<Dio>(),
-                                  );
-                                  return LocationRepository(locationApiService);
-                                },
-                              ),
-                              ChangeNotifierProvider(
-                                create: (context) => CreateLocationViewModel(
-                                  locationRepository: context.read<ILocationRepository>(),
-                                  photonService: PhotonService(),
-                                ),
-                              ),
-                            ],
-                            child: const CreateLocationScreen(),
-                          ),
                         ),
                       );
                     },
@@ -141,9 +169,9 @@ class NewHomeScreen extends StatelessWidget {
             // Rotterdam Stats
             Text(
               'Rotterdam at a Glance',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
             Card(
@@ -154,7 +182,7 @@ class NewHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    _StatItem(
+                    const _StatItem(
                       icon: Icons.location_city,
                       title: 'City Area',
                       value: '324.14 km²',
@@ -162,7 +190,7 @@ class NewHomeScreen extends StatelessWidget {
                     Divider(
                       color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                     ),
-                    _StatItem(
+                    const _StatItem(
                       icon: Icons.people,
                       title: 'Population',
                       value: '651,446',
@@ -170,7 +198,7 @@ class NewHomeScreen extends StatelessWidget {
                     Divider(
                       color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                     ),
-                    _StatItem(
+                    const _StatItem(
                       icon: Icons.tour,
                       title: 'Tourist Attractions',
                       value: '100+',
@@ -186,6 +214,10 @@ class NewHomeScreen extends StatelessWidget {
   }
 }
 
+/// A card widget that displays an action with icon, title, and description.
+///
+/// Used in the home screen to create interactive navigation cards for main features.
+/// Handles tap interactions and provides visual feedback through material design.
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -203,9 +235,7 @@ class _QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12.0),
@@ -215,22 +245,19 @@ class _QuickActionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                icon, 
+                icon,
                 color: Theme.of(context).colorScheme.primary,
-                size: 32.0
+                size: 32.0,
               ),
               const SizedBox(height: 12.0),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4.0),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(description, style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         ),
@@ -239,6 +266,10 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
+/// A widget that displays a city statistic with an icon, title, and value.
+///
+/// Used to show various statistics about Rotterdam in a consistent format.
+/// Automatically adapts to the current theme for visual consistency.
 class _StatItem extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -256,23 +287,17 @@ class _StatItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(
-            icon, 
-            color: Theme.of(context).colorScheme.primary
-          ),
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 16.0),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.bodyMedium),
               Text(
                 value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),

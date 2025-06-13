@@ -39,6 +39,8 @@
 /// - Add terms of service acceptance
 /// - Consider adding registration with social accounts
 ///
+library register_screen;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth_viewmodel.dart';

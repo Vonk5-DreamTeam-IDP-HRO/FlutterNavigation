@@ -38,6 +38,8 @@
 /// - Add support for custom categories
 /// - Consider caching frequent searches
 ///
+library create_location_viewmodel;
+
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/core/repositories/Location/i_location_repository.dart';
 import 'package:osm_navigation/core/models/Location/CreateLocation/create_location_dto.dart';

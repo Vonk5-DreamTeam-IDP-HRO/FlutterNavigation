@@ -1,3 +1,42 @@
+/// **RouteApiService**
+///
+/// A service that manages route-related API communications with primary and
+/// fallback endpoint support.
+///
+/// **Purpose:**
+/// Provides a robust interface for route management operations, including
+/// creation, retrieval, and route-location associations.
+///
+/// **Key Features:**
+/// - Primary/fallback URL handling for high availability
+/// - Comprehensive error handling and logging
+/// - Type-safe response mapping
+/// - Support for complex route operations
+///
+/// **API Endpoints:**
+/// - `GET /api/Route` - Fetch all routes
+/// - `GET /api/Route/{id}` - Get route by ID
+/// - `POST /api/Route` - Create new route
+/// - `GET /api/Route/selectable` - Get selectable routes
+/// - `GET /api/Route/{id}/locations` - Get route locations
+///
+/// **Dependencies:**
+/// - `Dio`: HTTP client
+/// - `AppConfig`: Configuration settings
+/// - Various DTOs for data transfer
+///
+/// **Usage:**
+/// ```dart
+/// final service = RouteApiService(dio);
+/// final result = await service.getAllRoutes();
+/// if (result.isSuccess) {
+///   final routes = result.data;
+///   // Process routes
+/// }
+/// ```
+///
+library route_api_service;
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
@@ -34,7 +73,7 @@ class RouteApiService implements IRouteApiService {
         return result;
       }
       debugPrint('$operationName: Failed. Trying fallback...');
-    } catch (e, s) {
+    } catch (e) {
       debugPrint('$operationName: Exception - $e');
       result = StatusCodeResponseDto(
         statusCodeResponse: StatusCodeResponse.internalServerError,
@@ -55,7 +94,7 @@ class RouteApiService implements IRouteApiService {
             '$operationName FAILED on fallback URL with status: ${result.statusCodeResponse}. Message: ${result.message}.',
           );
         }
-      } catch (e, s) {
+      } catch (e) {
         debugPrint(
           'Exception during $operationName on fallback URL: $_fallbackBaseApiUrl. Error: $e.',
         );

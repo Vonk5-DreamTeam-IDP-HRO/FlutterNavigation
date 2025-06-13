@@ -1,3 +1,5 @@
+library navigation;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
@@ -17,12 +19,35 @@ import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart
 import 'package:dio/dio.dart';
 import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
-import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
 import 'package:osm_navigation/features/create_location/create_location_screen.dart';
 import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import 'package:osm_navigation/features/auth/screens/login_screen.dart';
 
+/// **MainScreen**
+///
+/// Primary navigation container for the Rotterdam Navigation app that manages
+/// screen transitions and bottom navigation.
+///
+/// **Features:**
+/// - Bottom navigation bar with 5 main sections
+/// - SpeedDial for create actions (route/location)
+/// - Authentication state handling
+/// - Provider-based screen state management
+///
+/// **Navigation Structure:**
+/// - Home (index 0)
+/// - Saved Routes (index 1)
+/// - Create Actions (index 2, SpeedDial)
+/// - Map View (index 3)
+/// - Settings (index 4)
+///
+/// **Usage:**
+/// ```dart
+/// MaterialApp(
+///   home: MainScreen(),
+/// )
+/// ```
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -38,6 +63,14 @@ class MainScreen extends StatefulWidget {
 
 // Provide the MapViewModel specifically to the MapScreen subtree.
 // This creates a new MapViewModel instance when MainScreen builds.
+/// State management for MainScreen.
+///
+/// Handles:
+/// - Speed dial state
+/// - Screen transitions
+/// - Authentication checks
+/// - Provider-based navigation
+/// - Screen initialization
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   final ValueNotifier<bool> _isDialOpen = ValueNotifier(false);
 
@@ -74,11 +107,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ),
 
     // 4: Settings Screen
-    Builder(
-      builder: (context) => const SettingsScreen(),
-    ),
+    Builder(builder: (context) => const SettingsScreen()),
   ];
 
+  /// Ensures an action is only performed when the user is authenticated.
+  ///
+  /// Shows the login dialog if user is not authenticated, then:
+  /// - Executes the action if authentication succeeds
+  /// - Cancels if authentication fails or is dismissed
+  ///
+  /// Parameters:
+  /// - [action]: The callback to execute if authenticated
   Future<void> _handleAuthenticatedAction(VoidCallback action) async {
     final authViewModel = context.read<AuthViewModel>();
     if (!authViewModel.isAuthenticated) {
@@ -91,6 +130,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     action();
   }
 
+  /// Navigates to the route creation screen with required providers.
+  ///
+  /// Sets up:
+  /// - AppState provider
+  /// - CreateRouteViewModel with repositories
+  /// - Authentication state
   void _navigateToCreateRoute() {
     Navigator.push(
       context,
@@ -124,6 +169,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _isDialOpen.value = false;
   }
 
+  /// Navigates to the location creation screen with required providers.
+  ///
+  /// Sets up:
+  /// - AppState provider
+  /// - CreateLocationViewModel with repositories
+  /// - PhotonService for geocoding
   void _navigateToCreateLocation() {
     Navigator.push(
       context,
@@ -187,7 +238,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         children: [
           SpeedDialChild(
             child: const Icon(Icons.route),
-            backgroundColor: const Color(0xFF00811F), // Gemeente Rotterdam green
+            backgroundColor: const Color(
+              0xFF00811F,
+            ), // Gemeente Rotterdam green
             foregroundColor: Colors.white,
             label: 'Create Route',
             labelStyle: const TextStyle(fontSize: 18.0),
@@ -196,7 +249,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           SpeedDialChild(
             child: const Icon(Icons.add_location_alt_outlined),
-            backgroundColor: const Color(0xFF00811F), // Gemeente Rotterdam green
+            backgroundColor: const Color(
+              0xFF00811F,
+            ), // Gemeente Rotterdam green
             foregroundColor: Colors.white,
             label: 'Create Location',
             labelStyle: const TextStyle(fontSize: 18.0),

@@ -1,3 +1,39 @@
+/// **SettingsScreen.dart**
+///
+/// **Purpose:**
+/// Provides the user interface for application settings and account management.
+/// Handles theme switching and authentication state display.
+///
+/// **Usage:**
+/// ```dart
+/// Navigator.push(
+///   context,
+///   MaterialPageRoute(builder: (context) => SettingsScreen()),
+/// );
+/// ```
+///
+/// **Key Features:**
+/// - Account management interface for authenticated users
+/// - Login/Register prompt for unauthenticated users
+/// - Dark mode toggle with persistent state
+/// - Responsive design with card-based UI
+///
+/// **Dependencies:**
+/// - `AuthViewModel`: For authentication state management
+/// - `AppState`: For theme management
+/// - `Provider`: For state management
+/// - `LoginScreen`: For authentication flow
+///
+/// **workflow:**
+/// ```
+/// 1. Check authentication state
+/// 2. Display appropriate account section
+/// 3. Provide theme switching capability
+/// 4. Handle logout functionality
+/// ```
+///
+library settings_screen;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
@@ -56,83 +92,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) => Theme(
-                          data: Theme.of(context).copyWith(
-                            dialogTheme: DialogThemeData(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          child: AlertDialog(
-                            backgroundColor: Theme.of(context).dialogBackgroundColor,
-                            titlePadding: const EdgeInsets.all(24),
-                            contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                            title: Text(
-                              'Account Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Icon(
-                                    Icons.person,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  ),
-                                  title: Text(
-                                    'Username',
-                                    style: Theme.of(context).textTheme.titleSmall,
-                                  ),
-                                  subtitle: Text(
-                                    authViewModel.username ?? 'N/A',
-                                    style: Theme.of(context).textTheme.bodyLarge,
+                        builder:
+                            (context) => Theme(
+                              data: Theme.of(context).copyWith(
+                                dialogTheme: DialogThemeData(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                // Email functionality temporarily removed
-                                // ListTile(
-                                //   contentPadding: EdgeInsets.zero,
-                                //   leading: Icon(
-                                //     Icons.email,
-                                //     color: Theme.of(context).colorScheme.primary,
-                                //   ),
-                                //   title: Text(
-                                //     'Email',
-                                //     style: Theme.of(context).textTheme.titleSmall,
-                                //   ),
-                                //   subtitle: Text(
-                                //     authViewModel.email ?? 'N/A',
-                                //     style: Theme.of(context).textTheme.bodyLarge,
-                                //   ),
-                                // ),
-                              ],
+                              ),
+                              child: AlertDialog(
+                                backgroundColor:
+                                    Theme.of(context).dialogBackgroundColor,
+                                titlePadding: const EdgeInsets.all(24),
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                  24,
+                                  0,
+                                  24,
+                                  24,
+                                ),
+                                title: Text(
+                                  'Account Details',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: Icon(
+                                        Icons.person,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                      ),
+                                      title: Text(
+                                        'Username',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.titleSmall,
+                                      ),
+                                      subtitle: Text(
+                                        authViewModel.username ?? 'N/A',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge,
+                                      ),
+                                    ),
+                                    // Email functionality temporarily removed
+                                    // ListTile(
+                                    //   contentPadding: EdgeInsets.zero,
+                                    //   leading: Icon(
+                                    //     Icons.email,
+                                    //     color: Theme.of(context).colorScheme.primary,
+                                    //   ),
+                                    //   title: Text(
+                                    //     'Email',
+                                    //     style: Theme.of(context).textTheme.titleSmall,
+                                    //   ),
+                                    //   subtitle: Text(
+                                    //     authViewModel.email ?? 'N/A',
+                                    //     style: Theme.of(context).textTheme.bodyLarge,
+                                    //   ),
+                                    // ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    child: const Text('Close'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      _logout(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Theme.of(context).colorScheme.primary,
-                                ),
-                                child: const Text('Close'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _logout(context);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Logout'),
-                              ),
-                            ],
-                          ),
-                        ),
                       );
                     },
                   ),
@@ -165,14 +217,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const LoginScreen(isDialog: false),
-                            ));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        const LoginScreen(isDialog: false),
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00811F),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -190,29 +249,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Builder(
-                  builder: (context) => ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Icon(
-                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: Text(
-                      'Dark Mode',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    subtitle: Text(
-                      isDarkMode ? 'Dark theme enabled' : 'Light theme enabled',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    trailing: Switch(
-                      value: isDarkMode,
-                      onChanged: (bool value) {
-                        context.read<AppState>().toggleDarkMode();
-                      },
-                      activeColor: const Color(0xFF00811F),
-                    ),
-                  ),
+                  builder:
+                      (context) => ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Icon(
+                          isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                          size: 40,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(
+                          'Dark Mode',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        subtitle: Text(
+                          isDarkMode
+                              ? 'Dark theme enabled'
+                              : 'Light theme enabled',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        trailing: Switch(
+                          value: isDarkMode,
+                          onChanged: (bool value) {
+                            context.read<AppState>().toggleDarkMode();
+                          },
+                          activeColor: const Color(0xFF00811F),
+                        ),
+                      ),
                 ),
               ),
             ],

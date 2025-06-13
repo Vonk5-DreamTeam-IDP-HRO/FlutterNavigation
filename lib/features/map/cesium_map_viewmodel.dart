@@ -1,3 +1,33 @@
+/// **CesiumMapViewModel**
+///
+/// Core ViewModel for managing Cesium-based 3D map interactions and state.
+///
+/// **Purpose:**
+/// Provides a bridge between the Flutter UI and Cesium.js WebView implementation,
+/// managing map state, route display, and camera controls.
+///
+/// **Key Features:**
+/// - WebView initialization and management
+/// - Route loading and display
+/// - Camera position control
+/// - Error handling and loading states
+/// - Automatic token management
+///
+/// **Usage:**
+/// ```dart
+/// final viewModel = CesiumMapViewModel(routeApiService);
+/// await viewModel.moveCameraTo(51.92, 4.48, 14.0);
+/// await viewModel.loadAndDisplayRoute('route123');
+/// ```
+///
+/// **Dependencies:**
+/// - `webview_flutter`: For Cesium WebView management
+/// - `RouteApiService`: For route data fetching
+/// - `ValhallaService`: For route calculations
+/// - `AppConfig`: For Cesium token management
+///
+library cesium_map_viewmodel;
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -9,6 +39,10 @@ import '../../core/config/app_config.dart';
 import '../../core/services/route/route_api_service.dart';
 import './services/valhalla_service.dart';
 
+/// ViewModel that manages the Cesium 3D map state and interactions.
+///
+/// Handles initialization of the WebView, map state management, route loading,
+/// and provides methods for map manipulation.
 class CesiumMapViewModel extends ChangeNotifier {
   // --- Dependencies ---
   final ValhallaService _valhallaService = ValhallaService();
@@ -45,6 +79,14 @@ class CesiumMapViewModel extends ChangeNotifier {
     _initialize();
   }
 
+  /// Initializes the WebView controller and loads the Cesium map.
+  ///
+  /// Sets up:
+  /// - JavaScript configuration
+  /// - Navigation delegates
+  /// - Error handling
+  /// - HTML content loading
+  /// - Token injection
   Future<void> _initialize() async {
     _webViewController =
         WebViewController()
@@ -114,6 +156,14 @@ class CesiumMapViewModel extends ChangeNotifier {
     }
   }
 
+  /// Loads the Cesium HTML template from assets.
+  ///
+  /// Returns:
+  /// - String containing the HTML content
+  /// - null if loading fails
+  ///
+  /// Throws:
+  /// - Exception if the asset is empty or invalid
   Future<String?> _loadHtmlContent() async {
     try {
       debugPrint('Loading HTML asset from: assets/Cesium.html');
@@ -135,6 +185,14 @@ class CesiumMapViewModel extends ChangeNotifier {
 
   Timer? _readinessCheckTimer;
 
+  /// Checks if the Cesium map is initialized and ready for interaction.
+  ///
+  /// Performs periodic checks until the map is ready, then:
+  /// 1. Updates ready state
+  /// 2. Cancels further checks
+  /// 3. Moves camera to default position
+  ///
+  /// Uses JavaScript bridge to verify Cesium initialization.
   Future<void> _checkCesiumReady() async {
     if (!_isCesiumLoaded || _isCesiumReady) {
       _readinessCheckTimer
@@ -177,6 +235,14 @@ class CesiumMapViewModel extends ChangeNotifier {
     _readinessCheckTimer = Timer(const Duration(seconds: 1), _checkCesiumReady);
   }
 
+  /// Moves the Cesium camera to specified coordinates and zoom level.
+  ///
+  /// Parameters:
+  /// - [lat]: Latitude in degrees
+  /// - [lng]: Longitude in degrees
+  /// - [zoom]: Zoom level (higher values = closer to ground)
+  ///
+  /// Only works when Cesium is ready. Silently fails if map isn't ready.
   Future<void> moveCameraTo(double lat, double lng, double zoom) async {
     if (!_isCesiumReady) return;
     try {
@@ -193,6 +259,18 @@ class CesiumMapViewModel extends ChangeNotifier {
     }
   }
 
+  /// Retrieves the current camera position from Cesium.
+  ///
+  /// Returns:
+  /// Map containing camera position data:
+  /// - latitude: Current latitude
+  /// - longitude: Current longitude
+  /// - height: Camera height above ground
+  ///
+  /// Returns null if:
+  /// - Map isn't ready
+  /// - JavaScript execution fails
+  /// - Position data is invalid
   Future<Map<String, dynamic>?> getCesiumCameraPosition() async {
     if (!_isCesiumReady) return null;
     try {
@@ -216,13 +294,27 @@ class CesiumMapViewModel extends ChangeNotifier {
     }
   }
 
+  /// Fetches location data for a specific route from the API.
+  ///
+  /// Parameters:
+  /// - [routeId]: The ID of the route to load
+  ///
+  /// Updates:
+  /// - [_routeLocations] with the fetched coordinates
+  /// - [_errorMessage] if the fetch fails
+  ///
+  /// Throws:
+  /// - Exception if the API request fails or returns empty data
   Future<void> _loadRouteLocations(String routeId) async {
     try {
       final result = await _routeApiService.getRouteLocations(routeId);
       if (result.isSuccess && result.data != null) {
-        _routeLocations = result.data!.map((location) => 
-          LatLng(location.latitude, location.longitude)
-        ).toList();
+        _routeLocations =
+            result.data!
+                .map(
+                  (location) => LatLng(location.latitude, location.longitude),
+                )
+                .toList();
       } else {
         throw Exception(result.message);
       }
@@ -235,6 +327,18 @@ class CesiumMapViewModel extends ChangeNotifier {
     }
   }
 
+  /// Loads and displays a route on the Cesium map.
+  ///
+  /// Workflow:
+  /// 1. Fetches route locations from API
+  /// 2. Calculates optimized route using Valhalla
+  /// 3. Displays route on the Cesium map
+  ///
+  /// Parameters:
+  /// - [routeId]: The ID of the route to display
+  ///
+  /// Updates UI state through [_isLoadingRoute] and [_errorMessage].
+  /// Notifies listeners of state changes.
   Future<void> loadAndDisplayRoute(String routeId) async {
     if (!_isCesiumReady || _isLoadingRoute) return;
 
@@ -244,7 +348,7 @@ class CesiumMapViewModel extends ChangeNotifier {
 
     try {
       await _loadRouteLocations(routeId);
-      
+
       if (_routeLocations == null || _routeLocations!.isEmpty) {
         throw Exception('No route locations available');
       }
@@ -280,6 +384,14 @@ class CesiumMapViewModel extends ChangeNotifier {
   }
 
   // --- Public Actions for View ---
+  /// Reloads the Cesium WebView and resets all state.
+  ///
+  /// Use this method to recover from errors or reinitialize the map.
+  /// Resets:
+  /// - Loading states
+  /// - Error messages
+  /// - Route display
+  /// - WebView content
   void reloadWebView() {
     _isCesiumLoaded = false;
     _isCesiumReady = false;
@@ -289,11 +401,21 @@ class CesiumMapViewModel extends ChangeNotifier {
     _webViewController.reload();
   }
 
+  /// Moves the camera to the default Rotterdam city center position.
+  ///
+  /// Uses predefined [_defaultCenter] coordinates and a zoom level of 14.0.
+  /// This is typically used for resetting the view or initial positioning.
   void moveCameraToHome() {
     moveCameraTo(_defaultCenter.latitude, _defaultCenter.longitude, 14.0);
   }
 
   // --- Cleanup ---
+  /// Cleans up resources when the ViewModel is disposed.
+  ///
+  /// Ensures proper cleanup of:
+  /// - Timer resources
+  /// - WebView resources
+  /// - State notifications
   @override
   void dispose() {
     _readinessCheckTimer?.cancel(); // Ensure timer is cancelled

@@ -1,21 +1,48 @@
+library api_error_handler;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:osm_navigation/Core/services/api_exceptions.dart';
 
-/// Handles Dio errors and converts them to generic [ApiException] types.
+/// **API Error Handler**
 ///
-/// This utility function can be used by any API service that uses Dio
-/// to ensure consistent error handling.
+/// Provides standardized error handling for Dio-based API operations by converting
+/// Dio exceptions into application-specific exception types.
 ///
-/// - [e]: The [DioException] that occurred.
-/// - [operation]: A descriptive string of the operation being attempted
-///   (e.g., "fetching user data", "creating new item").
-/// - [urlAttempted]: The URL that was being accessed when the error occurred.
+/// **Purpose:**
+/// Centralizes error handling logic and provides consistent error responses
+/// across all API operations in the application.
 ///
-/// Returns an [ApiException] (or a subtype like [ApiNetworkException])
-/// representing the error.
-/// Some of the information can be found on https://pub.dev/packages/dio Also https://medium.com/@mohammadjoumani/error-handling-in-flutter-a1dfe81a2e0
-/// and
+/// **Key Features:**
+/// - Converts DioExceptions to typed ApiExceptions
+/// - Handles network timeouts and connection errors
+/// - Provides detailed error messages with context
+/// - Preserves stack traces for debugging
+///
+/// **Usage:**
+/// ```dart
+/// try {
+///   await dio.get('/users');
+/// } on DioException catch (e) {
+///   final apiError = handleDioError(e, 'fetching users', '/api/users');
+///   // Handle the typed exception
+/// }
+/// ```
+///
+/// **Parameters:**
+/// - [e]: The DioException that occurred during the API call
+/// - [operation]: Description of the attempted operation
+/// - [urlAttempted]: The endpoint URL that was being accessed
+///
+/// **Returns:**
+/// An [ApiException] or its subtype ([ApiNetworkException], [ApiNotFoundException])
+/// that represents the error in a standardized format.
+///
+/// **References:**
+/// - [Dio Documentation](https://pub.dev/packages/dio)
+/// - [Error Handling Best Practices](https://medium.com/@mohammadjoumani/error-handling-in-flutter-a1dfe81a2e0)
+///
+
 ApiException handleDioError(
   DioException e,
   String operation,

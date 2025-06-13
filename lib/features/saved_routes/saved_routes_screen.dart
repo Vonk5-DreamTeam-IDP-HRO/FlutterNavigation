@@ -1,3 +1,5 @@
+library saved_routes_screen;
+
 import 'package:flutter/material.dart';
 import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
 import 'package:osm_navigation/core/services/route/route_api_service.dart';
@@ -13,9 +15,36 @@ import 'package:dio/dio.dart';
 import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
 import './saved_routes_viewmodel.dart';
 
-/// SavedRoutesScreen: The View component for the saved routes list feature.
-/// Displays a list of saved routes fetched via [SavedRoutesViewModel].
-/// Delegates user actions (view, edit) to the ViewModel.
+/// **SavedRoutesScreen**
+///
+/// A screen that displays and manages saved navigation routes with options
+/// to view routes in 3D and edit route details.
+///
+/// **Purpose:**
+/// Provides a centralized view of all saved routes with actions for viewing
+/// and managing route data.
+///
+/// **Key Features:**
+/// - List view of saved routes
+/// - Route editing capability
+/// - 3D route visualization
+/// - Pull-to-refresh functionality
+/// - Loading and error states
+///
+/// **Dependencies:**
+/// - SavedRoutesViewModel: For state management
+/// - CesiumMapViewModel: For 3D route visualization
+/// - CreateRouteViewModel: For route editing
+///
+/// **Usage:**
+/// ```dart
+/// ChangeNotifierProvider(
+///   create: (context) => SavedRoutesViewModel(repository),
+///   child: SavedRoutesScreen(),
+/// )
+/// ```
+///
+
 class SavedRoutesScreen extends StatelessWidget {
   const SavedRoutesScreen({super.key});
 
@@ -39,6 +68,17 @@ class SavedRoutesScreen extends StatelessWidget {
     );
   }
 
+  /// Builds the main content of the screen based on the current state.
+  ///
+  /// Handles different states:
+  /// - Loading: Shows progress indicator
+  /// - Error: Displays error message
+  /// - Empty: Shows "No routes" message
+  /// - Success: Displays route list
+  ///
+  /// Parameters:
+  /// - [context]: Build context for theming and dependencies
+  /// - [viewModel]: Current state of saved routes
   Widget _buildBody(BuildContext context, SavedRoutesViewModel viewModel) {
     // Display loading indicator
     if (viewModel.isLoading) {
@@ -143,9 +183,10 @@ class SavedRoutesScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder:
                                 (context) => ChangeNotifierProvider(
-                                  create: (context) => CesiumMapViewModel(
-                                    RouteApiService(context.read<Dio>()),
-                                  )..loadAndDisplayRoute(route.routeId),
+                                  create:
+                                      (context) => CesiumMapViewModel(
+                                        RouteApiService(context.read<Dio>()),
+                                      )..loadAndDisplayRoute(route.routeId),
                                   child: const CesiumMapScreen(),
                                 ),
                           ),

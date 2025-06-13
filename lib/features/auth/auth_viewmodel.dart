@@ -38,6 +38,8 @@
 /// - Implement password reset functionality
 /// - Consider addding OAuth providers support (Google, GitHub, etc.)
 ///
+library auth_viewmodel;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
@@ -45,10 +47,31 @@ import 'package:osm_navigation/Core/services/auth/auth_api_service.dart';
 import 'package:osm_navigation/core/services/dio_factory.dart';
 
 class AuthViewModel extends ChangeNotifier {
+  // --- Dependencies ---
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   late final AuthApiService _authService;
-  bool _isInitialized = false;
 
+  // --- State ---
+  bool _isInitialized = false;
+  String? _token;
+  String? _username;
+  String? _email;
+  String? _error;
+
+  // --- Getters ---
+  bool get isInitialized => _isInitialized;
+  String? get token => _token;
+  String? get username => _username;
+  String? get email => _email;
+  String? get error => _error;
+  bool get isAuthenticated => _token != null;
+
+  // --- Constants ---
+  static const String _userTokenKey = 'user_token';
+  static const String _userUsernameKey = 'user_username';
+  static const String _userEmailKey = 'user_email';
+
+  // --- Initialization ---
   AuthViewModel({Dio? dio}) {
     _authService = AuthApiService(dio ?? Dio());
     debugPrint('🔧 AuthViewModel constructor called');
@@ -57,7 +80,7 @@ class AuthViewModel extends ChangeNotifier {
     DioFactory.setTokenProvider(() => _token);
   }
 
-  bool get isInitialized => _isInitialized;
+  // --- Lifecycle Methods ---
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -71,21 +94,7 @@ class AuthViewModel extends ChangeNotifier {
     debugPrint('AuthViewModel: notifyListeners() called after initialization');
   }
 
-  // Keys for secure storage
-  static const String _userTokenKey = 'user_token';
-  static const String _userUsernameKey = 'user_username';
-  static const String _userEmailKey = 'user_email';
-
-  String? _token;
-  String? _username;
-  String? _email;
-  String? _error;
-
-  String? get token => _token;
-  String? get username => _username;
-  String? get email => _email;
-  String? get error => _error;
-  bool get isAuthenticated => _token != null;
+  // --- Private Helper Methods ---
   Future<void> _loadUserFromStorage() async {
     debugPrint('AuthViewModel._loadUserFromStorage() started');
     _token = await _secureStorage.read(key: _userTokenKey);
@@ -98,6 +107,7 @@ class AuthViewModel extends ChangeNotifier {
     debugPrint('AuthViewModel._loadUserFromStorage() completed');
   }
 
+  // --- Public Methods ---
   Future<bool> login(String username, String password) async {
     try {
       _error = null;
