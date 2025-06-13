@@ -1,4 +1,11 @@
+library navigation;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:osm_navigation/core/repositories/Route/route_repository.dart';
+import 'package:osm_navigation/core/repositories/Location/location_repository.dart';
+import 'package:osm_navigation/core/services/route/route_api_service.dart';
+import 'package:osm_navigation/features/create_location/Services/Photon.dart';
 import 'package:provider/provider.dart';
 import 'package:osm_navigation/core/providers/app_state.dart';
 import 'package:osm_navigation/features/home/new_home_screen.dart';
@@ -9,16 +16,41 @@ import 'package:osm_navigation/features/map/map_viewmodel.dart';
 import 'package:osm_navigation/features/setting/setting_screen.dart';
 import 'package:osm_navigation/features/home/new_home_viewmodel.dart';
 import 'package:osm_navigation/features/saved_routes/saved_routes_viewmodel.dart';
-import 'package:osm_navigation/features/saved_routes/services/route_api_service.dart';
-import 'package:osm_navigation/core/services/location_api_service.dart';
+import 'package:dio/dio.dart';
+import 'package:osm_navigation/core/services/location/location_api_service.dart';
 import 'package:osm_navigation/features/create_route/create_route_viewmodel.dart';
-import 'package:osm_navigation/features/setting/setting_viewmodel.dart';
+import 'package:osm_navigation/features/create_location/create_location_screen.dart';
+import 'package:osm_navigation/features/create_location/create_location_viewmodel.dart';
+import 'package:osm_navigation/features/auth/auth_viewmodel.dart';
+import 'package:osm_navigation/features/auth/screens/login_screen.dart';
 
+/// **MainScreen**
+///
+/// Primary navigation container for the Rotterdam Navigation app that manages
+/// screen transitions and bottom navigation.
+///
+/// **Features:**
+/// - Bottom navigation bar with 5 main sections
+/// - SpeedDial for create actions (route/location)
+/// - Authentication state handling
+/// - Provider-based screen state management
+///
+/// **Navigation Structure:**
+/// - Home (index 0)
+/// - Saved Routes (index 1)
+/// - Create Actions (index 2, SpeedDial)
+/// - Map View (index 3)
+/// - Settings (index 4)
+///
+/// **Usage:**
+/// ```dart
+/// MaterialApp(
+///   home: MainScreen(),
+/// )
+/// ```
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
-  // Define constants here for static access if needed elsewhere,
-  // otherwise they can be moved or removed if only used locally.
   static const int homeIndex = 0;
   static const int saveIndex = 1;
   static const int createRouteIndex = 2;
@@ -29,80 +61,234 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-/// Provide the MapViewModel specifically to the MapScreen subtree.
-/// This creates a new MapViewModel instance when MainScreen builds.
-class _MainScreenState extends State<MainScreen> {
+// Provide the MapViewModel specifically to the MapScreen subtree.
+// This creates a new MapViewModel instance when MainScreen builds.
+/// State management for MainScreen.
+///
+/// Handles:
+/// - Speed dial state
+/// - Screen transitions
+/// - Authentication checks
+/// - Provider-based navigation
+/// - Screen initialization
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+  final ValueNotifier<bool> _isDialOpen = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _isDialOpen.dispose();
+    super.dispose();
+  }
+
   final List<Widget> _screens = [
     // 0: Home Screen
     ChangeNotifierProvider(
       create: (_) => NewHomeViewModel(),
       child: const NewHomeScreen(),
-    ),
-
-    // 1: Saved Routes Screen
+    ), // 1: Saved Routes Screen
     ChangeNotifierProvider(
-      // Create the ApiService and pass it to the ViewModel
-      // Instantiate the service here to ensure it's available for the ViewModel
-      create: (_) => SavedRoutesViewModel(apiService: RouteApiService()),
+      create: (context) {
+        final dio = context.read<Dio>();
+        final routeApiService = RouteApiService(dio);
+        final routeRepository = RouteRepository(routeApiService);
+        return SavedRoutesViewModel(routeRepository: routeRepository);
+      },
       child: const SavedRoutesScreen(),
     ),
 
-    // 2: Create Route Screen
-    ChangeNotifierProvider(
-      // Instantiate and provide LocationApiService
-      create: (_) => CreateRouteViewModel(LocationApiService()),
-      child: const CreateRouteScreen(),
-    ),
+    // 2: Empty placeholder for Create tab. When tapped, it opens the SpeedDial.
+    // The user can choice to create a route or a location.
+    const SizedBox.shrink(),
 
-    // 3: Map Screen (2D Map)
+    // 3: Map Screen (3D Map)
     ChangeNotifierProvider(
       create: (_) => MapViewModel(),
       child: const MapScreen(),
     ),
 
     // 4: Settings Screen
-    ChangeNotifierProvider(
-      create: (_) => SettingsViewModel(),
-      child: const SettingsScreen(),
-    ),
+    Builder(builder: (context) => const SettingsScreen()),
   ];
+
+  /// Ensures an action is only performed when the user is authenticated.
+  ///
+  /// Shows the login dialog if user is not authenticated, then:
+  /// - Executes the action if authentication succeeds
+  /// - Cancels if authentication fails or is dismissed
+  ///
+  /// Parameters:
+  /// - [action]: The callback to execute if authenticated
+  Future<void> _handleAuthenticatedAction(VoidCallback action) async {
+    final authViewModel = context.read<AuthViewModel>();
+    if (!authViewModel.isAuthenticated) {
+      await LoginScreen.showAsDialog(context);
+      if (!authViewModel.isAuthenticated) {
+        _isDialOpen.value = false;
+        return;
+      }
+    }
+    action();
+  }
+
+  /// Navigates to the route creation screen with required providers.
+  ///
+  /// Sets up:
+  /// - AppState provider
+  /// - CreateRouteViewModel with repositories
+  /// - Authentication state
+  void _navigateToCreateRoute() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(value: context.read<AppState>()),
+                ChangeNotifierProvider(
+                  create: (context) {
+                    final dio = context.read<Dio>();
+                    final authViewModel = context.read<AuthViewModel>();
+                    final locationApiService = LocationApiService(dio);
+                    final locationRepository = LocationRepository(
+                      locationApiService,
+                    );
+                    final routeRepository = RouteRepository(
+                      RouteApiService(dio),
+                    );
+                    return CreateRouteViewModel(
+                      routeRepository,
+                      locationRepository,
+                    );
+                  },
+                ),
+              ],
+              child: const CreateRouteScreen(),
+            ),
+      ),
+    );
+    _isDialOpen.value = false;
+  }
+
+  /// Navigates to the location creation screen with required providers.
+  ///
+  /// Sets up:
+  /// - AppState provider
+  /// - CreateLocationViewModel with repositories
+  /// - PhotonService for geocoding
+  void _navigateToCreateLocation() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(value: context.read<AppState>()),
+                ChangeNotifierProvider(
+                  create: (context) {
+                    final dio = context.read<Dio>();
+                    final authViewModel = context.read<AuthViewModel>();
+                    final locationApiService = LocationApiService(dio);
+                    final locationRepository = LocationRepository(
+                      locationApiService,
+                    );
+                    final photonService = context.read<PhotonService>();
+                    return CreateLocationViewModel(
+                      locationRepository: locationRepository,
+                      photonService: photonService,
+                    );
+                  },
+                ),
+              ],
+              child: const CreateLocationScreen(),
+            ),
+      ),
+    );
+    _isDialOpen.value = false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Watch AppState to rebuild when selectedTabIndex changes
     final appState = context.watch<AppState>();
     final currentIndex = appState.selectedTabIndex;
 
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: _screens),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+      floatingActionButton: SpeedDial(
+        openCloseDial: _isDialOpen,
+        dialRoot: (ctx, open, toggleChildren) {
+          // This custom dialRoot makes the main button effectively invisible
+          // and non-interactive directly. The open/close state is controlled
+          // by _isDialOpen, which is toggled by the BottomNavigationBar.
+          // 'open' boolean indicates if SpeedDial children are currently visible.
+          return const SizedBox.shrink();
+        },
+        visible: true,
+        direction: SpeedDialDirection.up,
+        switchLabelPosition: false,
+        closeManually: false,
+        curve: Curves.bounceIn,
+        overlayColor: Colors.black,
+        overlayOpacity: 0.5,
+        onOpen: () => debugPrint('SPEED DIAL CHILDREN OPENED'),
+        onClose: () => debugPrint('SPEED DIAL CHILDREN CLOSED'),
+        tooltip: 'Create Options',
+        heroTag: 'speed-dial-hero-tag',
+        elevation: 0.0,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.route),
+            backgroundColor: const Color(
+              0xFF00811F,
+            ), // Gemeente Rotterdam green
+            foregroundColor: Colors.white,
+            label: 'Create Route',
+            labelStyle: const TextStyle(fontSize: 18.0),
+            // Check authentication before pushing create route screen
+            onTap: () => _handleAuthenticatedAction(_navigateToCreateRoute),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.add_location_alt_outlined),
+            backgroundColor: const Color(
+              0xFF00811F,
+            ), // Gemeente Rotterdam green
+            foregroundColor: Colors.white,
+            label: 'Create Location',
+            labelStyle: const TextStyle(fontSize: 18.0),
+            // Check authentication before pushing create Location screen
+            onTap: () => _handleAuthenticatedAction(_navigateToCreateLocation),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF00811F), // Gemeente Rotterdam green
+        unselectedItemColor: Colors.grey,
         currentIndex: currentIndex,
         onTap: (index) {
-          // Call AppState method to change tab
-          context.read<AppState>().changeTab(index);
+          if (index == MainScreen.createRouteIndex) {
+            _isDialOpen.value = !_isDialOpen.value;
+          } else {
+            if (_isDialOpen.value) {
+              _isDialOpen.value = false;
+            }
+            context.read<AppState>().changeTab(index);
+          }
         },
         items: const [
-          // 0: Home
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          // 1: Save routes
           BottomNavigationBarItem(
             icon: Icon(Icons.save_alt_outlined),
             label: 'Save routes',
-          ), // Changed icon and label
-          // 2: Create Route
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.add_circle_outline,
-            ), // Using a standard add icon for now
-            label: 'Create Route',
           ),
-          // 3: Show Map
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline),
+            label: 'Create',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.map_outlined),
             label: 'Show Map',
-          ), // Changed label, adjusted icon
-          // 4: Settings
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',

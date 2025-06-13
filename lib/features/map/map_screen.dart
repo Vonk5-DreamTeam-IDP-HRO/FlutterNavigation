@@ -1,14 +1,30 @@
+library map_screen;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import './map_viewmodel.dart';
 
-/// MapScreen: The View component for the map feature.
+/// An interactive map widget displaying Rotterdam's geographical data and routes.
 ///
-/// This widget is implemented as a StatelessWidget according to MVVM principles.
-/// It observes state changes from [MapViewModel] and delegates user interactions
-/// back to the ViewModel.
+/// Implements the View component in MVVM architecture, observing [MapViewModel] for
+/// state changes and delegating user interactions. Features include:
+/// * OpenStreetMap tile display
+/// * Route polyline visualization
+/// * Error message handling
+/// * Loading state indicators
+///
+/// Example usage:
+/// ```dart
+/// MultiProvider(
+///   providers: [
+///     ChangeNotifierProvider(create: (_) => MapViewModel()),
+///   ],
+///   child: MapScreen(),
+/// )
+/// ```
+
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
@@ -21,7 +37,9 @@ class MapScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rotterdam Map (MVVM)'),
+        title: const Text('Rotterdam Map'),
+        backgroundColor: const Color(0xFF00811F),
+        foregroundColor: Colors.white,
         actions: [
           // Display a loading indicator in the AppBar when the ViewModel is busy.
           if (viewModel.isLoading)
